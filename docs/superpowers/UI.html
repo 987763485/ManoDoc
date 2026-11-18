@@ -2330,7 +2330,7 @@
                 <div class="engine-card">
                   <div>
                     <div class="name">xberg</div>
-                    <div class="meta" data-i18n="engine.xbergMeta">1.3.10 · OCR / 复杂表格 / 回退</div>
+                    <div class="meta" data-i18n="engine.xbergMeta">1.4.0 · OCR / 复杂表格 / 回退</div>
                   </div>
                   <div class="spacer"><span class="badge green" data-i18n="engine.ready">就绪</span></div>
                 </div>
@@ -2352,7 +2352,7 @@
                 <div class="engine-card">
                   <div>
                     <div class="name">pandoc</div>
-                    <div class="meta" data-i18n="engine.pandocMeta">3.8.3 · HTML / DOCX / EPUB 导出</div>
+                    <div class="meta" data-i18n="engine.pandocMeta">3.14 · HTML / DOCX / EPUB 导出</div>
                   </div>
                   <div class="spacer"><span class="badge green" data-i18n="engine.ready">就绪</span></div>
                 </div>
@@ -2524,7 +2524,7 @@
         </button>
       </div>
       <div class="matrix-list" id="matrix-list"></div>
-      <p class="matrix-note" data-i18n="matrix.note">PDF → Word 走 PDF → Markdown → Word；Markdown → PDF 由 pandoc + Typst 生成。Python 引擎由 uv 按需下载 Python，并在应用数据目录创建 .venv。</p>
+      <p class="matrix-note" data-i18n="matrix.note">PDF → Word 走 PDF → Markdown → Word，目录与图片保真有限；Markdown → PDF 由 pandoc + Typst 生成。Python 引擎由 uv 按需下载 Python，并在应用数据目录创建 .venv。</p>
     </div>
   </dialog>
 
@@ -2573,7 +2573,7 @@
         "convert.title": "文档转换", "convert.srTitle": "转换任务", "convert.sub": "把文档转换成 Markdown、Word 或 PDF", "convert.pdfDemo": "PDF 预检示例", "convert.export": "导出",
         "file.current": "当前文件", "file.preset": "转换预设", "preset.standard": "标准文档", "preset.table": "表格清单", "preset.corpus": "知识库", "preset.standardMeta": "内置 · 通用转换 · 清洗保守", "preset.tableMeta": "内置 · 表格优先 · 保留分级警告", "preset.corpusMeta": "内置 · 切块、元数据与语料包", "preset.custom": "我的研究预设", "preset.customMeta": "自定义 · 基于知识库",
         "opt.headers": "清洗页眉页脚", "opt.cjk": "中文标题规范化", "opt.tables": "表格质量分级", "opt.assets": "图片落 assets/", "opt.corpus": "生成语料包",
-        "convert.start": "开始转换", "convert.open": "打开输出目录", "convert.running": "正在转换 · 第 24 / 50 页", "convert.direction": "方向", "convert.engine": "引擎", "format.markdown": "Markdown", "format.word": "Word", "format.pdf": "PDF", "engine.auto": "自动", "engine.autoBatch": "自动（按文件）", "engine.routeHint": "Word → Markdown · 3 个引擎可用；自动优先 anydoc。", "engine.anydocHint": "anydoc：Office / 文本型 PDF 快速路径。", "engine.selectHint": "自动优先 anydoc；失败或质量不足时回退 xberg。", "engine.xbergHint": "xberg：OCR、复杂表格与 anydoc 回退。", "engine.pandocHint": "pandoc：Markdown 与 DOCX / HTML / EPUB 互转。", "matrix.open": "支持的方向", "matrix.title": "支持的方向", "matrix.sub": "基础一对一转换；多引擎方向可在转换页选择。", "matrix.note": "PDF → Word 走 PDF → Markdown → Word；Markdown → PDF 由 pandoc + Typst 生成。Python 引擎由 uv 按需下载 Python，并在应用数据目录创建 .venv。", "empty.choose": "选择文件",
+        "convert.start": "开始转换", "convert.open": "打开输出目录", "convert.running": "正在转换 · 第 24 / 50 页", "convert.direction": "方向", "convert.engine": "引擎", "format.markdown": "Markdown", "format.word": "Word", "format.pdf": "PDF", "engine.auto": "自动", "engine.autoBatch": "自动（按文件）", "engine.routeHint": "Word → Markdown · 3 个引擎可用；自动优先 anydoc。", "engine.anydocHint": "anydoc：Office / 文本型 PDF 快速路径。", "engine.selectHint": "自动优先 anydoc；失败或质量不足时回退 xberg。", "engine.xbergHint": "xberg：OCR、复杂表格与 anydoc 回退。", "engine.pandocHint": "pandoc：Markdown 与 DOCX / HTML / EPUB 互转。", "matrix.open": "支持的方向", "matrix.title": "支持的方向", "matrix.sub": "基础一对一转换；多引擎方向可在转换页选择。", "matrix.note": "PDF → Word 走 PDF → Markdown → Word，目录与图片保真有限；Markdown → PDF 由 pandoc + Typst 生成。Python 引擎由 uv 按需下载 Python，并在应用数据目录创建 .venv。", "empty.choose": "选择文件",
         "sheet.stamp": "已校验", "error.title": "需要 OCR", "error.desc": "该 PDF 第 1 页没有文本层。可以跳过该页继续，或安装 OCR 组件后再试。", "error.skip": "跳过第 1 页并继续", "error.install": "了解 OCR 组件", "success.title": "转换完成", "success.desc": "53,210 字符 · 49 标题 · 2 表格 · 1 个表格提示", "success.open": "打开输出", "success.folder": "打开输出目录", "permission.title": "无法写入输出目录", "permission.desc": "请在系统设置中授权文件夹访问，或更换输出目录。", "permission.open": "打开系统设置", "permission.change": "更换目录", "clear.title": "清空转换历史？", "clear.desc": "只删除任务记录，不删除输出文件。此操作不可撤销。", "clear.confirm": "清空历史",
         "mark.table": "表格 · 合并单元格", "mark.tableDesc": "第 2 行第 3 列疑似串行，建议人工复核。", "mark.line": "断行 · 已合并", "mark.lineDesc": "“固定，并设置”已从硬换行恢复为一段。", "mark.header": "页眉 · 已移除", "mark.headerDesc": "“GB/T 28448—2019”重复出现 12 次。",
         "batch.title": "语料制作", "batch.sub": "一个文件夹，一次完成转换、清洗与打包", "batch.add": "添加文件", "batch.start": "开始批量", "batch.files": "文件 · 已导入", "batch.chunks": "语料块 · 待生成", "batch.warnings": "警告 · 需复核",
@@ -2594,7 +2594,7 @@
         "status.converting": "转换中", "status.ocr": "OCR", "status.done": "完成", "status.waiting": "等待", "status.cleaning": "清洗中", "status.skipped": "已跳过", "status.failed": "失败", "status.warn3": "3 警告",
         "action.cancel": "取消", "action.open": "打开", "action.remove": "移除", "action.retry": "重试", "action.detail": "详情", "action.close": "关闭", "action.edit": "编辑", "action.duplicate": "复制", "action.delete": "删除",
         "chunk.1200": "1200 字符", "chunk.800": "800 字符", "chunk.2000": "2000 字符",
-        "engine.ready": "就绪", "engine.missing": "未安装", "engine.anydocMeta": "0.2.4 · Office / 文本型 PDF 快速路径", "engine.xbergMeta": "1.3.10 · OCR / 复杂表格 / 回退", "engine.paddleMeta": "P1 · 中文 OCR 增强 · uv 按需安装", "engine.pandocMeta": "3.8.3 · HTML / DOCX / EPUB 导出", "engine.pythonTitle": "Python 运行时", "engine.pythonMeta": "uv · 按引擎隔离 .venv", "engine.onDemand": "按需安装", "engine.runtimeHint": "Python 引擎由内置 uv 在 ~/.dull_doc/runtimes/<engine>/.venv 中按需安装，不依赖系统 Python；安装前提示包体积。", "aria.nav": "主导航", "aria.language": "语言", "aria.theme": "切换主题", "aria.palette": "命令面板", "aria.commandPalette": "命令面板", "aria.remove": "移除",
+        "engine.ready": "就绪", "engine.missing": "未安装", "engine.anydocMeta": "0.2.4 · Office / 文本型 PDF 快速路径", "engine.xbergMeta": "1.4.0 · OCR / 复杂表格 / 回退", "engine.paddleMeta": "P1 · 中文 OCR 增强 · uv 按需安装", "engine.pandocMeta": "3.14 · HTML / DOCX / EPUB 导出", "engine.pythonTitle": "Python 运行时", "engine.pythonMeta": "uv · 按引擎隔离 .venv", "engine.onDemand": "按需安装", "engine.runtimeHint": "Python 引擎由内置 uv 在 ~/.dull_doc/runtimes/<engine>/.venv 中按需安装，不依赖系统 Python；安装前提示包体积。", "aria.nav": "主导航", "aria.language": "语言", "aria.theme": "切换主题", "aria.palette": "命令面板", "aria.commandPalette": "命令面板", "aria.remove": "移除",
         "palette.select": "选择", "palette.run": "执行", "palette.close": "关闭", "palette.placeholder": "搜索命令、页面或最近文件…", "palette.empty": "没有找到匹配的命令", "palette.group.goto": "前往", "palette.group.action": "动作", "palette.group.pref": "偏好", "palette.group.recent": "最近",
         "pdf.title": "PDF 预检", "pdf.desc": "第 1 页没有文本层，可能是扫描封面。选择如何处理。", "pdf.page1": "1 · 无文本",
         "pdf.skipTitle": "跳过无文本页并继续", "pdf.skipDesc": "保留其余 49 页；在 manifest 记录 skipped_pages。",
@@ -2606,7 +2606,7 @@
         "convert.title": "Convert", "convert.srTitle": "Conversion task", "convert.sub": "Turn documents into Markdown, Word or PDF", "convert.pdfDemo": "PDF preflight demo", "convert.export": "Export",
         "file.current": "Current file", "file.preset": "Preset", "preset.standard": "Standard document", "preset.table": "Table list", "preset.corpus": "Knowledge base", "preset.standardMeta": "Built-in · General conversion · Conservative cleaning", "preset.tableMeta": "Built-in · Table-first · Keep grade warnings", "preset.corpusMeta": "Built-in · Chunking, metadata and corpus package", "preset.custom": "My research preset", "preset.customMeta": "Custom · Based on Knowledge base",
         "opt.headers": "Clean headers & footers", "opt.cjk": "Normalize Chinese headings", "opt.tables": "Grade table quality", "opt.assets": "Images to assets/", "opt.corpus": "Build corpus",
-        "convert.start": "Start conversion", "convert.open": "Open output folder", "convert.running": "Converting · page 24 of 50", "convert.direction": "Direction", "convert.engine": "Engine", "format.markdown": "Markdown", "format.word": "Word", "format.pdf": "PDF", "engine.auto": "Auto", "engine.autoBatch": "Auto (per file)", "engine.routeHint": "Word → Markdown · 3 engines available; Auto prefers anydoc.", "engine.anydocHint": "anydoc: fast path for Office and text-based PDF.", "engine.selectHint": "Auto prefers anydoc; falls back to xberg on failure or low quality.", "engine.xbergHint": "xberg: OCR, complex tables, and anydoc fallback.", "engine.pandocHint": "pandoc: Markdown and DOCX / HTML / EPUB conversion.", "matrix.open": "Supported directions", "matrix.title": "Supported directions", "matrix.sub": "Basic one-to-one conversions; choose an engine when more than one is available.", "matrix.note": "PDF → Word uses PDF → Markdown → Word; Markdown → PDF is produced by pandoc + Typst. Python engines use a uv-managed Python download and a .venv in the app data folder.", "empty.choose": "Choose a file",
+        "convert.start": "Start conversion", "convert.open": "Open output folder", "convert.running": "Converting · page 24 of 50", "convert.direction": "Direction", "convert.engine": "Engine", "format.markdown": "Markdown", "format.word": "Word", "format.pdf": "PDF", "engine.auto": "Auto", "engine.autoBatch": "Auto (per file)", "engine.routeHint": "Word → Markdown · 3 engines available; Auto prefers anydoc.", "engine.anydocHint": "anydoc: fast path for Office and text-based PDF.", "engine.selectHint": "Auto prefers anydoc; falls back to xberg on failure or low quality.", "engine.xbergHint": "xberg: OCR, complex tables, and anydoc fallback.", "engine.pandocHint": "pandoc: Markdown and DOCX / HTML / EPUB conversion.", "matrix.open": "Supported directions", "matrix.title": "Supported directions", "matrix.sub": "Basic one-to-one conversions; choose an engine when more than one is available.", "matrix.note": "PDF → Word uses PDF → Markdown → Word; TOC and image fidelity are limited. Markdown → PDF is produced by pandoc + Typst. Python engines use a uv-managed Python download and a .venv in the app data folder.", "empty.choose": "Choose a file",
         "sheet.stamp": "Reviewed", "error.title": "OCR required", "error.desc": "Page 1 of this PDF has no text layer. Skip it, or install the OCR component and try again.", "error.skip": "Skip page 1 and continue", "error.install": "Learn about OCR", "success.title": "Conversion complete", "success.desc": "53,210 chars · 49 headings · 2 tables · 1 table warning", "success.open": "Open output", "success.folder": "Open output folder", "permission.title": "Cannot write to the output folder", "permission.desc": "Grant folder access in Settings, or choose another output folder.", "permission.open": "Open settings", "permission.change": "Change folder", "clear.title": "Clear conversion history?", "clear.desc": "Task records are deleted; output files are not. This cannot be undone.", "clear.confirm": "Clear history",
         "mark.table": "Table · merged cells", "mark.tableDesc": "Row 2, column 3 looks misaligned. Review it.", "mark.line": "Line break · merged", "mark.lineDesc": "“fixed, and set” was restored to one paragraph.", "mark.header": "Header · removed", "mark.headerDesc": "“GB/T 28448—2019” appeared 12 times.",
         "batch.title": "Batch", "batch.sub": "One folder, one pass: convert, clean, package", "batch.add": "Add files", "batch.start": "Start batch", "batch.files": "files · imported", "batch.chunks": "chunks · pending", "batch.warnings": "warnings · review",
@@ -2627,7 +2627,7 @@
         "status.converting": "Converting", "status.ocr": "OCR", "status.done": "Done", "status.waiting": "Waiting", "status.cleaning": "Cleaning", "status.skipped": "Skipped", "status.failed": "Failed", "status.warn3": "3 warnings",
         "action.cancel": "Cancel", "action.open": "Open", "action.remove": "Remove", "action.retry": "Retry", "action.detail": "Details", "action.close": "Close", "action.edit": "Edit", "action.duplicate": "Duplicate", "action.delete": "Delete",
         "chunk.1200": "1200 chars", "chunk.800": "800 chars", "chunk.2000": "2000 chars",
-        "engine.ready": "Ready", "engine.missing": "Not installed", "engine.anydocMeta": "0.2.4 · Office / text PDF fast path", "engine.xbergMeta": "1.3.10 · OCR / complex tables / fallback", "engine.paddleMeta": "P1 · Chinese OCR enhancement · uv on demand", "engine.pandocMeta": "3.8.3 · HTML / DOCX / EPUB export", "engine.pythonTitle": "Python runtime", "engine.pythonMeta": "uv · isolated .venv per engine", "engine.onDemand": "Install on demand", "engine.runtimeHint": "Python engines are installed on demand by the bundled uv into ~/.dull_doc/runtimes/<engine>/.venv; system Python is not required. Size is shown before install.", "aria.nav": "Main navigation", "aria.language": "Language", "aria.theme": "Toggle theme", "aria.palette": "Command palette", "aria.commandPalette": "Command palette", "aria.remove": "Remove",
+        "engine.ready": "Ready", "engine.missing": "Not installed", "engine.anydocMeta": "0.2.4 · Office / text PDF fast path", "engine.xbergMeta": "1.4.0 · OCR / complex tables / fallback", "engine.paddleMeta": "P1 · Chinese OCR enhancement · uv on demand", "engine.pandocMeta": "3.14 · HTML / DOCX / EPUB export", "engine.pythonTitle": "Python runtime", "engine.pythonMeta": "uv · isolated .venv per engine", "engine.onDemand": "Install on demand", "engine.runtimeHint": "Python engines are installed on demand by the bundled uv into ~/.dull_doc/runtimes/<engine>/.venv; system Python is not required. Size is shown before install.", "aria.nav": "Main navigation", "aria.language": "Language", "aria.theme": "Toggle theme", "aria.palette": "Command palette", "aria.commandPalette": "Command palette", "aria.remove": "Remove",
         "palette.select": "select", "palette.run": "run", "palette.close": "close", "palette.placeholder": "Search commands, pages or recent files…", "palette.empty": "No matching commands", "palette.group.goto": "Go to", "palette.group.action": "Actions", "palette.group.pref": "Preferences", "palette.group.recent": "Recent",
         "pdf.title": "PDF preflight", "pdf.desc": "Page 1 has no text layer. It may be a scanned cover. Choose how to proceed.", "pdf.page1": "1 · no text",
         "pdf.skipTitle": "Skip pages with no text and continue", "pdf.skipDesc": "Keep the other 49 pages; record skipped_pages in the manifest.",
@@ -2837,7 +2837,7 @@
         direction: { zh: "PDF → Markdown", en: "PDF → Markdown" },
         sub: { zh: "单文件转换 · 2026-11-18 13:56", en: "Single file · 2026-11-18 13:56" },
         preset: { zh: "标准文档", en: "Standard" },
-        engine: "xberg 1.3.10 · OCR",
+        engine: "xberg 1.4.0 · OCR",
         output: "~/Documents/DullDoc Output/高风险判定.md",
         stats: { zh: "12 标题 · 204 表格行", en: "12 headings · 204 table rows" },
         warn: { zh: "1 个 B 级表格", en: "1 Grade B table" }
@@ -2947,8 +2947,8 @@
     const MATRIX_ROWS = [
       { from: "Word", fromIcons: ["WORD"], to: "Markdown", toIcons: ["MD"], engines: "anydoc · xberg · pandoc" },
       { from: "PDF", fromIcons: ["PDF"], to: "Markdown", toIcons: ["MD"], engines: "anydoc · xberg · Marker" },
-      { from: "PDF", fromIcons: ["PDF"], to: "Word", toIcons: ["WORD"], engines: "PDF→MD→Word · pandoc" },
       { from: "Markdown", fromIcons: ["MD"], to: "Word", toIcons: ["WORD"], engines: "pandoc" },
+      { from: "PDF", fromIcons: ["PDF"], to: "Word", toIcons: ["WORD"], engines: "PDF→MD→Word · pandoc" },
       { from: "Markdown", fromIcons: ["MD"], to: "PDF", toIcons: ["PDF"], engines: "pandoc + PDF renderer" },
       { from: "Markdown", fromIcons: ["MD"], to: "HTML / EPUB", toIcons: ["HTML", "EPUB"], engines: "pandoc" },
       { from: "PNG / JPEG", fromIcons: ["PNG", "JPG"], to: "Markdown", toIcons: ["MD"], engines: "xberg · PaddleOCR · Marker" },

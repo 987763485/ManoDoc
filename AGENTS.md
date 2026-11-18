@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S6 技术选型已确认（v1.0）；spike：S6-1 / S6-2 / S6-3 / S6-4 通过，S6-5~6 未完成** |
+| 当前阶段 | **S6 技术选型已确认（v1.1）；spike：S6-1~4 通过，S6-5 阻塞（缺 Developer ID），S6-6 质量 C 已接受** |
 | 下一阶段 | S7 Change 规划（S6 spike 全部达标后） |
-| 当前事项 | S6-1/2/3/4 通过：xberg ONNX OCR 1.58s/页、Typst 中文 PDF 正常；uv 0.13.9 独立 Python，PaddleOCR venv 约 795MB；S6-5 签名/公证与 S6-6 质量复核未完成 |
+| 当前事项 | S6-1~4 通过；S6-5 ad-hoc 结构签名通过但缺 Apple Developer ID，无法公证；S6-6 质量 C 已接受：保留 PDF→Word，UI 标注目录/图片限制；S6-5 公证延后到发布前 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -38,7 +38,7 @@
 - **取消预览（2026-11-18）**：按用户决定，文档转换页不提供文档预览（部分格式无法可靠预览），语料制作完成行也不提供 Markdown 预览；完成行只保留「打开」。进度、成功、错误与无权限改为配置卡内联显示；PRD 中 REQ-020~022、REQ-048、REQ-111 标记为已取消，编号保留不复用。
 - **单文件与语料配置分工（2026-11-18）**：文档转换页只保留方向、引擎与预设，PDF 无文本页策略在预检弹窗选择；页眉页脚、中文标题、表格分级、图片资产、切块、元数据与语料包开关集中在「语料制作」的每任务配置。系统设置 → 输出保留语料包全局默认，批次内可覆盖。语料制作的输出格式固定 Markdown，其他格式禁用；其他格式走单文件转换。
 - **体验偏好（2026-11-18 追加，P0）**：中英文切换（中文默认、英文完整、无需重启）；主题切换（跟随系统/浅色/深色）；Cmd+K 命令面板（页面/操作/最近文件，危险操作二次确认）。所有 UI 组件与颜色必须走 token，禁止硬编码。
-- **S6 技术决策（2026-11-18，待确认）**：前端 React 19 + TypeScript + Vite + Tailwind CSS 4；Markdown→PDF 立即接入 Typst；PDF→Word 走 PDF→MD→DOCX，不分发 pdf2docx；Python 运行时由 uv 按需下载 Python；Rust 固定 1.99.1，xberg 1.4.0、anydoc 0.2.4、pandoc 3.8.3、Typst 0.15.1。
+- **S6 技术决策（2026-11-18，待确认）**：前端 React 19 + TypeScript + Vite + Tailwind CSS 4；Markdown→PDF 立即接入 Typst；PDF→Word 走 PDF→MD→DOCX，不分发 pdf2docx；Python 运行时由 uv 按需下载 Python；Rust 固定 1.99.1，xberg 1.4.0、anydoc 0.2.4、pandoc 3.14（项目内 arm64）、Typst 0.15.1。
 
 ## 三、技术原理（初步）
 
@@ -47,7 +47,7 @@
   - **anydoc**（Firecrawl，纯 Rust，MIT）：Word / PowerPoint / Excel / OpenDocument / RTF / EPUB / CSV / 文本型 PDF → GitHub 风格 Markdown；速度快、无网络、无 OCR。Rust 可直接以 crate 形式嵌入 Tauri 后端。
   - **xberg**（原 Kreuzberg，Rust，MIT）：107 种格式 → 文本 / Markdown / HTML / JSON / DocTags；内置 OCR（Tesseract / PaddleOCR / Candle / VLM）、版面与表格识别、语法切块、CLI/API/MCP。作为第二内核，负责扫描件、复杂 PDF 表格与 anydoc 回退。
   - **PaddleOCR**（P1，Python，Apache-2.0）：中文 OCR / PP-Structure；作为 xberg 之外的中文 OCR 增强组件，检测环境或引导安装，不随包分发模型。
-  - **pandoc**（3.8.3，已安装）：通用标记语言转换器，负责 Markdown → HTML / DOCX / ODT / EPUB / Typst 等导出，以及部分格式兜底。以 sidecar 方式随应用分发。
+  - **pandoc**（3.14，项目内 `tools/macos/pandoc/bin/pandoc`，arm64）：通用标记语言转换器，负责 Markdown → HTML / DOCX / ODT / EPUB / Typst 等导出，以及部分格式兜底。以 sidecar 方式随应用分发。
   - **Typst**（0.15.1，Apache-2.0）：pandoc 先输出 `.typ`，再由 Typst sidecar 编译 PDF；中文字体优先使用 macOS 系统字体，必要时 bundle Noto CJK。
   - **Marker**（`marker-pdf`，Datalab，Python + ML 模型）：扫描 PDF / 图片 / 复杂版式 → Markdown / HTML / JSON，含版面分析、OCR、表格与公式识别。代码 Apache-2.0，模型权重为 OpenRAIL-M（含营收/竞品限制）；资源占用高，仅 P1 用户显式安装。
 - **数据处理原则**：本地优先、默认不上传；应用数据统一存放 `~/.dull_doc/`（settings/presets/history/logs/tmp/runtimes），用户输出目录独立；转换任务异步化、可取消、可查看进度与日志；失败可重试并保留中间产物。
@@ -62,9 +62,9 @@
 | S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（v0.7） |
 | S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.6） |
 | S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.6） |
-| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认（v1.3） |
+| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认（v1.4） |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 已确认 |
-| S6 | 技术选型 | `docs/superpowers/技术选型.md` | 已确认（v1.0）；spike 进行中 |
+| S6 | 技术选型 | `docs/superpowers/技术选型.md` | 已确认（v1.1）；S6-5 待发布前补公证 |
 | S7 | Change 总索引 | `CHANGE.md` | 未开始 |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
 
@@ -116,7 +116,7 @@
 5. **pandoc 为 GPL 程序**：以独立 sidecar 进程调用，不静态链接；分发时附带许可证与源码获取说明。
 6. **PDF 输出**：MVP 采用 pandoc → Typst → PDF，不使用 LaTeX；需验证中文字体、分页、表格与图片，Typst sidecar 需独立签名。
 7. **Tauri 跨平台 WebView 差异**：macOS WebKit、Windows WebView2、Linux WebKitGTK 的字体与渲染需分别验证。
-8. **macOS 签名与公证**：Tauri 不会可靠地给 sidecar 加 hardened runtime/timestamp；需在构建前预签名所有 sidecar，分别公证 `.app` 与 `.dmg` 并 staple。
+8. **macOS 签名与公证**：Tauri 不会可靠地给 sidecar 加 hardened runtime/timestamp；需在构建前预签名所有 sidecar，分别公证 `.app` 与 `.dmg` 并 staple。项目 pandoc 3.14 已是 arm64；当前无 Developer ID，公证阻塞。
 9. **pdf2docx 许可**：代码 MIT，但依赖 PyMuPDF AGPL-3.0；不随包分发、不默认安装，PDF→Word 走解析 + pandoc 管线。
 10. **安全**：所有外部命令以参数数组调用，禁止拼接 shell 字符串；限制文件路径与符号链接，防止命令注入。
 11. **隐私**：默认完全本地转换；仅当用户显式开启 OCR 云服务时才上传，并明确提示。
@@ -160,3 +160,8 @@
 | 2026-11-19 | S6 → Git | 用户指示提交 Git；提交技术选型 v1.0、S6-1/2/3 spike 结果、PRD/S4/S1/S2/UI 同步与 `tools/` 忽略规则；未推送远程。 |
 | 2026-11-19 | S6 spike | S6-4 通过（项目 uv 0.13.9）：CPython 3.12.16 下载 24.1MB/4.86s、安装 67MB；`.venv` 指向项目内 Python；paddleocr 3.7.0 + paddlepaddle 3.3.1 安装 30s，venv 795MB，CPU 导入正常；离线无缓存下载失败、已有 Python 可离线建 venv、缓存包可离线安装。 |
 | 2026-11-19 | S6-4 → Git | 用户指示提交 Git；提交 S6-4 uv 0.13.9 验证结果、PaddleOCR venv 795MB/离线行为、`--no-bin` 约束与文档同步；未推送远程。 |
+| 2026-11-19 | S6 spike | S6-5 结构验证：临时 `.app` 中 typst/uv/pandoc-arm64 按 inside-out ad-hoc 签名，`codesign --verify --deep --strict` 通过，`spctl` 按预期拒绝；本机 0 个 codesigning identity，无法公证；系统 pandoc x86_64，官方 arm64 zip 验证可重签。 |
+| 2026-11-19 | S6 spike | 改用项目 pandoc 3.14（arm64，188MB）：Typst writer 输出 `#divider()`，非 standalone 编译 21 页中文 PDF（688KB），不再需要 `-s`；S6-5 临时 `.app` 用项目 typst/uv/pandoc 重签，ad-hoc 结构验证通过，公证仍缺 Developer ID。 |
+| 2026-11-19 | S6-6 | PDF→Word 质量复核：源 PDF 49 页/61,172 字符/65 图；anydoc MD 59,781 字符/14 标题/0 图；pandoc DOCX 55,709 字节/18 表/0 媒体；Quick Look 目录压平、页码粘连。结论：功能可用、质量 C，需 UI 标注目录/图片保真限制。 |
+| 2026-11-19 | S6-6 | 用户接受 PDF→Word 质量 C：保留 PDF→MD→DOCX 管线，UI 方向矩阵标注目录/图片保真有限；S6-5 公证延后到发布前；技术选型升至 v1.1。 |
+| 2026-11-19 | S6-6 → Git | 用户指示提交 Git；提交 PDF→Word 质量 C 接受结论、方向矩阵提示、技术选型 v1.1 与 AGENTS 同步；未推送远程。 |
