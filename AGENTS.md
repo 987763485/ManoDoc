@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S4 软件功能设计说明已生成，待用户确认** |
-| 下一阶段 | S5 UI 设计规范 + 高保真原型 → `UI设计规范.html`、`UI.html` |
-| 当前事项 | 等待审阅 `docs/superpowers/软件功能设计说明.md`；确认后进入 S5 |
+| 当前阶段 | **S5 UI 设计规范 + 高保真原型（进行中）** |
+| 下一阶段 | S6 技术选型探讨 |
+| 当前事项 | 先编写 `docs/superpowers/UI设计规范.html`，再编写 `docs/superpowers/UI.html`；UI 迭代期间不提交 Git |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件） |
 
 ### 已确认的产品决策
@@ -53,8 +53,8 @@
 | S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.3 追加 PaddleOCR） |
 | S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（含 xberg / PaddleOCR 决策说明） |
 | S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.0） |
-| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已生成，待确认 |
-| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 未开始 |
+| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.0） |
+| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 进行中 |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 未开始 |
 | S7 | Change 总索引 | `CHANGE.md` | 未开始 |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
@@ -128,3 +128,4 @@
 | 2026-11-18 | S3 变更 | 用户指示 P1 增加 PaddleOCR。已同步 S1/S2/PRD 至 v0.3：新增 P1 中文 OCR 组件、REQ-101/102、OCR 路由/回退、验收与风险；xberg 仍为 P0 主 OCR 路径。 |
 | 2026-11-18 | S3 → S4 | 用户确认 S3；本次 `/grill-me` 由用户明确跳过并在 PRD 中记录。PRD 版本升至 v1.0，状态「已确认」；开始 S4 功能拆解与软件功能设计。 |
 | 2026-11-18 | S4 | 生成 `docs/superpowers/软件功能设计说明.md`：模块/菜单拆解（每行含 REQ）、6 个功能流程、5 个页面流程、5 个业务流程、数据流转、组件/SDK、状态/错误/日志、82 条 REQ + 12 条 NFR 追溯、里程碑。等待用户确认。 |
+| 2026-11-18 | S4 → S5 | 用户确认 S4，状态改为「已确认」；进入 S5，先写 UI 设计规范，再做高保真原型。UI 迭代期间只改文件，不提交 Git，待用户确认 UI 阶段后统一提交。 |
