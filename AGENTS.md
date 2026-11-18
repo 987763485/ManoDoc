@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S7 CHG-004 `pandoc-typst` 已归档，准备 CHG-005 打包公证** |
-| 下一阶段 | CHG-005 打包、sidecar 预签名、公证与 staple |
-| 当前事项 | CHG-004 已接入 pandoc 3.14 + Typst 0.15.1：Markdown→DOCX/HTML/EPUB/PDF、PDF→DOCX、HTML→Markdown；转换页支持目标格式、引擎与质量提示，历史记录目标格式并支持重跑恢复。实机：Markdown→Word（25071 字符、212 标题、121 表格行）、Markdown→PDF（21 页、672KB，中文表格正常）、PDF→Word（64154 字符、203 表格行，OCR 2 页 + 保真提示）；重跑生成 `-1.docx`。`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 12 ignored）通过。CHG-003 已接入 xberg 1.4.0 与 PaddleOCR ONNX（PP-OCRv6 small）：`engine/routing.rs` 实现 auto/anydoc/xberg 路由与可见回退；`ocr/mod.rs` 管理 `~/.dull_doc/models/paddleocr` 的模型状态与显式安装（约 31MB、SHA-256、离线不下载）；单文件、PNG/JPEG 与批量语料均写入实际引擎、OCR 页与回退原因。实机验证：封面无文本 50 页 PDF 以 xberg OCR 完成（64154 字符、9 标题、203 表格行，OCR 2 页，回退 anydoc:needs-ocr）；docx 保持 anydoc；无模型时图片返回 `E_NEEDS_OCR` 并给出安装入口；批量 4 文件（docx/xlsx/jpg/pdf）全部成功，356 chunks，manifest 记录 `engineUsed/ocrPages/ocrEngine/fallbackReason`。`pnpm build`、`pnpm test`（12 项）、`cargo test`（23 项 + 9 个 ignored）通过。模型真实公网下载因本机无法访问 huggingface.co 未实测，已用本地 HTTP 镜像验证下载/进度/SHA-256/原子写入。 |
+| 当前阶段 | **S7 CHG-001~005 全部归档，等待用户人工验收** |
+| 下一阶段 | 用户人工验收；取得 Developer ID 后执行公证与 staple |
+| 当前事项 | CHG-005 已接入 `scripts/package-macos.sh`：暂存并预签名 pandoc/Typst/uv 后由 Tauri 打包 `.app` 与 `.dmg`；产物 380MB/128MB，`codesign --verify --deep --strict` 通过（ad-hoc），DMG 可挂载且复制出的应用可启动；隐藏 `tools/macos` 后包内 sidecar 仍完成 Markdown→Word（25071 字符/212 标题/121 表格行）与 Markdown→PDF（21 页/672KB）；移除包内 pandoc 返回 `E_PANDOC_MISSING`；无 Developer ID 时脚本以退出码 20 标注公证阻塞。CHG-004 已接入 pandoc 3.14 + Typst 0.15.1：Markdown→DOCX/HTML/EPUB/PDF、PDF→DOCX、HTML→Markdown；转换页支持目标格式、引擎与质量提示，历史记录目标格式并支持重跑恢复。实机：Markdown→Word（25071 字符、212 标题、121 表格行）、Markdown→PDF（21 页、672KB，中文表格正常）、PDF→Word（64154 字符、203 表格行，OCR 2 页 + 保真提示）；重跑生成 `-1.docx`。`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 12 ignored）通过。CHG-003 已接入 xberg 1.4.0 与 PaddleOCR ONNX（PP-OCRv6 small）：`engine/routing.rs` 实现 auto/anydoc/xberg 路由与可见回退；`ocr/mod.rs` 管理 `~/.dull_doc/models/paddleocr` 的模型状态与显式安装（约 31MB、SHA-256、离线不下载）；单文件、PNG/JPEG 与批量语料均写入实际引擎、OCR 页与回退原因。实机验证：封面无文本 50 页 PDF 以 xberg OCR 完成（64154 字符、9 标题、203 表格行，OCR 2 页，回退 anydoc:needs-ocr）；docx 保持 anydoc；无模型时图片返回 `E_NEEDS_OCR` 并给出安装入口；批量 4 文件（docx/xlsx/jpg/pdf）全部成功，356 chunks，manifest 记录 `engineUsed/ocrPages/ocrEngine/fallbackReason`。`pnpm build`、`pnpm test`（12 项）、`cargo test`（23 项 + 9 个 ignored）通过。模型真实公网下载因本机无法访问 huggingface.co 未实测，已用本地 HTTP 镜像验证下载/进度/SHA-256/原子写入。 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -177,6 +177,8 @@
 | 2026-11-19 | S7 Verify → Archive | CHG-003 通过 Comet Verify（A1–A8）；用户按既有授权接受并归档至 `docs/comet/archive/2026-11-18-xberg-ocr/`。后继候选仅同步 `CHANGE.md`，检查证据复用后通过。 |
 | 2026-11-19 | S7 Build | CHG-004 完成 pandoc/Typst 候选实现：新增 `engine/export.rs`、`pandoc.rs`、`typst.rs`、`sidecar.rs`；转换页目标格式、质量提示与历史重跑；Markdown→Word/PDF、PDF→Word 实机通过。未提交 Git。 |
 | 2026-11-19 | S7 Verify → Archive | CHG-004 通过 Comet Verify（A1–A8）；用户按既有授权接受并归档至 `docs/comet/archive/2026-11-18-pandoc-typst/`。Runtime 检查 `pnpm build`、`pnpm test`、`cargo check`、`cargo test` 均通过。 |
+| 2026-11-19 | S7 Build | CHG-005 完成打包与签名候选实现：新增 `scripts/package-macos.sh` 与 `docs/superpowers/打包与签名.md`；配置 `externalBin` 与 dmg、生成 macOS 图标集；修复 Tauri 无签名身份时不生成 `_CodeSignature` 的问题，并用 `TESSERACT_RS_CACHE_DIR` 复用离线缓存。 |
+| 2026-11-19 | S7 Verify → Archive | CHG-005 通过 Comet Verify（A1–A8）；用户按既有授权接受并归档至 `docs/comet/archive/2026-11-18-packaging-signing/`。公证因缺少 Developer ID 记录为发布前阻塞。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->

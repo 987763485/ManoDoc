@@ -97,7 +97,7 @@ pub fn resolve(tool: Tool) -> Result<PathBuf, AppError> {
         tool.missing_code(),
         format!("未找到可执行的 {} sidecar", tool.binary()),
         format!(
-            "把 {} 放到应用工具目录，或设置 {}；已检查: {}",
+            "把 {} 放到应用包 Contents/MacOS/（或开发期 tools/macos），或设置 {}；已检查: {}",
             tool.binary(),
             tool.env_name(),
             candidates

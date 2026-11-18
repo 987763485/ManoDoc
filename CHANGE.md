@@ -11,13 +11,12 @@
 | CHG-002 | `batch-corpus-v2` | 批量队列、清洗、切块、`chunks.jsonl` 与 `manifest.json`、语料包配置 | Archive | 已归档（A1–A8 通过） | `docs/comet/archive/2026-11-18-batch-corpus-v2/` |
 | CHG-003 | `xberg-ocr` | xberg 第二内核、扫描件/图片 OCR、auto/anydoc/xberg 路由、模型显式安装与批量元数据 | Archive | 已归档（A1–A8 通过） | `docs/comet/archive/2026-11-18-xberg-ocr/` |
 | CHG-004 | `pandoc-typst` | pandoc/Typst sidecar、Markdown→DOCX/HTML/EPUB/PDF、PDF→DOCX、目标格式与质量提示 | Archive | 已归档（A1–A8 通过） | `docs/comet/archive/2026-11-18-pandoc-typst/` |
+| CHG-005 | `packaging-signing` | `.app`/`.dmg` 打包、sidecar 预签名、Developer ID 公证与 staple | Archive | 已归档（A1–A8 通过；公证待证书） | `docs/comet/archive/2026-11-18-packaging-signing/` |
 
 ## 后续 change（待启动）
 
 | ID | Change | 范围 | 状态 | 依赖 |
 | --- | --- | --- | --- | --- |
-
-| CHG-005 | `packaging-signing` | `.app`/`.dmg` 打包、sidecar 预签名、Developer ID 公证与 staple | Open | CHG-003、CHG-004 |
 
 ## 状态定义
 
@@ -44,3 +43,6 @@
 | 2026-11-19 | CHG-004 | Open → Build | Comet Native Shape 已确认，进入 pandoc/Typst 实现 |
 | 2026-11-19 | CHG-004 | Build → Verify | 候选实现提交；Runtime 检查与只读验收覆盖目标矩阵、实机导出与错误路径 |
 | 2026-11-19 | CHG-004 | Verify → Archive | 用户按既有授权接受结果，A1–A8 通过；归档至 `docs/comet/archive/2026-11-18-pandoc-typst/` |
+| 2026-11-19 | CHG-005 | Open → Build | Comet Native Shape 已确认，进入打包与签名实现 |
+| 2026-11-19 | CHG-005 | Build → Verify | 候选实现提交；打包、签名、DMG 与包内 sidecar 实机证据待验收 |
+| 2026-11-19 | CHG-005 | Verify → Archive | 用户按既有授权接受结果，A1–A8 通过；归档至 `docs/comet/archive/2026-11-18-packaging-signing/`；公证待 Developer ID |
