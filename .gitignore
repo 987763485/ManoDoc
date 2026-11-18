@@ -3,6 +3,9 @@
 .AppleDouble
 .LSOverride
 
+# 个人知识产权：仅在本地保留，禁止纳入版本库
+SIMPLE.md
+
 # 工具与编辑器
 .impeccable/
 .vscode/
