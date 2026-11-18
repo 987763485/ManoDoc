@@ -20,7 +20,7 @@
 | 产品名 | **DullDoc**（暂定，S1 确认） |
 | 当前阶段 | **S7 Change 规划；CHG-001 `mvp-implementation` 已归档（A1–A8 全部通过）** |
 | 下一阶段 | 启动 CHG-002 批量语料；随后 CHG-003 xberg OCR、CHG-004 pandoc/Typst、CHG-005 打包公证 |
-| 当前事项 | CHG-001 纵向切片已验收并归档至 `docs/comet/archive/2026-11-18-mvp-implementation/`。实现 Tauri 2 应用壳、四页导航、设置/主题/中英文、Cmd+K、anydoc 单文件 → Markdown、真实历史。实测 docx 315,999 字符/49 标题/15 表格行；文本型 PDF 正常转换不调用 OCR；封面无文本 PDF 返回 `E_NEEDS_OCR` 且不产出文件；不支持格式返回 `E_UNSUPPORTED_FORMAT`；不可写输出目录返回 `E_OUTPUT_PERMISSION`。`pnpm build`、`pnpm test`（7 项）、`cargo check`、`cargo test`（5 项 + 3 个样例测试）通过。代码尚未提交 Git；S6-5 公证仍延后到发布前。 |
+| 当前事项 | CHG-001 纵向切片已验收并归档至 `docs/comet/archive/2026-11-18-mvp-implementation/`。实现 Tauri 2 应用壳、四页导航、设置/主题/中英文、Cmd+K、anydoc 单文件 → Markdown、真实历史。实测 docx 315,999 字符/49 标题/15 表格行；文本型 PDF 正常转换不调用 OCR；封面无文本 PDF 返回 `E_NEEDS_OCR` 且不产出文件；不支持格式返回 `E_UNSUPPORTED_FORMAT`；不可写输出目录返回 `E_OUTPUT_PERMISSION`。`pnpm build`、`pnpm test`（7 项）、`cargo check`、`cargo test`（5 项 + 3 个样例测试）通过。代码已提交到 dev（ba220d2），未推送远程；S6-5 公证仍延后到发布前。 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -169,6 +169,7 @@
 | 2026-11-19 | S7 | 建立 `CHANGE.md` 总索引：CHG-001 `mvp-implementation`（Build）与后续 CHG-002 批量语料、CHG-003 xberg OCR、CHG-004 pandoc/Typst、CHG-005 打包公证。 |
 | 2026-11-19 | S7 Build | 完成 CHG-001 纵向切片：React 19 + Vite + Tailwind 前端，Tauri 2 + anydoc 0.2.4 后端；四页导航、设置/主题/中英文、Cmd+K、单文件转换、历史与详情弹窗。真实 docx → Markdown 315,999 字符/49 标题/15 表格行；封面无文本 PDF 返回 `E_NEEDS_OCR`；不支持格式返回 `E_UNSUPPORTED_FORMAT`；语言/主题写入 `~/.dull_doc/settings.json`，历史写入 `history.json`。`pnpm build`、`pnpm test`（7 项）、`cargo check`、`cargo test`（5 项 + 3 个样例测试）通过；未提交 Git。 |
 | 2026-11-19 | S7 Verify → Archive | CHG-001 通过 Comet Verify：A1–A8 全部通过；用户接受结果并归档至 `docs/comet/archive/2026-11-18-mvp-implementation/`。补充实机验证：1440×900 与 1280×800 无横向溢出；文本型 PDF → Markdown 不触发 OCR；CSV/RTF/EPUB 由 anydoc 0.2.4 独立 harness 验证；不可写输出目录显示 `E_OUTPUT_PERMISSION`。代码仍未提交 Git。 |
+| 2026-11-19 | S7 → Git | 用户指示提交 Git；提交 CHG-001 实现、`CHANGE.md`、AGENTS 更新与 Comet 归档材料到 `dev`（`ba220d2`）；未推送远程。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->
