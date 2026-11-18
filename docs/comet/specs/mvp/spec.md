@@ -545,3 +545,126 @@ Acceptance: A8
 
 验收：A6
 
+## Requirement: pandoc-export 导出格式与转换管线
+
+> 本节补齐 PRD 第 7.1 节中 Markdown 导出与 PDF→Word 管线，替代第 7 节「Markdown → Word/PDF/HTML/EPUB、PDF → Word、Typst PDF」的非目标。
+
+- 目标格式矩阵：
+  - Markdown 输入 → DOCX、PDF、HTML、EPUB、Markdown。
+  - PDF → Markdown、DOCX（PDF→Markdown→DOCX）。
+  - doc/docx/odt/rtf/epub/ppt/pptx/xls/xlsx/csv → Markdown。
+  - HTML/MHTML → Markdown（pandoc）。
+  - PNG/JPEG → Markdown（xberg OCR）。
+- Markdown → DOCX/HTML/EPUB：pandoc `-f markdown` 输出对应格式；HTML 使用 `--standalone`，EPUB 设置标题元数据；相对图片通过 `--resource-path` 指向输入文件目录。
+- Markdown → PDF：pandoc 先输出 Typst（`-t typst`），再由 Typst 编译 PDF；中文字体使用 macOS 系统字体，不 bundle 字体；编译失败返回 `E_PDF_COMPILE_FAILED`。
+- PDF → Word：先由 anydoc/xberg 提取 Markdown，再由 pandoc 导出 DOCX；结果必须标注目录与图片保真有限。
+- Markdown 输入直通导出，不重新解析；输出扩展名由目标格式决定，同名自动 `-1`、`-2`，不覆盖。
+- 输出先写临时文件，成功后 rename；失败、取消或超时删除临时文件与 `~/.dull_doc/tmp` 中间产物。
+- 历史方向使用「源格式 → 目标格式」，实际引擎为 `pandoc`、`pandoc + typst` 或来源引擎 + `pandoc`。
+
+#### Scenario: Markdown 转 Word
+
+- Given `tools/macos/pandoc/bin/pandoc` 可执行
+- When 用户把 `example/` 中的 Markdown 转换为 Word
+- Then 生成 `.docx` 文件且非空、可打开
+- And 历史显示 `Markdown → Word`、引擎 `pandoc`
+
+验收：A1
+
+#### Scenario: Markdown 转 HTML 与 EPUB
+
+- Given pandoc 就绪
+- When 用户分别导出 HTML 与 EPUB
+- Then HTML 包含文档标题与正文
+- And EPUB 是非空 zip，包含 `mimetype` 与 content 文档
+- And 两个输出的扩展名与目标格式一致
+
+验收：A2
+
+#### Scenario: Markdown 转 PDF
+
+- Given pandoc 与 Typst 均可执行
+- When 用户把中文 Markdown 导出为 PDF
+- Then 生成多页 PDF，页面中文无缺字方块
+- And 历史显示引擎 `pandoc + typst`
+- And 临时 `.typ` 文件在任务结束后被清理
+
+验收：A3
+
+#### Scenario: PDF 转 Word 与质量提示
+
+- Given example 50 页文本型 PDF
+- When 用户选择目标格式 Word
+- Then 输出 DOCX 非空、可打开
+- And 界面与历史显示「目录/图片保真有限」
+- And 实际引擎为 `pandoc`，来源解析为 anydoc/xberg
+
+验收：A4
+
+## Requirement: pandoc-sidecars pandoc/Typst sidecar 与错误
+
+> 本节定义 sidecar 解析、调用与失败处理；打包与公证留给 CHG-005。
+
+- sidecar 路径按顺序解析：`DULLDOC_PANDOC`/`DULLDOC_TYPST` → 应用资源目录 → 开发期 `tools/macos/pandoc/bin/pandoc` 与 `tools/macos/typst/typst`。
+- 缺失或不可执行返回 `E_PANDOC_MISSING` / `E_TYPST_MISSING`，包含检查路径与安装/打包下一步。
+- 所有外部命令使用参数数组，不拼接 shell；禁止把用户路径拼入命令字符串。
+- 单次 sidecar 超时 120 秒；超时终止进程并返回 `E_ENGINE_TIMEOUT`。
+- pandoc 非零退出返回 `E_PANDOC_FAILED`，附带脱敏 stderr 摘要；Typst 非零退出返回 `E_PDF_COMPILE_FAILED`。
+- 转换不发起网络请求；pandoc 与 Typst 为本地程序。
+- 临时目录固定 `~/.dull_doc/tmp/<uuid>/`，成功、失败与取消都清理；输出目录只写最终文件。
+
+#### Scenario: sidecar 缺失与失败
+
+- Given `DULLDOC_PANDOC` 指向不存在路径
+- When 用户转换 Markdown → Word
+- Then 返回 `E_PANDOC_MISSING` 与路径/安装下一步
+- And 不产生半写输出
+- When Typst 编译失败
+- Then 返回 `E_PDF_COMPILE_FAILED`
+- And 临时文件被清理
+
+验收：A7
+
+#### Scenario: 构建、离线与安全
+
+- Given 项目内 sidecar 已就绪
+- When 执行构建与测试命令并断网转换
+- Then 全部成功且无网络请求
+- And 外部命令均为参数数组调用
+- And 英文/深色界面在 1280×800 与 1440×900 无横向溢出
+
+验收：A8
+
+## Requirement: pandoc-ui 目标格式与历史界面
+
+- 转换页目标格式选择由源格式决定；不可用组合禁用并给出原因。
+- Markdown → PDF 与 PDF → Word 展示质量/渲染提示；提示随目标格式切换。
+- 引擎选择包含 auto/anydoc/xberg/pandoc；auto 按来源与目标路由，显式选择不兼容时禁用。
+- 结果卡显示目标格式、实际引擎与警告；失败卡显示错误码与下一步。
+- 历史记录保存目标格式与引擎参数；详情显示方向、目标、引擎与质量提示；重跑恢复原目标格式。
+- 批量语料页不提供目标格式选择，继续只生成 Markdown。
+
+#### Scenario: 目标格式与提示
+
+- Given 用户选择 Markdown 文件
+- When 展开目标格式
+- Then 可选 Word/PDF/HTML/EPUB/Markdown
+- When 选择 PDF
+- Then 显示 Typst 渲染提示
+- And 选择不兼容引擎时该引擎禁用
+- When 选择 PDF 输入
+- Then 目标 Word 显示保真提示
+
+验收：A5
+
+#### Scenario: 历史与重跑
+
+- Given 已完成一次 Markdown → Word 转换
+- When 用户打开历史详情
+- Then 显示方向、目标格式与实际引擎
+- When 点击重跑
+- Then 转换页恢复相同目标格式
+- And 同名输出自动生成 `-1`
+
+验收：A6
+

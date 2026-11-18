@@ -42,24 +42,23 @@ impl EngineChoice {
 #[derive(Debug, Clone)]
 pub struct Extracted {
     pub markdown: String,
-    pub format: String,
     pub engine: String,
     pub engine_choice: String,
     pub fallback_reason: Option<String>,
     pub ocr_pages: Vec<u32>,
     pub ocr_engine: Option<String>,
     pub warnings: Vec<String>,
-    pub pages: Option<usize>,
-    pub method: Option<String>,
 }
 
 #[derive(Debug, Clone)]
 pub enum InputKind {
     Document(Format),
     Image,
+    Markdown,
+    Html,
 }
 
-/// 内容优先识别；PNG/JPEG 没有 anydoc Format，需要单独走 OCR。
+/// 内容优先识别；Markdown/HTML 没有 anydoc Format，按扩展名与文本特征识别。
 pub fn detect(bytes: &[u8], path: &Path) -> Option<InputKind> {
     if let Some(format) = anydoc_engine::detect_format(bytes, path) {
         return Some(InputKind::Document(format));
@@ -75,6 +74,8 @@ pub fn detect(bytes: &[u8], path: &Path) -> Option<InputKind> {
     {
         "png" => Some(InputKind::Image),
         "jpg" | "jpeg" => Some(InputKind::Image),
+        "md" | "markdown" => Some(InputKind::Markdown),
+        "html" | "htm" | "mhtml" => Some(InputKind::Html),
         _ => None,
     }
 }
@@ -88,6 +89,8 @@ pub fn format_label(kind: &InputKind) -> &'static str {
     match kind {
         InputKind::Document(format) => anydoc_engine::format_label(*format),
         InputKind::Image => "PNG/JPEG",
+        InputKind::Markdown => "Markdown",
+        InputKind::Html => "HTML",
     }
 }
 
@@ -116,21 +119,17 @@ fn from_anydoc(
 ) -> Extracted {
     Extracted {
         markdown: extracted.markdown,
-        format: extracted.format,
         engine: "anydoc".into(),
         engine_choice: choice.as_str().into(),
         fallback_reason,
         ocr_pages: Vec::new(),
         ocr_engine: None,
         warnings,
-        pages: None,
-        method: Some("native".into()),
     }
 }
 
 fn from_xberg(
     extracted: xberg_engine::XbergExtracted,
-    format: String,
     choice: EngineChoice,
     fallback_reason: Option<String>,
 ) -> Extracted {
@@ -141,15 +140,12 @@ fn from_xberg(
     };
     Extracted {
         markdown: extracted.markdown,
-        format,
         engine: "xberg".into(),
         engine_choice: choice.as_str().into(),
         fallback_reason,
         ocr_pages: extracted.ocr_pages,
         ocr_engine,
         warnings: extracted.warnings,
-        pages: Some(extracted.pages),
-        method: Some(extracted.method),
     }
 }
 
@@ -193,8 +189,15 @@ pub fn extract<F: FnMut(&str)>(
             "请选择 docx、xlsx、pptx、rtf、epub、csv、文本型 PDF、PNG 或 JPEG",
         )
     })?;
-    let label = format_label(&kind).to_string();
     let ocr_ready = ocr::status().ready;
+
+    if matches!(kind, InputKind::Markdown | InputKind::Html) {
+        return Err(AppError::new(
+            "E_UNSUPPORTED_FORMAT",
+            "Markdown/HTML 输入由导出管线处理",
+            "请在转换页选择目标格式后重试",
+        ));
+    }
 
     match (&kind, choice) {
         (InputKind::Image, EngineChoice::Anydoc) => Err(AppError::new(
@@ -213,7 +216,7 @@ pub fn extract<F: FnMut(&str)>(
             }
             on_stage("ocr");
             let extracted = xberg_engine::extract(input, true)?;
-            Ok(from_xberg(extracted, label, choice, None))
+            Ok(from_xberg(extracted, choice, None))
         }
         (InputKind::Document(_), EngineChoice::Anydoc) => {
             let extracted = anydoc_engine::extract(input).map_err(|error| {
@@ -238,7 +241,7 @@ pub fn extract<F: FnMut(&str)>(
         (InputKind::Document(_), EngineChoice::Xberg) => {
             on_stage(if ocr_ready { "ocr" } else { "converting" });
             match xberg_engine::extract(input, ocr_ready) {
-                Ok(extracted) => Ok(from_xberg(extracted, label, choice, None)),
+                Ok(extracted) => Ok(from_xberg(extracted, choice, None)),
                 Err(error) if error.code == "E_NEEDS_OCR" => Err(needs_ocr_error(
                     &error.message,
                     &error.next_step,
@@ -248,8 +251,7 @@ pub fn extract<F: FnMut(&str)>(
                 Err(error) => Err(error),
             }
         }
-        (InputKind::Document(_), EngineChoice::Auto) => {
-            let anydoc_result = anydoc_engine::extract(input);
+        (InputKind::Document(_), EngineChoice::Auto) => {            let anydoc_result = anydoc_engine::extract(input);
             match anydoc_result {
                 Ok(extracted) => {
                     // 表格 C 级说明 anydoc 的结构还原不可靠，交给 xberg 再试一次。
@@ -258,7 +260,7 @@ pub fn extract<F: FnMut(&str)>(
                         on_stage("ocr");
                         if let Ok(retried) = xberg_engine::extract(input, true) {
                             let reason = Some("anydoc:table-grade-c".to_string());
-                            return Ok(from_xberg(retried, label, choice, reason));
+                            return Ok(from_xberg(retried, choice, reason));
                         }
                     }
                     let warnings = if grade == "C" {
@@ -293,7 +295,6 @@ pub fn extract<F: FnMut(&str)>(
                     })?;
                     Ok(from_xberg(
                         retried,
-                        label,
                         choice,
                         Some("anydoc:needs-ocr".into()),
                     ))
@@ -304,7 +305,6 @@ pub fn extract<F: FnMut(&str)>(
                     match xberg_engine::extract(input, ocr_ready) {
                         Ok(retried) => Ok(from_xberg(
                             retried,
-                            label,
                             choice,
                             Some(format!("anydoc:{}", error.code)),
                         )),
@@ -321,6 +321,11 @@ pub fn extract<F: FnMut(&str)>(
                 }
             }
         }
+        (InputKind::Markdown, _) | (InputKind::Html, _) => Err(AppError::new(
+            "E_UNSUPPORTED_FORMAT",
+            "Markdown/HTML 输入由导出管线处理",
+            "请在转换页选择目标格式后重试",
+        )),
     }
 }
 

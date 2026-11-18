@@ -8,6 +8,8 @@ use crate::models::{AppError, TaskStats};
 #[derive(Debug)]
 pub struct Extracted {
     pub markdown: String,
+    /// 仅用于诊断与样例测试；路由的展示标签来自输入类型。
+    #[allow(dead_code)]
     pub format: String,
 }
 

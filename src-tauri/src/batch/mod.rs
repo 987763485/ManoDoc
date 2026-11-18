@@ -287,6 +287,10 @@ fn add_file(
         skipped.push(format!("跳过不支持的文件: {}", path.display()));
         return Ok(());
     };
+    if matches!(kind, engine::InputKind::Html) {
+        skipped.push(format!("HTML 请在单文件转换中处理: {}", path.display()));
+        return Ok(());
+    }
     let relative = canonical
         .strip_prefix(root)
         .unwrap_or(&canonical)
@@ -702,13 +706,39 @@ fn process_file(
         .map(|bytes| chunk::sha256_hex(&bytes))
         .unwrap_or_default();
     let choice = crate::engine::EngineChoice::parse(&config.engine);
-    let extracted = match engine::extract(path, choice, |_| {}) {
-        Ok(extracted) => extracted,
-        Err(error) => {
-            return (
-                failed_result(input, &hash, &error, started.elapsed().as_millis() as u64),
-                Vec::new(),
-            )
+    let extracted = if matches!(engine::routing::detect_path(path), Some(engine::InputKind::Markdown)) {
+        // 批量只产出 Markdown，Markdown 输入直接作为镜像内容。
+        match fs::read_to_string(path) {
+            Ok(markdown) => engine::routing::Extracted {
+                markdown,
+                engine: "direct".into(),
+                engine_choice: "direct".into(),
+                fallback_reason: None,
+                ocr_pages: Vec::new(),
+                ocr_engine: None,
+                warnings: Vec::new(),
+            },
+            Err(error) => {
+                let app_error = AppError::new(
+                    "E_IO",
+                    format!("读取 Markdown 失败: {error}"),
+                    "确认文件为 UTF-8 文本",
+                );
+                return (
+                    failed_result(input, &hash, &app_error, started.elapsed().as_millis() as u64),
+                    Vec::new(),
+                );
+            }
+        }
+    } else {
+        match engine::extract(path, choice, |_| {}) {
+            Ok(extracted) => extracted,
+            Err(error) => {
+                return (
+                    failed_result(input, &hash, &error, started.elapsed().as_millis() as u64),
+                    Vec::new(),
+                )
+            }
         }
     };
     if cancel.load(Ordering::Relaxed) {
@@ -1111,7 +1141,7 @@ mod scan_tests {
         assert!(names.contains(&"b.xlsx"));
         assert!(!names.contains(&".hidden.docx"));
         assert!(!names.contains(&".DS_Store"));
-        assert!(!names.contains(&"note.md"));
+        assert!(names.contains(&"note.md"));
         let _ = fs::remove_dir_all(&root);
     }
 

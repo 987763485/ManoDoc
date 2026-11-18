@@ -26,6 +26,7 @@ export interface HistoryParams extends Partial<BatchConfig> {
   ocrEngine?: string | null;
   method?: string;
   pages?: number | null;
+  target?: string;
 }
 
 export interface HistoryTask {
@@ -135,6 +136,8 @@ export interface FileInfo {
   format: string;
   direction: string;
   isImage: boolean;
+  targets: string[];
+  defaultTarget: string;
 }
 
 export interface ConversionResult {
@@ -143,6 +146,8 @@ export interface ConversionResult {
   outputName: string;
   stats: TaskStats;
   durationMs: number;
+  target: string;
+  direction: string;
   engineUsed: string;
   engineChoice: string;
   fallbackReason: string | null;
@@ -157,6 +162,10 @@ export interface EngineInfo {
   ready: boolean;
   ocrReady: boolean;
   ocrModelDir: string;
+  pandocReady: boolean;
+  pandocVersion: string;
+  typstReady: boolean;
+  typstVersion: string;
 }
 
 export interface OcrModelFile {
@@ -257,6 +266,10 @@ export async function getEngineInfo(): Promise<EngineInfo> {
       ready: true,
       ocrReady: true,
       ocrModelDir: "~/.dull_doc/models/paddleocr",
+      pandocReady: true,
+      pandocVersion: "pandoc 3.14",
+      typstReady: true,
+      typstVersion: "typst 0.15.1",
     };
   }
   return invoke<EngineInfo>("get_engine_info");
@@ -306,6 +319,12 @@ export async function inspectFile(path: string): Promise<FileInfo> {
       format,
       direction: `${format} → Markdown`,
       isImage: ["png", "jpg", "jpeg"].includes(ext),
+      targets: ext === "md" || ext === "markdown"
+        ? ["docx", "pdf", "html", "epub"]
+        : ext === "pdf"
+          ? ["markdown", "docx"]
+          : ["markdown"],
+      defaultTarget: ext === "md" || ext === "markdown" ? "docx" : "markdown",
     };
   }
   return invoke<FileInfo>("inspect_file", { path });
@@ -321,7 +340,7 @@ export async function chooseFile(): Promise<string | null> {
         name: "支持的文件",
         extensions: [
           "doc", "docx", "odt", "rtf", "epub", "pdf", "ppt", "pptx", "xls", "xlsx", "csv",
-          "png", "jpg", "jpeg",
+          "png", "jpg", "jpeg", "md", "markdown", "html", "htm", "mhtml",
         ],
       },
     ],
@@ -344,7 +363,7 @@ export async function chooseFiles(): Promise<string[]> {
         name: "支持的文件",
         extensions: [
           "doc", "docx", "odt", "rtf", "epub", "pdf", "ppt", "pptx", "xls", "xlsx", "csv",
-          "png", "jpg", "jpeg",
+          "png", "jpg", "jpeg", "md", "markdown", "html", "htm", "mhtml",
         ],
       },
     ],
@@ -362,6 +381,7 @@ export async function convertFile(
   inputPath: string,
   taskId: string,
   engineChoice: string = "auto",
+  targetFormat: string = "markdown",
 ): Promise<ConversionResult> {
   if (!isTauri()) {
     await new Promise((resolve) => setTimeout(resolve, 900));
@@ -393,6 +413,8 @@ export async function convertFile(
       outputName: "GB-T-28448.md",
       stats,
       durationMs: 920,
+      target: "Markdown",
+      direction: "DOCX → Markdown",
       engineUsed: "anydoc",
       engineChoice,
       fallbackReason: null,
@@ -401,7 +423,12 @@ export async function convertFile(
       warnings: [],
     };
   }
-  return invoke<ConversionResult>("convert_file", { inputPath, taskId, engineChoice });
+  return invoke<ConversionResult>("convert_file", {
+    inputPath,
+    taskId,
+    engineChoice,
+    targetFormat,
+  });
 }
 
 export async function cancelConversion(taskId: string): Promise<void> {

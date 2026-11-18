@@ -111,6 +111,8 @@ pub struct FileInfo {
     pub format: String,
     pub direction: String,
     pub is_image: bool,
+    pub targets: Vec<String>,
+    pub default_target: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -121,6 +123,8 @@ pub struct ConversionResult {
     pub output_name: String,
     pub stats: TaskStats,
     pub duration_ms: u128,
+    pub target: String,
+    pub direction: String,
     pub engine_used: String,
     pub engine_choice: String,
     pub fallback_reason: Option<String>,
@@ -145,4 +149,8 @@ pub struct EngineInfo {
     pub ready: bool,
     pub ocr_ready: bool,
     pub ocr_model_dir: String,
+    pub pandoc_ready: bool,
+    pub pandoc_version: String,
+    pub typst_ready: bool,
+    pub typst_version: String,
 }

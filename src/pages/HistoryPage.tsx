@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useI18n } from "../i18n";
+import { useI18n, type MessageKey } from "../i18n";
 import { clearHistory, openPath, type HistoryTask } from "../lib/ipc";
 import { FileIcon } from "../components/FileIcon";
 import { Modal } from "../components/Modal";
@@ -16,7 +16,7 @@ export function HistoryPage({
   tasks: HistoryTask[];
   onRefresh: () => Promise<void>;
   showToast: (message: string) => void;
-  onRerun: (path: string) => void;
+  onRerun: (path: string, target?: string) => void;
   onRerunBatch: (task: HistoryTask) => void;
 }) {
   const { t, lang } = useI18n();
@@ -181,7 +181,7 @@ export function HistoryPage({
             <div className="kv">
               <b>{t("history.preset")}</b><span>{selected.params?.preset ?? t("settings.presetStandard")}</span>
               <b>{t("history.direction")}</b><span>{selected.kind === "batch" ? `${t("batch.kind")} → Markdown` : selected.direction}</span>
-              <b>{t("history.target")}</b><span>Markdown</span>
+              <b>{t("history.target")}</b><span>{t(`target.${selected.params?.target ?? "markdown"}` as MessageKey)}</span>
               <b>{t("history.engine")}</b><span>{selected.engine} · {selected.durationMs}ms</span>
               {selected.params?.ocrPages && selected.params.ocrPages.length > 0 ? (
                 <>
@@ -212,7 +212,7 @@ export function HistoryPage({
                 className="btn primary small"
                 onClick={() => {
                   if (selected.kind === "batch") onRerunBatch(selected);
-                  else onRerun(selected.inputPath);
+                  else onRerun(selected.inputPath, selected.params?.target);
                   setSelected(null);
                 }}
               >

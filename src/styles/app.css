@@ -37,3 +37,11 @@
 @media (max-width: 1080px) {
   .app { grid-template-columns: 200px minmax(0, 1fr); }
 }
+
+/* 1280 宽度下英文页头按钮较长，允许换行而不是被裁切。 */
+.page-head { flex-wrap: wrap; }
+.page-head .actions { flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 1280px) {
+  .page-head { align-items: flex-start; flex-direction: column; }
+  .page-head .actions { margin-left: 0; }
+}

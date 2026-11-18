@@ -20,7 +20,6 @@ pub struct XbergExtracted {
     pub method: String,
     pub ocr_pages: Vec<u32>,
     pub warnings: Vec<String>,
-    pub pages: usize,
 }
 
 /// xberg 内部仍可能触达 HF 下载逻辑；转换期间强制离线，缺失模型直接报错。
@@ -148,7 +147,6 @@ pub fn extract(input: &Path, ocr_ready: bool) -> Result<XbergExtracted, AppError
         method,
         ocr_pages,
         warnings,
-        pages,
     })
 }
 

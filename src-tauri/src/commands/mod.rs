@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
-use std::fs::{self, OpenOptions};
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
@@ -46,12 +45,17 @@ pub fn get_app_data_dir() -> Result<String, AppError> {
 #[tauri::command(rename_all = "camelCase")]
 pub fn get_engine_info() -> EngineInfo {
     let status = ocr::status();
+    let sidecars = engine::sidecar_status();
     EngineInfo {
         anydoc_version: "0.2.4".into(),
         xberg_version: "1.4.0".into(),
         ready: true,
         ocr_ready: status.ready,
         ocr_model_dir: status.model_dir,
+        pandoc_ready: sidecars.pandoc.ready,
+        pandoc_version: sidecars.pandoc.version,
+        typst_ready: sidecars.typst.ready,
+        typst_version: sidecars.typst.version,
     }
 }
 
@@ -96,13 +100,28 @@ pub fn inspect_file(path: String) -> Result<FileInfo, AppError> {
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| "未命名文件".into());
     let format = engine::input_format_label(&kind).to_string();
+    let targets = engine::export::targets_for(&kind)
+        .into_iter()
+        .map(|target| target.id().to_string())
+        .collect::<Vec<_>>();
+    let default_target = targets.first().cloned().unwrap_or_else(|| "markdown".into());
+    let default_label = if default_target == "markdown" {
+        "Markdown"
+    } else {
+        engine::export::targets_for(&kind)
+            .first()
+            .map(|target| target.label())
+            .unwrap_or("Markdown")
+    };
     Ok(FileInfo {
         name,
         path: input.to_string_lossy().into_owned(),
         size_bytes: bytes.len() as u64,
-        direction: format!("{format} → Markdown"),
+        direction: format!("{format} → {default_label}"),
         format,
         is_image: matches!(kind, engine::InputKind::Image),
+        targets,
+        default_target,
     })
 }
 
@@ -113,6 +132,7 @@ pub async fn convert_file(
     output_dir: Option<String>,
     task_id: String,
     engine_choice: Option<String>,
+    target_format: Option<String>,
 ) -> Result<ConversionResult, AppError> {
     let started = Instant::now();
     let input = canonical_input(&input_path)?;
@@ -125,6 +145,35 @@ pub async fn convert_file(
     let output_root = prepare_output_dir(&target_dir)?;
     let choice = EngineChoice::parse(engine_choice.as_deref().unwrap_or("auto"));
 
+    let bytes = fs::read(&input).map_err(|error| {
+        AppError::new(
+            "E_IO",
+            format!("读取文件失败: {error}"),
+            "确认文件仍存在并具有读取权限",
+        )
+    })?;
+    let kind = engine::detect_input(&bytes, &input).ok_or_else(|| {
+        AppError::new(
+            "E_UNSUPPORTED_FORMAT",
+            "无法识别该文件的格式",
+            "请选择 docx、xlsx、pptx、rtf、epub、csv、PDF、Markdown、HTML、PNG 或 JPEG",
+        )
+    })?;
+    let supported = engine::export::targets_for(&kind);
+    let target = target_format
+        .as_deref()
+        .and_then(engine::TargetFormat::parse)
+        .unwrap_or(supported[0]);
+    if !supported.contains(&target) {
+        return Err(AppError::new(
+            "E_UNSUPPORTED_DIRECTION",
+            format!("不支持 {} → {}", engine::input_format_label(&kind), target.label()),
+            "在转换页选择可用目标格式",
+        ));
+    }
+    let source_label = engine::input_format_label(&kind).to_string();
+    let direction = format!("{source_label} → {}", target.label());
+
     emit_progress(&app, &task_id, "reading", 8);
     if take_cancelled(&app, &task_id) {
         return Err(cancelled_error());
@@ -132,18 +181,26 @@ pub async fn convert_file(
     emit_progress(&app, &task_id, "converting", 24);
 
     let input_for_task = input.clone();
+    let output_root_for_task = output_root.clone();
     let progress_app = app.clone();
     let progress_task = task_id.clone();
-    let extracted = tauri::async_runtime::spawn_blocking(move || {
-        // 路由在需要切到 xberg 时回调进度，让界面从「转换」进入「OCR 识别」。
-        engine::extract(&input_for_task, choice, |stage| {
-            let (label, percent) = match stage {
-                "ocr" => ("ocr", 46),
-                "converting" => ("converting", 24),
-                _ => ("converting", 30),
-            };
-            emit_progress(&progress_app, &progress_task, label, percent);
-        })
+    let exported = tauri::async_runtime::spawn_blocking(move || {
+        engine::export::convert(
+            &input_for_task,
+            &kind,
+            target,
+            choice,
+            &output_root_for_task,
+            |stage| {
+                let (label, percent) = match stage {
+                    "ocr" => ("ocr", 46),
+                    "rendering" => ("rendering", 64),
+                    "writing" => ("writing", 88),
+                    _ => ("converting", 24),
+                };
+                emit_progress(&progress_app, &progress_task, label, percent);
+            },
+        )
     })
     .await
     .map_err(|e| {
@@ -155,32 +212,31 @@ pub async fn convert_file(
     })??;
 
     if take_cancelled(&app, &task_id) {
+        let _ = fs::remove_file(&exported.output_path);
         return Err(cancelled_error());
     }
-    emit_progress(&app, &task_id, "writing", 82);
-
-    let stats = engine::stats(&extracted.markdown);
-    let output_path = write_output(&output_root, &input, &extracted.markdown)?;
     emit_progress(&app, &task_id, "writing", 96);
 
+    let stats = engine::stats(&exported.stats_markdown);
+    let output_path = exported.output_path.clone();
     let duration_ms = started.elapsed().as_millis();
-    // 历史参数保存引擎选择、实际引擎与回退原因，便于之后解释同一文件为何走 OCR。
+    // 历史参数保存目标格式、引擎选择、实际引擎与回退原因。
     let params = serde_json::json!({
-        "engineChoice": extracted.engine_choice,
-        "engineUsed": extracted.engine,
-        "fallbackReason": extracted.fallback_reason,
-        "ocrPages": extracted.ocr_pages,
-        "ocrEngine": extracted.ocr_engine,
-        "method": extracted.method,
-        "pages": extracted.pages
+        "target": exported.target.id(),
+        "engineChoice": choice.as_str(),
+        "engineUsed": exported.engine,
+        "sourceEngine": exported.source_engine,
+        "fallbackReason": exported.fallback_reason,
+        "ocrPages": exported.ocr_pages,
+        "ocrEngine": exported.ocr_engine
     });
     let task = HistoryTask {
         id: task_id.clone(),
         created_at: chrono::Utc::now().to_rfc3339(),
         input_path: input.to_string_lossy().into_owned(),
         input_name: input_name.clone(),
-        direction: format!("{} → Markdown", extracted.format),
-        engine: extracted.engine.clone(),
+        direction: direction.clone(),
+        engine: exported.engine.clone(),
         status: "completed".into(),
         output_path: Some(output_path.to_string_lossy().into_owned()),
         error_code: None,
@@ -212,12 +268,14 @@ pub async fn convert_file(
         output_path: output_path.to_string_lossy().into_owned(),
         stats,
         duration_ms,
-        engine_used: extracted.engine,
-        engine_choice: extracted.engine_choice,
-        fallback_reason: extracted.fallback_reason,
-        ocr_pages: extracted.ocr_pages,
-        ocr_engine: extracted.ocr_engine,
-        warnings: extracted.warnings,
+        target: exported.target.label().into(),
+        direction,
+        engine_used: exported.engine,
+        engine_choice: choice.as_str().into(),
+        fallback_reason: exported.fallback_reason,
+        ocr_pages: exported.ocr_pages,
+        ocr_engine: exported.ocr_engine,
+        warnings: exported.warnings,
     })
 }
 
@@ -312,50 +370,6 @@ pub async fn retry_batch_file(
         })?
 }
 
-fn write_output(root: &Path, input: &Path, markdown: &str) -> Result<PathBuf, AppError> {
-    let stem = input
-        .file_stem()
-        .map(|s| s.to_string_lossy().into_owned())
-        .unwrap_or_else(|| "output".into());
-    for index in 0..1000 {
-        let name = if index == 0 {
-            format!("{stem}.md")
-        } else {
-            format!("{stem}-{index}.md")
-        };
-        let candidate = root.join(name);
-        match OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&candidate)
-        {
-            Ok(mut file) => {
-                if let Err(error) = file.write_all(markdown.as_bytes()) {
-                    let _ = fs::remove_file(&candidate);
-                    return Err(AppError::new(
-                        "E_OUTPUT_PERMISSION",
-                        format!("写入输出失败: {error}"),
-                        "检查磁盘空间与目录权限后重试",
-                    ));
-                }
-                return Ok(candidate);
-            }
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
-            Err(error) => {
-                return Err(AppError::new(
-                    "E_OUTPUT_PERMISSION",
-                    format!("无法创建输出文件: {error}"),
-                    "更换可写目录后重试",
-                ))
-            }
-        }
-    }
-    Err(AppError::new(
-        "E_OUTPUT_PERMISSION",
-        "同名文件过多，无法生成输出",
-        "更换输出目录或清理同名文件",
-    ))
-}
 
 fn take_cancelled(app: &AppHandle, task_id: &str) -> bool {
     app.state::<AppState>()

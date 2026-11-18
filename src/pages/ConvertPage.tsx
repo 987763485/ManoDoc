@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useI18n } from "../i18n";
+import { useI18n, type MessageKey } from "../i18n";
 import {
   cancelConversion,
   chooseFile,
@@ -33,12 +33,21 @@ const MATRIX = [
   ["HTML / RTF / ODT / EPUB", "Markdown", "anydoc · xberg"],
 ];
 
+const TARGET_LABEL_KEYS: Record<string, string> = {
+  markdown: "target.markdown",
+  docx: "target.docx",
+  pdf: "target.pdf",
+  html: "target.html",
+  epub: "target.epub",
+};
+
 export function ConvertPage({
   active,
   settings,
   showToast,
   onHistoryChanged,
   requestedPath,
+  requestedTarget,
   onRequestedConsumed,
   onOpenSettings,
 }: {
@@ -47,6 +56,7 @@ export function ConvertPage({
   showToast: (message: string) => void;
   onHistoryChanged: () => void;
   requestedPath?: string | null;
+  requestedTarget?: string | null;
   onRequestedConsumed: () => void;
   onOpenSettings: () => void;
 }) {
@@ -58,8 +68,9 @@ export function ConvertPage({
   const [error, setError] = useState<AppError | null>(null);
   const [matrixOpen, setMatrixOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [engine, setEngine] = useState<"auto" | "anydoc" | "xberg">("auto");
+  const [engine, setEngine] = useState<"auto" | "anydoc" | "xberg" | "pandoc">("auto");
   const [ocrReady, setOcrReady] = useState(true);
+  const [target, setTarget] = useState("markdown");
   const taskRef = useRef<string | null>(null);
   const dropRef = useRef<(path: string) => void>(() => {});
 
@@ -102,7 +113,9 @@ export function ConvertPage({
   useEffect(() => {
     if (!requestedPath) return;
     onRequestedConsumed();
-    void loadPath(requestedPath);
+    void loadPath(requestedPath).then(() => {
+      if (requestedTarget) setTarget(requestedTarget);
+    });
     // loadPath 是稳定操作；requestedPath 消费后由 App 清空。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestedPath]);
@@ -111,6 +124,8 @@ export function ConvertPage({
     try {
       const info = await inspectFile(path);
       setFile(info);
+      setTarget(info.defaultTarget ?? info.targets?.[0] ?? "markdown");
+      setEngine("auto");
       setResult(null);
       setError(null);
       setStatus("idle");
@@ -150,7 +165,7 @@ export function ConvertPage({
     setResult(null);
     setProgress({ stage: "reading", percent: 4 });
     try {
-      const converted = await convertFile(file.path, taskId, engine);
+      const converted = await convertFile(file.path, taskId, engine, target);
       setResult(converted);
       setStatus("success");
       showToast(t("toast.converted"));
@@ -183,6 +198,7 @@ export function ConvertPage({
   const stageText = useMemo(() => {
     if (progress.stage === "reading") return t("convert.reading");
     if (progress.stage === "ocr") return t("convert.ocr");
+    if (progress.stage === "rendering") return t("convert.rendering");
     if (progress.stage === "writing") return t("convert.writing");
     if (progress.stage === "done") return t("convert.done");
     return t("convert.converting");
@@ -224,6 +240,23 @@ export function ConvertPage({
         : error?.code === "E_OUTPUT_PERMISSION"
           ? t("error.nextPermission")
           : (error?.nextStep ?? "");
+
+  const isMarkdownSource = file?.format === "Markdown";
+  const isPdfSource = file?.format === "PDF";
+  const engineAllowed = (choice: "anydoc" | "xberg" | "pandoc") => {
+    if (choice === "pandoc") return target !== "markdown" && isMarkdownSource;
+    if (target === "markdown") return true;
+    // PDF → Word 时 anydoc/xberg 负责来源解析，pandoc 只负责导出。
+    return isPdfSource && target === "docx";
+  };
+  const qualityNote =
+    isPdfSource && target === "docx"
+      ? t("convert.qualityPdfWord")
+      : target === "pdf"
+        ? t("convert.qualityPdf")
+        : target === "epub"
+          ? t("convert.qualityEpub")
+          : null;
 
   return (
     <section className={`page${active ? " active" : ""}`} id="page-convert">
@@ -295,23 +328,45 @@ export function ConvertPage({
                       <span>{file.format}</span>
                     </span>
                     <span aria-hidden="true">→</span>
-                    <span>Markdown</span>
+                    <select
+                      id="target-format"
+                      value={target}
+                      onChange={(event) => {
+                        setTarget(event.target.value);
+                        // 目标切换后引擎能力变化，回到 auto 避免保留不可用选择。
+                        setEngine("auto");
+                      }}
+                    >
+                      {(file.targets ?? ["markdown"]).map((value) => (
+                        <option key={value} value={value}>
+                          {t((TARGET_LABEL_KEYS[value] ?? "target.markdown") as MessageKey)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className="field">
                   <label>{t("convert.engine")}</label>
                   <select
                     value={engine}
-                    onChange={(event) => setEngine(event.target.value as "auto" | "anydoc" | "xberg")}
+                    onChange={(event) =>
+                      setEngine(event.target.value as "auto" | "anydoc" | "xberg" | "pandoc")
+                    }
                   >
-                    <option value="auto">{t("convert.engineAuto")}</option>
-                    <option value="anydoc">anydoc</option>
-                    <option value="xberg" disabled={!ocrReady}>
+                    <option value="auto">
+                      {isMarkdownSource && target !== "markdown"
+                        ? t("convert.engineAutoPandoc")
+                        : t("convert.engineAuto")}
+                    </option>
+                    <option value="anydoc" disabled={!engineAllowed("anydoc")}>anydoc</option>
+                    <option value="xberg" disabled={!engineAllowed("xberg") || !ocrReady}>
                       xberg{t("convert.engineOcrSuffix")}
                     </option>
-                    <option disabled>pandoc · {t("convert.engineLater")}</option>
+                    <option value="pandoc" disabled={!engineAllowed("pandoc")}>pandoc</option>
                   </select>
-                  {!ocrReady ? <span className="hint">{t("convert.ocrModelMissing")}</span> : null}
+                  {!ocrReady && engineAllowed("xberg") ? (
+                    <span className="hint">{t("convert.ocrModelMissing")}</span>
+                  ) : null}
                 </div>
               </div>
               <div className="field">
@@ -323,6 +378,7 @@ export function ConvertPage({
                 </select>
               </div>
               <p className="hint">{t("convert.imageLimit")}</p>
+              {qualityNote ? <p className="hint" id="quality-note">{qualityNote}</p> : null}
 
               <div className="actions">
                 <button className="btn primary" id="start-convert" disabled={status === "converting"} onClick={() => void start()}>
@@ -354,7 +410,7 @@ export function ConvertPage({
                 <b>{result.outputName}</b> · {t("convert.resultHint", { chars: stats.chars, headings: stats.headings, tables: stats.tableRows })}
               </p>
               <p className="hint" id="convert-engine-info">
-                {t("convert.engineUsed")}: <b>{result.engineUsed}</b>
+                {result.target} · {t("convert.engineUsed")}: <b>{result.engineUsed}</b>
                 {result.ocrPages.length > 0
                   ? ` · ${t("convert.ocrPages", { n: result.ocrPages.length })}`
                   : ""}

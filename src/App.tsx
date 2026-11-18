@@ -38,6 +38,7 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [requestedPath, setRequestedPath] = useState<string | null>(null);
+  const [requestedTarget, setRequestedTarget] = useState<string | null>(null);
   const [batchRerun, setBatchRerun] = useState<{
     inputPaths: string[];
     config: BatchConfig;
@@ -132,8 +133,9 @@ export default function App() {
     void updateSettings({ language: settings.language === "zh" ? "en" : "zh" });
   }
 
-  function pickRecent(path: string) {
+  function pickRecent(path: string, target?: string) {
     setRequestedPath(path);
+    setRequestedTarget(target ?? null);
     setPage("convert");
   }
 
@@ -167,6 +169,7 @@ export default function App() {
         toast={toast}
         paletteOpen={paletteOpen}
         requestedPath={requestedPath}
+        requestedTarget={requestedTarget}
         batchRerun={batchRerun}
         onPage={setPage}
         onPalette={changePalette}
@@ -191,6 +194,7 @@ function AppShell({
   toast,
   paletteOpen,
   requestedPath,
+  requestedTarget,
   batchRerun,
   onPage,
   onPalette,
@@ -210,6 +214,7 @@ function AppShell({
   toast: string;
   paletteOpen: boolean;
   requestedPath: string | null;
+  requestedTarget: string | null;
   batchRerun: { inputPaths: string[]; config: BatchConfig } | null;
   onPage: (page: PageId) => void;
   onPalette: (open: boolean) => void;
@@ -218,7 +223,7 @@ function AppShell({
   onToggleLanguage: () => void;
   onRefreshHistory: () => Promise<void>;
   onShowToast: (message: string) => void;
-  onPickRecent: (path: string) => void;
+  onPickRecent: (path: string, target?: string) => void;
   onRerunBatch: (task: HistoryTask) => void;
   onBatchRerunConsumed: () => void;
   onRequestedConsumed: () => void;
@@ -312,6 +317,7 @@ function AppShell({
             showToast={onShowToast}
             onHistoryChanged={() => void onRefreshHistory()}
             requestedPath={requestedPath}
+        requestedTarget={requestedTarget}
             onRequestedConsumed={onRequestedConsumed}
             onOpenSettings={() => onPage("settings")}
           />

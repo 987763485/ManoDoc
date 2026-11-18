@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "../i18n";
-import { chooseDirectory, type Settings } from "../lib/ipc";
+import { chooseDirectory, getEngineInfo, type EngineInfo, type Settings } from "../lib/ipc";
 import { OcrModelCard } from "../components/OcrModelCard";
 
 type Tab = "general" | "engines" | "output" | "presets" | "logs" | "about";
@@ -29,6 +29,11 @@ export function SettingsPage({
 }) {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("general");
+  const [engines, setEngines] = useState<EngineInfo | null>(null);
+
+  useEffect(() => {
+    void getEngineInfo().then(setEngines).catch(() => setEngines(null));
+  }, []);
 
   async function changeOutputDir() {
     const path = await chooseDirectory();
@@ -119,8 +124,26 @@ export function SettingsPage({
                 <div className="spacer"><span className="badge gray">{t("settings.later")}</span></div>
               </div>
               <div className="engine-card">
-                <div><div className="name">pandoc</div><div className="meta">{t("settings.pandocMeta")}</div></div>
-                <div className="spacer"><span className="badge gray">{t("settings.later")}</span></div>
+                <div>
+                  <div className="name">pandoc</div>
+                  <div className="meta">{engines?.pandocVersion || t("settings.pandocMeta")}</div>
+                </div>
+                <div className="spacer">
+                  <span className={`badge ${engines?.pandocReady ? "green" : "gray"}`}>
+                    {engines?.pandocReady ? t("settings.ready") : t("settings.later")}
+                  </span>
+                </div>
+              </div>
+              <div className="engine-card">
+                <div>
+                  <div className="name">Typst</div>
+                  <div className="meta">{engines?.typstVersion || t("settings.typstMeta")}</div>
+                </div>
+                <div className="spacer">
+                  <span className={`badge ${engines?.typstReady ? "green" : "gray"}`}>
+                    {engines?.typstReady ? t("settings.ready") : t("settings.later")}
+                  </span>
+                </div>
               </div>
             </section>
           ) : null}
