@@ -159,7 +159,7 @@
   <h1>UI 设计规范</h1>
   <p class="tagline">Proofing Desk · 为文档转换而做的校样台</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v1.2</span>
+    <span class="pill"><strong>版本</strong> v1.3</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>模式</strong> Operate · 桌面</span>
     <span class="pill status">状态：已确认</span>
@@ -393,7 +393,7 @@
         <tbody>
           <tr><td>Word</td><td>Markdown</td><td>anydoc · xberg · pandoc</td></tr>
           <tr><td>PDF</td><td>Markdown</td><td>anydoc · xberg · Marker</td></tr>
-          <tr><td>PDF</td><td>Word</td><td>pdf2docx · PDF→MD→Word</td></tr>
+          <tr><td>PDF</td><td>Word</td><td>PDF→MD→Word · pandoc</td></tr>
           <tr><td>Markdown</td><td>Word</td><td>pandoc</td></tr>
           <tr><td>Markdown</td><td>PDF</td><td>pandoc + PDF renderer</td></tr>
           <tr><td>Markdown</td><td>HTML / EPUB</td><td>pandoc</td></tr>
@@ -405,7 +405,7 @@
       </table>
     </div>
     <h3>Python 运行时</h3>
-    <div class="callout"><b>uv + 隔离 .venv</b><br>Python 引擎（PaddleOCR / Marker / pdf2docx）不依赖系统 Python。应用在 <code>~/.dull_doc/runtimes/&lt;engine&gt;/.venv</code> 创建隔离环境，按需安装并记录版本；安装前提示包体积与网络，不静默下载。</div>
+    <div class="callout"><b>uv + 隔离 .venv</b><br>Python 引擎（PaddleOCR / Marker）不依赖系统 Python。应用在 <code>~/.dull_doc/runtimes/&lt;engine&gt;/.venv</code> 创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积与来源并等待确认。</div>
   </section>
 
   <section id="theme" class="card">

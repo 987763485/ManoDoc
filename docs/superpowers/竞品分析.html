@@ -260,8 +260,8 @@
   <h1>竞品分析</h1>
   <p class="tagline">文档互转与 Markdown 工作台：功能面、实现原理与 DullDoc 的机会</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.6</span>
-    <span class="pill"><strong>变更</strong> 范围收敛：取消预览，补多方向/图标/运行时</span>
+    <span class="pill"><strong>版本</strong> v0.7</span>
+    <span class="pill"><strong>变更</strong> S6 选型：Typst PDF · 许可收敛</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>样本</strong> 40+ 产品与项目 · 61 项功能面</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -677,7 +677,7 @@
           <tr><td>F-25</td><td>Markdown</td><td>GFM 为默认；表头、脚注、公式、图片均可读</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-26</td><td>HTML</td><td>pandoc 导出；模板与 CSS 可配置</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-27</td><td>DOCX</td><td>pandoc 导出；适合回填与交付</td><td><span class="tag p0">P0</span></td></tr>
-          <tr><td>F-28</td><td>PDF</td><td>需 LaTeX/Typst/WebView 打印；MVP 不做</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-28</td><td>PDF</td><td>pandoc → Typst sidecar；不使用 LaTeX；MVP 接入</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-29</td><td>EPUB</td><td>pandoc 直接支持</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-30</td><td>JSON / JSONL</td><td>语料包核心格式；每行一个 chunk</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-31</td><td>LaTeX</td><td>公式密集场景；P2</td><td><span class="tag p2">P2</span></td></tr>
@@ -982,7 +982,7 @@
       <div class="finding">
         <span class="k">06</span>
         <b>pandoc 的定位应收缩到「导出」</b>
-        <p>不要用它做 docx 抽取；用它做 Markdown → HTML/DOCX/EPUB。PDF 输出在 S6 单独选型（Typst/WebView 打印/LaTeX）。</p>
+        <p>不要用它做 docx 抽取；用它做 Markdown → HTML/DOCX/EPUB/Typst。PDF 已选 Typst 编译，不使用 LaTeX。</p>
       </div>
     </div>
 
@@ -1079,7 +1079,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr>
             <td>PDF 输出</td>
             <td>LaTeX 体积大、安装复杂；本机已验证缺失 pdflatex 即失败。</td>
-            <td>MVP 不做 PDF 输出；P1 评估 Typst、WebView 打印或按需安装 LaTeX。</td>
+            <td>MVP 用 pandoc → Typst；不引入 LaTeX；Typst sidecar 需签名与字体验证。</td>
           </tr>
           <tr>
             <td>xberg 的稳定性与模型依赖</td>

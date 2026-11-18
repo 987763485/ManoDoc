@@ -246,8 +246,8 @@
   <h1>DullDoc</h1>
   <p class="tagline">本地优先的文档转换工作台</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.6</span>
-    <span class="pill"><strong>变更</strong> 多方向 · 引擎 · 图标 · 无预览</span>
+    <span class="pill"><strong>版本</strong> v0.7</span>
+    <span class="pill"><strong>变更</strong> S6 选型：Typst PDF · 不分发 pdf2docx</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>形态</strong> Tauri 2 · macOS Apple Silicon</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -436,7 +436,7 @@
           </tr>
           <tr>
             <td>PDF 输出</td><td>Markdown → PDF</td>
-            <td>基础用 Typst / WebKit 打印；精修与 LaTeX 另行评估；缺失渲染器时阻止并提示。</td>
+            <td>pandoc 生成 Typst，再由 Typst sidecar 编译 PDF；中文字体优先系统字体，必要时 bundle Noto CJK；缺失时阻止并提示。</td>
             <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
@@ -521,8 +521,8 @@
           </tr>
           <tr>
             <td>PDF 输出</td>
-            <td>pandoc 出 PDF 依赖 LaTeX / Typst，体积与稳定性都是问题。</td>
-            <td>MVP 不做；P1 单独评估 WebView 打印或 Typst。</td>
+            <td>PDF 输出需 Typst sidecar 与中文字体；LaTeX 体积大且本机缺失。</td>
+            <td>MVP 采用 pandoc → Typst；不使用 LaTeX；spike 验证分页、字体与表格。</td>
           </tr>
           <tr>
             <td>“可读文档”边界</td>

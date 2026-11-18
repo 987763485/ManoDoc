@@ -28,6 +28,9 @@ src-tauri/gen/schemas/
 # 本地测试文档：第三方标准与测评资料，仅本地使用，不纳入版本库
 example/
 
+# 本地工具链（cmake / typst 等，不纳入版本库）
+tools/
+
 # 本地运行数据与密钥
 *.sqlite
 *.sqlite3

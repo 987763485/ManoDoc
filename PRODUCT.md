@@ -10,7 +10,7 @@ web
 
 ## Stack
 
-Tauri 2（Rust 后端 + WebView 前端）；UI 原型使用纯 HTML / CSS / 原生 JavaScript；最终前端框架在 S6 技术选型中确认。
+Tauri 2（Rust 后端 + WebView 前端）；前端 React 19 + TypeScript + Vite + Tailwind CSS 4；UI 原型使用纯 HTML / CSS / 原生 JavaScript。
 
 ## Users
 
@@ -44,12 +44,12 @@ DullDoc 是一个 **macOS 本地优先的文档转换工作台**：以 Markdown 
 
 ## Capabilities and Constraints
 
-**已确认能力**：Word / PDF / Markdown / PNG / JPEG 等基础一对一转换（含 Word→Markdown、PDF→Markdown、PDF→Word、Markdown→Word、Markdown→PDF、图片→Markdown）；多引擎方向可显式选择引擎；docx / pdf / xlsx / pptx / odt / rtf / epub / csv / md 输入；pandoc 导出 HTML / DOCX / EPUB；PDF 页级预检；xberg OCR 与复杂表格回退；PaddleOCR（P1）中文 OCR；批量队列；清洗；切块；元数据；`chunks.jsonl` + `manifest.json`；历史；预设；全局日志与错误处理；中英文切换；跟随系统/浅色/深色主题；Cmd+K 命令面板；文件类型图标。
+**已确认能力**：Word / PDF / Markdown / PNG / JPEG 等基础一对一转换（含 Word→Markdown、PDF→Markdown、PDF→Word、Markdown→Word、Markdown→PDF、图片→Markdown）；多引擎方向可显式选择引擎；docx / pdf / xlsx / pptx / odt / rtf / epub / csv / md 输入；pandoc 导出 HTML / DOCX / EPUB；pandoc→Typst 导出 PDF；PDF 页级预检；xberg OCR 与复杂表格回退；PaddleOCR（P1）中文 OCR；批量队列；清洗；切块；元数据；`chunks.jsonl` + `manifest.json`；历史；预设；全局日志与错误处理；中英文切换；跟随系统/浅色/深色主题；Cmd+K 命令面板；文件类型图标。
 
 **约束**：
 - 首发 macOS Apple Silicon；Windows / Linux 为 P2。
 - Marker / PaddleOCR 等 Python 引擎为 P1 可选组件；由内置 `uv` 在 `~/.dull_doc/runtimes/<engine>/.venv` 按需安装，不依赖系统 Python，不静默下载。
-- PDF→Word 走 `pdf2docx` 或 PDF→Markdown→Word 管线；Markdown→PDF 需 PDF 渲染器（Typst / WebKit 打印 / LaTeX）；复杂版式不承诺像素级保真。
+- PDF→Word 走 PDF→Markdown→Word 管线，不分发 pdf2docx；Markdown→PDF 由 pandoc 生成 Typst 再编译 PDF；复杂版式不承诺像素级保真。
 - MVP 使用本地 JSON 存储，统一放在 `~/.dull_doc/`，不引入数据库；用户输出目录独立。
 - 默认离线；任何云服务必须显式开启并二次确认。
 - 语料制作的输出格式固定 Markdown；其他格式走单文件转换；清洗/切块/语料开关集中在语料制作配置，系统设置仅保留语料包全局默认。

@@ -18,14 +18,14 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S5 已确认（2026-11-18）：多方向转换 / 引擎选择 / uv 运行时 / 文件图标 / 取消文档与语料预览** |
-| 下一阶段 | S6 技术选型探讨 |
-| 当前事项 | 已完成原型与全部文档的自检对齐（137 项回归通过，detector 0 反模式）；下一步进入 S6 技术选型探讨 |
+| 当前阶段 | **S6 技术选型已确认（v1.0）；spike：S6-1 / S6-2 / S6-3 通过（OCR 模型约 36MB 需预置），S6-4~6 未完成** |
+| 下一阶段 | S7 Change 规划（S6 spike 全部达标后） |
+| 当前事项 | S6-1 通过；S6-2 通过（xberg `paddle-ocr-ort` 中文 OCR 1.58s/页，模型缓存 36MB，需预置）；S6-3 通过（pandoc `-s` + Typst 0.15.1，中文系统字体正常）；S6-4~6 未完成 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
 
-- **引擎分工**：anydoc 负责 Office/文本型 PDF 的快速路径；xberg（原 Kreuzberg，Rust/MIT）作为第二内核，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；pandoc 负责 Markdown ↔ DOCX/HTML/EPUB 与部分格式兜底；PaddleOCR（P1，Apache-2.0）作为中文 OCR 增强组件；pdf2docx 作为 PDF→Word 备选；Marker 保留为 P1 的备选高质量引擎。
+- **引擎分工**：anydoc 负责 Office/文本型 PDF 的快速路径；xberg（原 Kreuzberg，Rust/MIT）作为第二内核，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；pandoc 负责 Markdown ↔ DOCX/HTML/EPUB 与部分格式兜底；Markdown→PDF 由 pandoc 生成 Typst 再编译 PDF；PaddleOCR（P1，Apache-2.0）作为中文 OCR 增强组件；PDF→Word 走 PDF→Markdown→DOCX，**不分发 pdf2docx**；Marker 保留为 P1 的备选高质量引擎。
 - **引擎路由**：按文件内容判定格式；文本型 PDF 先由 anydoc 处理，失败或质量不足时回退 xberg；扫描件优先 xberg OCR，中文低置信度或用户选择时可用 PaddleOCR（P1）；xberg/PaddleOCR 均不可用时才进入「跳过无文本页 / 提示需要 OCR」的降级路径，不得静默失败。
 - **批量知识库产物**：厂商中立的「镜像 `.md` + `chunks.jsonl` + `manifest.json`」语料包；清洗、切块、元数据均为可勾选项；不绑定 Dify / RAGFlow 等具体平台。
 - **测试样本**：`example/` 下为测试文件——`.docx`（GB/T 28448-2019 等保测评要求，表格密集）、50 页 PDF（有完整文本层，约 6.1 万字）、`.xlsx`（等保指标清单）、`.md`（1074 行，用于验证 Markdown 再导出）。
@@ -33,21 +33,23 @@
 - **图片策略**：默认输出到同目录 `assets/` 并使用相对路径；单文件导出可选内嵌 base64。
 - **历史记录**：保留最近 50 条任务元数据（可配置），只存路径、参数、方向、引擎、哈希与结果摘要，不复制文件。
 - **多方向转换（2026-11-18 已确认）**：保留 Word ↔ Markdown、PDF → Markdown/Word、Markdown → Word/PDF/HTML/EPUB、PNG/JPEG → Markdown、Excel/CSV 与 PowerPoint → Markdown 等基础一对一方向；同一方向多引擎时提供「自动 + 显式引擎」选择；不支持的组合禁用并说明原因。
-- **Python 运行时（2026-11-18，P1）**：内置 uv sidecar；在 `~/.dull_doc/runtimes/<engine>/.venv` 为每个 Python 引擎创建隔离环境，按需安装 PaddleOCR / Marker / pdf2docx 等包；不依赖系统 Python，不静默下载，安装前提示体积，记录版本与哈希。
+- **Python 运行时（2026-11-18，P1）**：内置 uv 0.6.12 sidecar；在 `~/.dull_doc/runtimes/<engine>/.venv` 为每个 Python 引擎创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积、来源与哈希，用户确认后才联网；不依赖系统 Python，不静默下载；按需安装 PaddleOCR / Marker 等包并记录版本。pdf2docx 不默认安装、不随包分发。
 - **文件图标（2026-11-18，P0）**：转换页、批量、历史与方向矩阵统一使用 `icons/` 下的文件类型图标；缺失时回退综合文档；本次补齐 Markdown、HTML、EPUB、RTF、ODT、ODS、ODP、TXT。
 - **取消预览（2026-11-18）**：按用户决定，文档转换页不提供文档预览（部分格式无法可靠预览），语料制作完成行也不提供 Markdown 预览；完成行只保留「打开」。进度、成功、错误与无权限改为配置卡内联显示；PRD 中 REQ-020~022、REQ-048、REQ-111 标记为已取消，编号保留不复用。
 - **单文件与语料配置分工（2026-11-18）**：文档转换页只保留方向、引擎与预设，PDF 无文本页策略在预检弹窗选择；页眉页脚、中文标题、表格分级、图片资产、切块、元数据与语料包开关集中在「语料制作」的每任务配置。系统设置 → 输出保留语料包全局默认，批次内可覆盖。语料制作的输出格式固定 Markdown，其他格式禁用；其他格式走单文件转换。
 - **体验偏好（2026-11-18 追加，P0）**：中英文切换（中文默认、英文完整、无需重启）；主题切换（跟随系统/浅色/深色）；Cmd+K 命令面板（页面/操作/最近文件，危险操作二次确认）。所有 UI 组件与颜色必须走 token，禁止硬编码。
+- **S6 技术决策（2026-11-18，待确认）**：前端 React 19 + TypeScript + Vite + Tailwind CSS 4；Markdown→PDF 立即接入 Typst；PDF→Word 走 PDF→MD→DOCX，不分发 pdf2docx；Python 运行时由 uv 按需下载 Python；Rust 固定 1.99.1，xberg 1.4.0、anydoc 0.2.4、pandoc 3.8.3、Typst 0.15.1。
 
 ## 三、技术原理（初步）
 
-- **应用框架**：Tauri 2。Rust 负责文件系统、进程管理、转换编排与安全边界；前端使用 WebView 渲染界面。
+- **应用框架**：Tauri 2。Rust 负责文件系统、进程管理、转换编排与安全边界；前端 React 19 + TypeScript + Vite + Tailwind CSS 4 渲染界面。
 - **转换内核**（四个解析/导出引擎 + 可选 OCR 组件）：
   - **anydoc**（Firecrawl，纯 Rust，MIT）：Word / PowerPoint / Excel / OpenDocument / RTF / EPUB / CSV / 文本型 PDF → GitHub 风格 Markdown；速度快、无网络、无 OCR。Rust 可直接以 crate 形式嵌入 Tauri 后端。
   - **xberg**（原 Kreuzberg，Rust，MIT）：107 种格式 → 文本 / Markdown / HTML / JSON / DocTags；内置 OCR（Tesseract / PaddleOCR / Candle / VLM）、版面与表格识别、语法切块、CLI/API/MCP。作为第二内核，负责扫描件、复杂 PDF 表格与 anydoc 回退。
   - **PaddleOCR**（P1，Python，Apache-2.0）：中文 OCR / PP-Structure；作为 xberg 之外的中文 OCR 增强组件，检测环境或引导安装，不随包分发模型。
-  - **pandoc**（3.8.3，已安装）：通用标记语言转换器，负责 Markdown → HTML / DOCX / ODT / EPUB / LaTeX 等导出，以及部分格式兜底。以 sidecar 方式随应用分发。
-  - **Marker**（`marker-pdf`，Datalab，Python + ML 模型）：扫描 PDF / 图片 / 复杂版式 → Markdown / HTML / JSON，含版面分析、OCR、表格与公式识别。资源占用高，保留为 P1 备选。
+  - **pandoc**（3.8.3，已安装）：通用标记语言转换器，负责 Markdown → HTML / DOCX / ODT / EPUB / Typst 等导出，以及部分格式兜底。以 sidecar 方式随应用分发。
+  - **Typst**（0.15.1，Apache-2.0）：pandoc 先输出 `.typ`，再由 Typst sidecar 编译 PDF；中文字体优先使用 macOS 系统字体，必要时 bundle Noto CJK。
+  - **Marker**（`marker-pdf`，Datalab，Python + ML 模型）：扫描 PDF / 图片 / 复杂版式 → Markdown / HTML / JSON，含版面分析、OCR、表格与公式识别。代码 Apache-2.0，模型权重为 OpenRAIL-M（含营收/竞品限制）；资源占用高，仅 P1 用户显式安装。
 - **数据处理原则**：本地优先、默认不上传；应用数据统一存放 `~/.dull_doc/`（settings/presets/history/logs/tmp/runtimes），用户输出目录独立；转换任务异步化、可取消、可查看进度与日志；失败可重试并保留中间产物。
 - **日志与错误**：全局日志、全局错误处理、任务级错误归因；敏感信息（API Key、token）不得落盘或写日志，本地敏感信息存系统钥匙串。
 
@@ -56,12 +58,13 @@
 | 阶段 | 文档 | 路径 | 状态 |
 | --- | --- | --- | --- |
 | S0 | 项目运营手册 | `AGENTS.md` | 已生成 |
-| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.6） |
-| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（v0.6） |
-| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.5） |
-| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.5） |
-| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认（v1.2） |
+| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.7） |
+| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（v0.7） |
+| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.6） |
+| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.6） |
+| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认（v1.3） |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 已确认 |
+| S6 | 技术选型 | `docs/superpowers/技术选型.md` | 已确认（v1.0）；spike 进行中 |
 | S7 | Change 总索引 | `CHANGE.md` | 未开始 |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
 
@@ -107,15 +110,16 @@
 ## 六、注意事项与风险
 
 1. **anydoc 无 OCR**：图片型 PDF 会返回 `NeedsOcr`，必须优先路由 xberg；xberg 不可用但 PaddleOCR 可用时路由 PaddleOCR；两者均不可用时才提示用户跳过或等待 OCR。
-2. **xberg 依赖与模型**：OCR / 版面模型可能增加安装体积与平台差异；优先检测环境或使用最小模型，禁止静默下载；S6 用真实样本验证速度、体积与许可。
+2. **xberg 依赖与模型**：xberg 1.4.0 要求 Rust 1.99；OCR / 版面模型可能增加安装体积与平台差异；PP-OCRv6 small 模型缓存约 36MB，需随包预置或经确认下载；最小 feature 集、显式模型目录、禁止静默下载；需实机验证速度、体积、离线与许可。
 3. **PaddleOCR 依赖**：Python + Paddle 模型，macOS 上以 CPU 为主；作为 P1 可选组件，必须引导安装、不可静默下载；中文低置信度时才启用，避免默认变慢。
-4. **Marker 体量大**：保留为 P1 备选；Python 环境 + ML 模型可能达到数 GB，优先“检测系统环境 / 引导安装”，避免打包模型。
+4. **Marker 体量与许可**：代码 Apache-2.0，权重 OpenRAIL-M，含营收/竞品限制；仅 P1 用户显式安装，不随包分发模型。
 5. **pandoc 为 GPL 程序**：以独立 sidecar 进程调用，不静态链接；分发时附带许可证与源码获取说明。
-6. **pandoc 输出 PDF** 需要 LaTeX 引擎或替代方案（如 WebView 打印、Typst），需在 S6 选型时单独评估。
+6. **PDF 输出**：MVP 采用 pandoc → Typst → PDF，不使用 LaTeX；需验证中文字体、分页、表格与图片，Typst sidecar 需独立签名。
 7. **Tauri 跨平台 WebView 差异**：macOS WebKit、Windows WebView2、Linux WebKitGTK 的字体与渲染需分别验证。
-8. **macOS 签名与公证**：包含外部二进制、xberg 模型与可选 Python 环境时，分发前需处理 Hardened Runtime、entitlements 与 notarization。
-9. **安全**：所有外部命令以参数数组调用，禁止拼接 shell 字符串；限制文件路径与符号链接，防止命令注入。
-10. **隐私**：默认完全本地转换；仅当用户显式开启 OCR 云服务时才上传，并明确提示。
+8. **macOS 签名与公证**：Tauri 不会可靠地给 sidecar 加 hardened runtime/timestamp；需在构建前预签名所有 sidecar，分别公证 `.app` 与 `.dmg` 并 staple。
+9. **pdf2docx 许可**：代码 MIT，但依赖 PyMuPDF AGPL-3.0；不随包分发、不默认安装，PDF→Word 走解析 + pandoc 管线。
+10. **安全**：所有外部命令以参数数组调用，禁止拼接 shell 字符串；限制文件路径与符号链接，防止命令注入。
+11. **隐私**：默认完全本地转换；仅当用户显式开启 OCR 云服务时才上传，并明确提示。
 
 ## 七、工作日志
 
@@ -148,3 +152,9 @@
 | 2026-11-18 | S5 变更 | 按用户决定取消预览：移除转换页文档预览块与语料制作 Markdown 预览/编辑，进度与 OCR 错误改为配置卡内联；同步 UI、UI 规范、PRD v1.4、S4 v1.4、S1/S2 v0.6、PRODUCT 与 AGENTS；REQ-020~022、REQ-048、REQ-111 标记已取消（编号保留）；新增内联状态样式与空态拖放区；回归 119 项通过、detector 0 反模式；已提交 Git，未推送远程。 |
 | 2026-11-18 | S5 → Git | 用户指示提交 Git；S1/S2 v0.6、PRD v1.4、S4 v1.4、UI 规范 v1.1 与原型状态改为「已确认」；提交 UI、设计文档、需求文档与 `icons/`；未推送远程。 |
 | 2026-11-18 | S5 自检 | 对照原型与 S1/S2/PRD/S4/UI 规范逐项检查：补齐成功与无权限转换状态、批量清洗/跳过状态、并发与切块重叠、设置「预设」管理；统一一级菜单正式名称；澄清 PDF 策略在预检弹窗、语料包全局默认与批次覆盖关系；同步 PRD v1.5、S4 v1.5、UI 规范 v1.2；回归 137 项通过、detector 0 反模式；已提交 Git，未推送远程。 |
+| 2026-11-18 | S6 | 完成技术选型讨论并生成 `docs/superpowers/技术选型.md` v0.1：确认 Typst PDF、PDF→MD→DOCX（不分发 pdf2docx）、uv 按需下载 Python、React + TS + Vite + Tailwind；记录版本矩阵、许可、打包与 spike 门槛；待用户确认。 |
+| 2026-11-18 | S6 spike | 技术选型冻结为 v1.0（系统字体优先）；S6-1 通过：anydoc docx 49 标题/181ms、xlsx 1048 表格行/26ms、PDF 封面 `NeedsOcr`、去封面 14 标题/1049ms、Markdown 直通不交 anydoc；S6-2 部分：xberg formats 47MB/3–5ms，OCR 构建缺 cmake；S6-3 部分：pandoc→Typst 生成 39,550 字节 `.typ`，Typst 编译器未安装；S6-6 部分：去封面 PDF→MD→DOCX 55,709 字节/18 表，可打开；未提交 Git。 |
+| 2026-11-18 | S6 spike | 工具就绪：Typst 0.15.1 项目内安装、cmake 4.4.5 brew。S6-2：xberg `formats-no-heic` 47MB/1m48s，加 `paddle-ocr-tract` 101MB/2m40s；PaddleOCR 扫描页自动下载模型失败（hf-mirror 缺 ETag），需预置模型。S6-3：pandoc `-s` → Typst 编译 24 页中文 PDF（691KB），系统字体正常；非 standalone 因 `#horizontalrule` 失败。S6-6：PDF→MD→DOCX 55,709 字节/18 表可打开。未提交 Git。 |
+| 2026-11-18 | S6 spike | 补充 S6-2 模型结论：PP-OCRv6 small det≈9.9MB、rec≈21.2MB，总计约 31MB；建议随包预置或经确认下载并校验哈希。S6-3 已通过（pandoc `-s` + Typst 0.15.1，24 页中文 PDF，691KB，系统字体正常）。 |
+| 2026-11-18 | S6 spike | S6-2 通过：`paddle-ocr-ort` 104.4MB/2m12s，中文扫描页 1.58s、文本正确；tract 同页 30.4s 弃用；官方 HF 模型缓存 36MB，hf-mirror 缺 ETag 失败，正式版需预置模型。 |
+| 2026-11-19 | S6 → Git | 用户指示提交 Git；提交技术选型 v1.0、S6-1/2/3 spike 结果、PRD/S4/S1/S2/UI 同步与 `tools/` 忽略规则；未推送远程。 |
