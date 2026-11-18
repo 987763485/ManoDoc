@@ -177,9 +177,14 @@
   /* ---------- 原则 ---------- */
   .principle {
     display: flex; gap: 14px; padding: 16px 0;
+    position: relative;
+  }
+  .principle::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0;
     border-bottom: 1px dashed var(--line);
   }
-  .principle:last-child { border-bottom: 0; padding-bottom: 0; }
+  .principle:last-child { padding-bottom: 0; }
+  .principle:last-child::after { display: none; }
   .principle .icon {
     flex: 0 0 34px; height: 34px; border-radius: 10px;
     background: var(--accent-soft); color: var(--accent);
@@ -241,7 +246,8 @@
   <h1>DullDoc</h1>
   <p class="tagline">本地优先的文档 → Markdown 工作台</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.1</span>
+    <span class="pill"><strong>版本</strong> v0.2</span>
+    <span class="pill"><strong>变更</strong> 追加 xberg 内核</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>形态</strong> Tauri 2 · macOS Apple Silicon</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -359,6 +365,11 @@
             <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
+            <td>第二内核</td><td>xberg 引擎</td>
+            <td>扫描件 / 图片 PDF、复杂表格、anydoc 失败回退；Rust + MIT；S6 验证体积与稳定性。</td>
+            <td><span class="tag p0">P0</span></td>
+          </tr>
+          <tr>
             <td>导出</td><td>Markdown → HTML / DOCX / EPUB</td>
             <td>由 pandoc sidecar 执行；输出前可调模板与选项。</td>
             <td><span class="tag p0">P0</span></td>
@@ -389,8 +400,8 @@
             <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
-            <td>扫描件</td><td>Marker 引擎接入</td>
-            <td>扫描 PDF / 图片的 OCR 与版面分析；MVP 只给明确提示。</td>
+            <td>扫描件备选</td><td>Marker 引擎接入</td>
+            <td>Marker 作为 P1 的高质量备选；MVP 的扫描件由 xberg 覆盖。</td>
             <td><span class="tag p1">P1</span></td>
           </tr>
           <tr>
@@ -464,6 +475,11 @@
             <td>独立进程调用，附许可证与源码获取说明；不静态链接。</td>
           </tr>
           <tr>
+            <td>xberg 体积 / 稳定性</td>
+            <td>OCR 与版面模型可能增加依赖、安装体积与平台差异。</td>
+            <td>S6 用真实样本验证；若不可行则降级 P1，回退到 anydoc + 跳过策略。</td>
+          </tr>
+          <tr>
             <td>Marker 体量</td>
             <td>Python + 模型数 GB，不适合塞进 MVP 安装包。</td>
             <td>P1 采用「检测环境 + 引导安装」或本地服务方式。</td>
@@ -512,6 +528,12 @@
             <td>不做历史：实现更简单，但批量失败时难以复盘。</td>
           </tr>
           <tr>
+            <td>新增内核</td>
+            <td><strong>xberg（P0 第二内核）</strong></td>
+            <td>Rust + MIT，负责扫描件 / 图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；Marker 保留 P1。</td>
+            <td>S6 验证不达标时降级 P1，需用户确认。</td>
+          </tr>
+          <tr>
             <td>开源协议</td>
             <td><strong>MIT</strong></td>
             <td>与 anydoc 一致，个人与小团队采用门槛最低；pandoc 作为独立 sidecar 按 GPL 合规分发，并在「关于」页给出源码获取方式。</td>
@@ -521,12 +543,12 @@
       </table>
     </div>
     <div class="callout" style="margin-top:18px">
-      <b>已确认的默认组合：</b>DullDoc · 图片落 assets/ · 保留 50 条元数据 · MIT。四项均已在 S1 确认，可在 S3 需求文档定稿前调整。</div>
+      <b>已确认的组合：</b>DullDoc · 图片落 assets/ · 保留 50 条元数据 · MIT · xberg 第二内核。前四项在 S1 确认；xberg 为 2026-11-18 追加决策，可在 S3 定稿前调整。</div>
   </section>
 
   <footer>
     <span>DullDoc · S1 产品简报 · 2026-11-18</span>
-    <span>S1 已确认 · 进入 S2 竞品分析</span>
+    <span>S1 已确认 · v0.2 追加 xberg 内核（2026-11-18）</span>
   </footer>
 
 </div>

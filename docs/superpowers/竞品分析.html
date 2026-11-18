@@ -260,7 +260,8 @@
   <h1>竞品分析</h1>
   <p class="tagline">文档 → Markdown：功能面、实现原理与 DullDoc 的机会</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.1</span>
+    <span class="pill"><strong>版本</strong> v0.2</span>
+    <span class="pill"><strong>变更</strong> 追加 xberg 内核决策</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>样本</strong> 40+ 产品与项目 · 61 项功能面</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -292,8 +293,8 @@
       </div>
       <div class="finding">
         <span class="k">FINDING 05</span>
-        <b>xberg（原 Kreuzberg）是最接近的潜在竞品/增强引擎</b>
-        <p>Rust、MIT、107 种格式、Markdown/OCR/表格/切块/CLI/API/MCP。它证明「Rust 文档智能 + 语料化」这条路成立，也值得在 S6 作为 P1 引擎评估。</p>
+        <b>xberg（原 Kreuzberg）是最接近的潜在竞品，并已被选为第二内核</b>
+        <p>Rust、MIT、107 种格式、Markdown/OCR/表格/切块/CLI/API/MCP。它证明「Rust 文档智能 + 语料化」这条路成立；2026-11-18 用户决定将其纳入 DullDoc 内核，作为 P0 第二引擎，S6 负责落地验证。</p>
       </div>
       <div class="finding">
         <span class="k">FINDING 06</span>
@@ -802,7 +803,10 @@
     <h3>5.4 结论：DullDoc 的组合机会</h3>
     <div class="callout">
       <b>单个维度上，DullDoc 都很难赢：</b>OCR 赢不过 ABBYY/Marker，格式数量赢不过 CloudConvert/xberg，RAG 切块赢不过 RAGFlow/Unstructured。<br>
-      <b>但组合起来，空白非常明确：</b>macOS 原生、完全离线、中文优先、anydoc 快速解析 + pandoc 导出、PDF 页级预检、清洗/切块/语料包、批量队列与可解释诊断——目前没有产品同时做到。
+      <b>但组合起来，空白非常明确：</b>macOS 原生、完全离线、中文优先、anydoc 快速解析 + xberg OCR/表格增强 + pandoc 导出、PDF 页级预检、清洗/切块/语料包、批量队列与可解释诊断——目前没有产品同时做到。
+    </div>
+    <div class="callout warn" style="margin-top:14px">
+      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退。本节的竞品分析结论保持不变；实施要求见 S3 PRD 的 REQ-097 ~ REQ-100。
     </div>
   </section>
 
@@ -1018,7 +1022,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr><td>05</td><td>批量队列：并发、取消、重试、跳过已存在</td><td>文件夹转换不可控</td><td>开源引擎缺 GUI；在线服务不适合内部资料</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>06</td><td>语料包：chunks.jsonl + manifest</td><td>转完还要写脚本切块与加元数据</td><td>RAGFlow/Unstructured 重且平台化；桌面产品缺失</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>07</td><td>预设与可复现</td><td>每次参数不同，结果不可比</td><td>多数工具只记全局设置，不记引擎版本与哈希</td><td><span class="tag p0">P0</span></td></tr>
-          <tr><td>08</td><td>本地 OCR / 版面增强引擎</td><td>扫描件、复杂 PDF 表格</td><td>Marker/MinerU 强但重；桌面产品需引导安装</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>08</td><td>xberg 第二内核（OCR / 复杂表格）</td><td>扫描件、复杂 PDF 表格、anydoc 失败回退</td><td>Marker/MinerU 强但重；xberg 为 Rust + MIT，可作为 P0 增强</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>09</td><td>引擎插件化</td><td>今天是 anydoc，明天可能是 xberg/MinerU</td><td>没有产品把多引擎做成可解释的路由层</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>10</td><td>监听文件夹 + CLI + Finder 快捷操作</td><td>固定投递目录与自动化</td><td>商业套件有但重；开源引擎只有 CLI</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>11</td><td>中文标准文档专项</td><td>红头文件、印章、条款编号、竖排</td><td>通用工具不处理中国公文/标准格式</td><td><span class="tag p1">P1</span></td></tr>
@@ -1047,12 +1051,12 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr>
             <td>anydoc 对 PDF 的页级失败</td>
             <td>含封面、插图、扫描页的 PDF 直接不可用；真实样本已复现。</td>
-            <td>P0 做页级预检 + 跳过无文本页；P1 接 OCR 引擎补齐被跳过页。</td>
+            <td>P0 做页级预检 + xberg OCR 回退；xberg 不可用时才跳过 / 失败。</td>
           </tr>
           <tr>
             <td>复杂 PDF 表格保真</td>
             <td>「排版清晰」的承诺在复杂表格上不成立。</td>
-            <td>P0 做质量分级与警告；P1 评估 Marker / MinerU / xberg 作为增强引擎。</td>
+            <td>P0 做质量分级 + xberg 回退；Marker / MinerU 作为 P1 备选。</td>
           </tr>
           <tr>
             <td>中文清洗规则误伤</td>
@@ -1076,8 +1080,8 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           </tr>
           <tr>
             <td>xberg 的稳定性与模型依赖</td>
-            <td>项目刚更名，OCR/表格模型可能带来体积与平台差异。</td>
-            <td>S6 做一次真实样本对比（docx/pdf/xlsx），再决定是否作为 P1 第二引擎。</td>
+            <td>项目刚更名，OCR/表格模型可能带来体积、平台差异与许可问题。</td>
+            <td>已定为 P0 第二引擎；S6 用真实样本验证体积、速度与许可，不达标再降级 P1。</td>
           </tr>
           <tr>
             <td>macOS 签名 / 公证</td>
