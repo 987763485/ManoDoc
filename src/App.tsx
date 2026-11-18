@@ -1,0 +1,316 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { I18nProvider, useI18n } from "./i18n";
+import {
+  getSettings,
+  saveSettings,
+  listHistory,
+  openPath,
+  errorToAppError,
+  type HistoryTask,
+  type Settings,
+} from "./lib/ipc";
+import { ConvertPage } from "./pages/ConvertPage";
+import { BatchPage } from "./pages/BatchPage";
+import { HistoryPage } from "./pages/HistoryPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { CommandPalette, type PageId } from "./components/CommandPalette";
+
+// 首屏使用与 Rust 默认值一致的设置，避免主题闪动；随后以磁盘配置为准。
+const DEFAULT_SETTINGS: Settings = {
+  version: 1,
+  language: "zh",
+  theme: "system",
+  outputDir: "~/Documents/DullDoc Output",
+};
+
+const CRUMB_KEYS = {
+  convert: "crumb.convert",
+  batch: "crumb.batch",
+  history: "crumb.history",
+  settings: "crumb.settings",
+} as const;
+
+export default function App() {
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [page, setPage] = useState<PageId>("convert");
+  const [history, setHistory] = useState<HistoryTask[]>([]);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [toast, setToast] = useState("");
+  const [requestedPath, setRequestedPath] = useState<string | null>(null);
+  const toastTimer = useRef<number | null>(null);
+  const lastFocus = useRef<HTMLElement | null>(null);
+
+  const showToast = useCallback((message: string) => {
+    setToast(message);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(""), 2200);
+  }, []);
+
+  const refreshHistory = useCallback(async () => {
+    try {
+      setHistory(await listHistory());
+    } catch (error) {
+      showToast(errorToAppError(error).message);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        setSettings(await getSettings());
+      } catch (error) {
+        showToast(errorToAppError(error).message);
+      }
+    })();
+    void refreshHistory();
+    return () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    };
+  }, [refreshHistory, showToast]);
+
+  // 跟随系统时订阅外观变化，切到显式主题后解除订阅。
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      document.documentElement.dataset.theme =
+        settings.theme === "system" ? (media.matches ? "dark" : "light") : settings.theme;
+    };
+    apply();
+    if (settings.theme !== "system") return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [settings.theme]);
+
+  const changePalette = useCallback((open: boolean) => {
+    if (open) {
+      lastFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setPaletteOpen(true);
+    } else {
+      setPaletteOpen(false);
+      // 等面板卸载后再把焦点还给触发按钮。
+      window.requestAnimationFrame(() => lastFocus.current?.focus());
+    }
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        changePalette(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [changePalette]);
+
+  async function updateSettings(patch: Partial<Settings>) {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    try {
+      setSettings(await saveSettings(next));
+    } catch (error) {
+      showToast(errorToAppError(error).message);
+    }
+  }
+
+  function toggleTheme() {
+    const resolved =
+      settings.theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : settings.theme;
+    void updateSettings({ theme: resolved === "dark" ? "light" : "dark" });
+  }
+
+  function toggleLanguage() {
+    void updateSettings({ language: settings.language === "zh" ? "en" : "zh" });
+  }
+
+  function pickRecent(path: string) {
+    setRequestedPath(path);
+    setPage("convert");
+  }
+
+  return (
+    <I18nProvider lang={settings.language}>
+      <AppShell
+        settings={settings}
+        page={page}
+        history={history}
+        toast={toast}
+        paletteOpen={paletteOpen}
+        requestedPath={requestedPath}
+        onPage={setPage}
+        onPalette={changePalette}
+        onUpdateSettings={updateSettings}
+        onToggleTheme={toggleTheme}
+        onToggleLanguage={toggleLanguage}
+        onRefreshHistory={refreshHistory}
+        onShowToast={showToast}
+        onPickRecent={pickRecent}
+        onRequestedConsumed={() => setRequestedPath(null)}
+      />
+    </I18nProvider>
+  );
+}
+
+function AppShell({
+  settings,
+  page,
+  history,
+  toast,
+  paletteOpen,
+  requestedPath,
+  onPage,
+  onPalette,
+  onUpdateSettings,
+  onToggleTheme,
+  onToggleLanguage,
+  onRefreshHistory,
+  onShowToast,
+  onPickRecent,
+  onRequestedConsumed,
+}: {
+  settings: Settings;
+  page: PageId;
+  history: HistoryTask[];
+  toast: string;
+  paletteOpen: boolean;
+  requestedPath: string | null;
+  onPage: (page: PageId) => void;
+  onPalette: (open: boolean) => void;
+  onUpdateSettings: (patch: Partial<Settings>) => Promise<void>;
+  onToggleTheme: () => void;
+  onToggleLanguage: () => void;
+  onRefreshHistory: () => Promise<void>;
+  onShowToast: (message: string) => void;
+  onPickRecent: (path: string) => void;
+  onRequestedConsumed: () => void;
+}) {
+  const { t } = useI18n();
+  const crumbDetail = page === "convert" && history[0] ? history[0].inputName : t("app.name");
+
+  async function openOutput() {
+    try {
+      await openPath(settings.outputDir);
+    } catch {
+      onShowToast(t("toast.openFailed"));
+    }
+  }
+
+  return (
+    <div className="app">
+      <aside className="sidebar">
+        <div className="brand"><span className="seal">D</span>DullDoc</div>
+        <nav className="nav" aria-label={t("nav.convert")}>
+          <button className={page === "convert" ? "active" : ""} onClick={() => onPage("convert")}>
+            <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4" /><path d="M10 12h5M10 16h5" /></svg>
+            <span>{t("nav.convert")}</span>
+          </button>
+          <button className={page === "batch" ? "active" : ""} onClick={() => onPage("batch")}>
+            <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /><path d="M7 4h10v3H7z" /></svg>
+            <span>{t("nav.batch")}</span>
+          </button>
+          <button className={page === "history" ? "active" : ""} onClick={() => onPage("history")}>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 8v5l3 2" /></svg>
+            <span>{t("nav.history")}</span>
+          </button>
+          <button className={page === "settings" ? "active" : ""} onClick={() => onPage("settings")}>
+            <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>
+            <span>{t("nav.settings")}</span>
+          </button>
+        </nav>
+        <div className="side-foot">
+          <span className="live" />
+          <span>{t("side.offline")}</span>
+          <button
+            className="kbd"
+            onClick={(event) => {
+              event.currentTarget.focus();
+              onPalette(true);
+            }}
+            aria-label={t("palette.open")}
+          >
+            ⌘K
+          </button>
+        </div>
+      </aside>
+
+      <div className="main">
+        <header className="topbar">
+          <div className="crumb">
+            <span>{t(CRUMB_KEYS[page])}</span>
+            <span className="sep">/</span>
+            <b>{crumbDetail}</b>
+          </div>
+          <div className="top-right">
+            <div className="seg" aria-label={t("settings.lang")}>
+              <button className={settings.language === "zh" ? "on" : ""} onClick={() => settings.language !== "zh" && onToggleLanguage()}>中文</button>
+              <button className={settings.language === "en" ? "on" : ""} onClick={() => settings.language !== "en" && onToggleLanguage()}>EN</button>
+            </div>
+            <button className="icon-btn" title={t("palette.theme")} aria-label={t("palette.theme")} onClick={onToggleTheme}>
+              <svg className="sun" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+              </svg>
+              <svg className="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z" /></svg>
+            </button>
+            <button
+              className="icon-btn"
+              title={`${t("palette.title")} (⌘K)`}
+              aria-label={t("palette.open")}
+              onClick={(event) => {
+                event.currentTarget.focus();
+                onPalette(true);
+              }}
+            >
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
+            </button>
+          </div>
+        </header>
+
+        <main className="content">
+          <ConvertPage
+            active={page === "convert"}
+            settings={settings}
+            showToast={onShowToast}
+            onHistoryChanged={() => void onRefreshHistory()}
+            requestedPath={requestedPath}
+            onRequestedConsumed={onRequestedConsumed}
+            onOpenSettings={() => onPage("settings")}
+          />
+          <BatchPage active={page === "batch"} />
+          <HistoryPage
+            active={page === "history"}
+            tasks={history}
+            onRefresh={onRefreshHistory}
+            showToast={onShowToast}
+            onRerun={onPickRecent}
+          />
+          <SettingsPage
+            active={page === "settings"}
+            settings={settings}
+            onUpdate={onUpdateSettings}
+            showToast={onShowToast}
+          />
+        </main>
+      </div>
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => onPalette(false)}
+        onNavigate={onPage}
+        onToggleTheme={onToggleTheme}
+        onToggleLanguage={onToggleLanguage}
+        onOpenOutput={openOutput}
+        recent={history}
+        onPickRecent={onPickRecent}
+      />
+
+      <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
+        {toast}
+      </div>
+    </div>
+  );
+}

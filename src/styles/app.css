@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@import "./prototype.css";
+
+/* React 应用补充：只做布局衔接，视觉 token 仍来自 prototype.css。 */
+#root { height: 100%; }
+.app { height: 100dvh; }
+.main { min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.content { overflow: auto; }
+.page { display: none; }
+.page.active { display: block; }
+.nav button { width: 100%; border: 0; background: transparent; text-align: left; }
+.batch-placeholder { padding: 44px; display: grid; gap: 14px; place-items: center; text-align: center; }
+.batch-placeholder h2 { margin: 0; font-size: 20px; }
+.batch-placeholder p { margin: 0; color: var(--ink-3); max-width: 460px; line-height: 1.8; }
+.file-empty { min-height: 132px; cursor: pointer; }
+.file-empty.show { display: flex; }
+.file-empty.dragover { border-color: var(--blue); background: var(--blue-soft); }
+.side-foot .kbd { cursor: pointer; }
+.history-empty { padding: 40px; text-align: center; color: var(--ink-3); }
+.setting-row .control select { min-width: 180px; }
+.brand-seal { width: 20px; height: 20px; border: 2px solid var(--red); display: grid; place-items: center; color: var(--red); font-size: 12px; font-weight: 800; transform: rotate(-3deg); }
+.palette-item .hint { margin-left: auto; }
+.toast-host { position: fixed; inset: auto 0 24px; display: grid; place-items: center; pointer-events: none; z-index: 90; }
+.status-dot { display: inline-block; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 1080px) {
+  .app { grid-template-columns: 200px minmax(0, 1fr); }
+}

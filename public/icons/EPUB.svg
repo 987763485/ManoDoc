@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="256" height="256">
+  <path d="M132 32h548l212 212v748H132z" fill="#2F6B4F"/>
+  <path d="M680 32v212h212z" fill="#FFFFFF" opacity=".28"/>
+  <path d="M604 132h384v760H604z" fill="#FFFFFF"/>
+  <rect x="700" y="220" width="200" height="280" rx="14" fill="none" stroke="#2F6B4F" stroke-width="28"/><path d="M800 220v280" stroke="#2F6B4F" stroke-width="24"/><rect x="660" y="550" width="272" height="22" rx="8" fill="#2F6B4F" opacity=".5"/><rect x="660" y="610" width="200" height="22" rx="8" fill="#2F6B4F" opacity=".38"/>
+  <text x="340" y="710" font-family="Arial, Helvetica, sans-serif" font-size="320" font-weight="800" fill="#FFFFFF" text-anchor="middle">E</text>
+</svg>
