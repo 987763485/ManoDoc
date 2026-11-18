@@ -16,6 +16,10 @@
 .file-empty.show { display: flex; }
 .file-empty.dragover { border-color: var(--blue); background: var(--blue-soft); }
 .side-foot .kbd { cursor: pointer; }
+.config-panel button.switch { border: 0; padding: 0; cursor: pointer; }
+.config-panel button.switch:disabled { opacity: .45; cursor: not-allowed; }
+.batch-warnings { margin: 14px 0 0; padding-left: 20px; color: var(--ink-3); font-size: 12px; line-height: 1.7; }
+.history-empty .hint { margin-top: 6px; font-size: 12px; }
 .history-empty { padding: 40px; text-align: center; color: var(--ink-3); }
 .setting-row .control select { min-width: 180px; }
 .brand-seal { width: 20px; height: 20px; border: 2px solid var(--red); display: grid; place-items: center; color: var(--red); font-size: 12px; font-weight: 800; transform: rotate(-3deg); }

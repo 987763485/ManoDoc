@@ -55,6 +55,16 @@ pub struct TaskStats {
     pub table_rows: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct BatchCounts {
+    pub success: usize,
+    pub skipped: usize,
+    pub failed: usize,
+    pub warnings: usize,
+    pub chunks: usize,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HistoryTask {
@@ -69,6 +79,19 @@ pub struct HistoryTask {
     pub error_code: Option<String>,
     pub stats: TaskStats,
     pub duration_ms: u128,
+    // 批量记录与单文件记录共用 history.json；旧记录缺省时按单文件处理。
+    #[serde(default)]
+    pub kind: String,
+    #[serde(default)]
+    pub input_count: usize,
+    #[serde(default)]
+    pub input_paths: Vec<String>,
+    #[serde(default)]
+    pub output_dir: Option<String>,
+    #[serde(default)]
+    pub counts: Option<BatchCounts>,
+    #[serde(default)]
+    pub params: Option<Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

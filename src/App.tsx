@@ -8,6 +8,7 @@ import {
   errorToAppError,
   type HistoryTask,
   type Settings,
+  type BatchConfig,
 } from "./lib/ipc";
 import { ConvertPage } from "./pages/ConvertPage";
 import { BatchPage } from "./pages/BatchPage";
@@ -37,6 +38,10 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [requestedPath, setRequestedPath] = useState<string | null>(null);
+  const [batchRerun, setBatchRerun] = useState<{
+    inputPaths: string[];
+    config: BatchConfig;
+  } | null>(null);
   const toastTimer = useRef<number | null>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
 
@@ -132,6 +137,12 @@ export default function App() {
     setPage("convert");
   }
 
+  function rerunBatch(task: HistoryTask) {
+    if (!task.inputPaths?.length || !task.params) return;
+    setBatchRerun({ inputPaths: task.inputPaths, config: task.params });
+    setPage("batch");
+  }
+
   return (
     <I18nProvider lang={settings.language}>
       <AppShell
@@ -141,6 +152,7 @@ export default function App() {
         toast={toast}
         paletteOpen={paletteOpen}
         requestedPath={requestedPath}
+        batchRerun={batchRerun}
         onPage={setPage}
         onPalette={changePalette}
         onUpdateSettings={updateSettings}
@@ -149,6 +161,8 @@ export default function App() {
         onRefreshHistory={refreshHistory}
         onShowToast={showToast}
         onPickRecent={pickRecent}
+        onRerunBatch={rerunBatch}
+        onBatchRerunConsumed={() => setBatchRerun(null)}
         onRequestedConsumed={() => setRequestedPath(null)}
       />
     </I18nProvider>
@@ -162,6 +176,7 @@ function AppShell({
   toast,
   paletteOpen,
   requestedPath,
+  batchRerun,
   onPage,
   onPalette,
   onUpdateSettings,
@@ -170,6 +185,8 @@ function AppShell({
   onRefreshHistory,
   onShowToast,
   onPickRecent,
+  onRerunBatch,
+  onBatchRerunConsumed,
   onRequestedConsumed,
 }: {
   settings: Settings;
@@ -178,6 +195,7 @@ function AppShell({
   toast: string;
   paletteOpen: boolean;
   requestedPath: string | null;
+  batchRerun: { inputPaths: string[]; config: BatchConfig } | null;
   onPage: (page: PageId) => void;
   onPalette: (open: boolean) => void;
   onUpdateSettings: (patch: Partial<Settings>) => Promise<void>;
@@ -186,6 +204,8 @@ function AppShell({
   onRefreshHistory: () => Promise<void>;
   onShowToast: (message: string) => void;
   onPickRecent: (path: string) => void;
+  onRerunBatch: (task: HistoryTask) => void;
+  onBatchRerunConsumed: () => void;
   onRequestedConsumed: () => void;
 }) {
   const { t } = useI18n();
@@ -280,13 +300,21 @@ function AppShell({
             onRequestedConsumed={onRequestedConsumed}
             onOpenSettings={() => onPage("settings")}
           />
-          <BatchPage active={page === "batch"} />
+          <BatchPage
+            active={page === "batch"}
+            settings={settings}
+            showToast={onShowToast}
+            onHistoryChanged={() => void onRefreshHistory()}
+            rerunRequest={batchRerun}
+            onRerunConsumed={onBatchRerunConsumed}
+          />
           <HistoryPage
             active={page === "history"}
             tasks={history}
             onRefresh={onRefreshHistory}
             showToast={onShowToast}
             onRerun={onPickRecent}
+            onRerunBatch={onRerunBatch}
           />
           <SettingsPage
             active={page === "settings"}

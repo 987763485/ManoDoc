@@ -1,13 +1,15 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use tauri::{AppHandle, Emitter, Manager};
 
+use crate::batch::{self, BatchRequest, BatchResult, BatchScan};
 use crate::engine;
 use crate::models::{
     AppError, ConversionResult, EngineInfo, FileInfo, HistoryTask, ProgressEvent, Settings,
@@ -18,6 +20,8 @@ use crate::storage;
 #[derive(Default)]
 pub struct AppState {
     pub cancelled: Mutex<HashSet<String>>,
+    pub batch_cancels: Mutex<HashMap<String, Arc<AtomicBool>>>,
+    pub batches: batch::BatchStore,
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -135,6 +139,12 @@ pub async fn convert_file(
         error_code: None,
         stats: stats.clone(),
         duration_ms,
+        kind: "single".into(),
+        input_count: 1,
+        input_paths: vec![input.to_string_lossy().into_owned()],
+        output_dir: None,
+        counts: None,
+        params: None,
     };
     let _ = storage::record_task(task);
     let _ = app.emit(
@@ -207,6 +217,46 @@ pub fn open_path(path: String, reveal: Option<bool>) -> Result<(), AppError> {
             "请在 Finder 中手动打开",
         ))
     }
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn scan_batch_inputs(paths: Vec<String>, output_dir: String) -> Result<BatchScan, AppError> {
+    batch::scan_inputs(&paths, &output_dir)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn start_batch(app: AppHandle, request: BatchRequest) -> Result<BatchResult, AppError> {
+    tauri::async_runtime::spawn_blocking(move || batch::run(app, request))
+        .await
+        .map_err(|error| {
+            AppError::new(
+                "E_ENGINE_UNAVAILABLE",
+                format!("批量线程失败: {error}"),
+                "重启应用后重试",
+            )
+        })?
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn cancel_batch(app: AppHandle, batch_id: String) {
+    batch::cancel(&app, &batch_id);
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn retry_batch_file(
+    app: AppHandle,
+    batch_id: String,
+    file_id: String,
+) -> Result<BatchResult, AppError> {
+    tauri::async_runtime::spawn_blocking(move || batch::retry_file(app, &batch_id, &file_id))
+        .await
+        .map_err(|error| {
+            AppError::new(
+                "E_ENGINE_UNAVAILABLE",
+                format!("重试线程失败: {error}"),
+                "重启应用后重试",
+            )
+        })?
 }
 
 fn write_output(root: &Path, input: &Path, markdown: &str) -> Result<PathBuf, AppError> {

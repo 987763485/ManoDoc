@@ -30,6 +30,92 @@ export interface HistoryTask {
   errorCode: string | null;
   stats: TaskStats;
   durationMs: number;
+  kind?: "single" | "batch" | string;
+  inputCount?: number;
+  inputPaths?: string[];
+  outputDir?: string | null;
+  counts?: BatchCounts | null;
+  params?: BatchConfig | null;
+}
+
+export interface BatchCounts {
+  success: number;
+  skipped: number;
+  failed: number;
+  warnings: number;
+  chunks: number;
+}
+
+export interface BatchConfig {
+  preset: string;
+  engine: string;
+  concurrency: number;
+  cleanHeaders: boolean;
+  cleanCjk: boolean;
+  gradeTables: boolean;
+  chunk: boolean;
+  metadata: boolean;
+  corpus: boolean;
+  chunkSize: number;
+  overlap: number;
+}
+
+export interface BatchInput {
+  id: string;
+  path: string;
+  name: string;
+  relative: string;
+  format: string;
+  sizeBytes: number;
+}
+
+export interface BatchScan {
+  files: BatchInput[];
+  skipped: string[];
+}
+
+export interface BatchFileResult extends BatchInput {
+  hash: string;
+  status: string;
+  engine: string;
+  tableGrade: string | null;
+  warnings: string[];
+  errorCode: string | null;
+  errorMessage: string | null;
+  nextStep: string | null;
+  chars: number;
+  headings: number;
+  tableRows: number;
+  chunks: number;
+  durationMs: number;
+  outputPath: string | null;
+}
+
+export interface BatchResult {
+  batchId: string;
+  name: string;
+  status: string;
+  packageDir: string;
+  files: BatchFileResult[];
+  counts: BatchCounts;
+  durationMs: number;
+}
+
+export interface BatchRequest {
+  batchId: string;
+  name?: string;
+  files: BatchInput[];
+  config: BatchConfig;
+  outputDir: string;
+}
+
+export interface BatchProgress {
+  batchId: string;
+  fileId: string | null;
+  status: string;
+  completed: number;
+  total: number;
+  percent: number;
 }
 
 export interface FileInfo {
@@ -143,6 +229,26 @@ export async function chooseFile(): Promise<string | null> {
   return typeof selected === "string" ? selected : null;
 }
 
+export async function chooseFiles(): Promise<string[]> {
+  if (!isTauri()) {
+    return [
+      "~/Documents/示例/GB-T-28448.docx",
+      "~/Documents/示例/等级保护测评2.0要求指标清单v1.xlsx",
+    ];
+  }
+  const selected = await open({
+    multiple: true,
+    directory: false,
+    filters: [
+      {
+        name: "支持的文件",
+        extensions: ["doc", "docx", "odt", "rtf", "epub", "pdf", "ppt", "pptx", "xls", "xlsx", "csv"],
+      },
+    ],
+  });
+  return Array.isArray(selected) ? selected : selected ? [selected] : [];
+}
+
 export async function chooseDirectory(): Promise<string | null> {
   if (!isTauri()) return "~/Documents/DullDoc Output";
   const selected = await open({ multiple: false, directory: true });
@@ -166,6 +272,12 @@ export async function convertFile(inputPath: string, taskId: string): Promise<Co
       errorCode: null,
       stats,
       durationMs: 920,
+      kind: "single",
+      inputCount: 1,
+      inputPaths: [inputPath],
+      outputDir: null,
+      counts: null,
+      params: null,
     };
     writeMockHistory([task, ...readMockHistory()]);
     return { taskId, outputPath, outputName: "GB-T-28448.md", stats, durationMs: 920 };
@@ -212,6 +324,120 @@ export async function onFileDrop(
   return getCurrentWebview().onDragDropEvent((event) => {
     if (event.payload.type === "drop") handler(event.payload.paths);
   });
+}
+
+const FORMAT_MAP: Record<string, string> = {
+  doc: "DOC", docx: "DOCX", odt: "ODT", rtf: "RTF", epub: "EPUB", pdf: "PDF",
+  ppt: "PPT", pptx: "PPTX", xls: "XLSX", xlsx: "XLSX", csv: "CSV", ods: "ODS", odp: "ODP",
+};
+
+export async function scanBatchInputs(paths: string[], outputDir: string): Promise<BatchScan> {
+  if (!isTauri()) {
+    const files: BatchInput[] = [];
+    const skipped: string[] = [];
+    for (const path of paths) {
+      const name = path.split("/").pop() ?? "未命名文件";
+      const ext = name.split(".").pop()?.toLowerCase() ?? "";
+      const format = FORMAT_MAP[ext];
+      if (!format) {
+        skipped.push(`跳过不支持的文件: ${name}`);
+        continue;
+      }
+      files.push({
+        id: `mock-${files.length}`,
+        path,
+        name,
+        relative: name,
+        format,
+        sizeBytes: 512 * 1024,
+      });
+    }
+    return { files, skipped };
+  }
+  return invoke<BatchScan>("scan_batch_inputs", { paths, outputDir });
+}
+
+export async function startBatch(request: BatchRequest): Promise<BatchResult> {
+  if (!isTauri()) {
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    const packageDir = `~/Documents/DullDoc Output/${request.name ?? "corpus"}-20261119-010000`;
+    const files: BatchFileResult[] = request.files.map((input, index) => ({
+      ...input,
+      hash: "mock-hash",
+      status: "completed",
+      engine: "anydoc",
+      tableGrade: "A",
+      warnings: [],
+      errorCode: null,
+      errorMessage: null,
+      nextStep: null,
+      chars: 1200 + index * 300,
+      headings: 5 + index,
+      tableRows: 2,
+      chunks: request.config.chunk ? 4 : 0,
+      durationMs: 80 + index * 20,
+      outputPath: `${packageDir}/mirror/${input.relative.replace(/\.[^.]+$/, ".md")}`,
+    }));
+    const counts: BatchCounts = {
+      success: files.length,
+      skipped: 0,
+      failed: 0,
+      warnings: 0,
+      chunks: files.reduce((sum, file) => sum + file.chunks, 0),
+    };
+    const result: BatchResult = {
+      batchId: request.batchId,
+      name: request.name ?? "corpus",
+      status: "completed",
+      packageDir,
+      files,
+      counts,
+      durationMs: 650,
+    };
+    const task: HistoryTask = {
+      id: request.batchId,
+      createdAt: new Date().toISOString(),
+      inputPath: files[0]?.path ?? "",
+      inputName: result.name,
+      direction: "批量 → Markdown",
+      engine: "anydoc",
+      status: "completed",
+      outputPath: packageDir,
+      errorCode: null,
+      stats: {
+        chars: counts.success * 1200,
+        headings: counts.success * 5,
+        tableRows: counts.success * 2,
+      },
+      durationMs: 650,
+      kind: "batch",
+      inputCount: files.length,
+      inputPaths: request.files.map((file) => file.path),
+      outputDir: packageDir,
+      counts,
+      params: request.config,
+    };
+    writeMockHistory([task, ...readMockHistory()]);
+    return result;
+  }
+  return invoke<BatchResult>("start_batch", { request });
+}
+
+export async function cancelBatch(batchId: string): Promise<void> {
+  if (!isTauri()) return;
+  await invoke("cancel_batch", { batchId });
+}
+
+export async function retryBatchFile(batchId: string, fileId: string): Promise<BatchResult> {
+  if (!isTauri()) throw new Error("浏览器预览不支持重试");
+  return invoke<BatchResult>("retry_batch_file", { batchId, fileId });
+}
+
+export async function onBatchProgress(
+  handler: (event: BatchProgress) => void,
+): Promise<() => void> {
+  if (!isTauri()) return () => {};
+  return listen<BatchProgress>("batch-progress", (event) => handler(event.payload));
 }
 
 export function errorToAppError(error: unknown): AppError {

@@ -1,4 +1,8 @@
+mod batch;
+mod chunk;
+mod clean;
 mod commands;
+mod corpus;
 mod engine;
 mod models;
 mod security;
@@ -24,6 +28,10 @@ pub fn run() {
             commands::inspect_file,
             commands::convert_file,
             commands::cancel_conversion,
+            commands::scan_batch_inputs,
+            commands::start_batch,
+            commands::cancel_batch,
+            commands::retry_batch_file,
             commands::list_history,
             commands::clear_history,
             commands::open_path

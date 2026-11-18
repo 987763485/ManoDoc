@@ -10,12 +10,14 @@ export function HistoryPage({
   onRefresh,
   showToast,
   onRerun,
+  onRerunBatch,
 }: {
   active: boolean;
   tasks: HistoryTask[];
   onRefresh: () => Promise<void>;
   showToast: (message: string) => void;
   onRerun: (path: string) => void;
+  onRerunBatch: (task: HistoryTask) => void;
 }) {
   const { t, lang } = useI18n();
   const [selected, setSelected] = useState<HistoryTask | null>(null);
@@ -38,11 +40,18 @@ export function HistoryPage({
   }
 
   async function copyParams(task: HistoryTask) {
-    const text = JSON.stringify(
-      { input: task.inputPath, direction: task.direction, engine: task.engine },
-      null,
-      2,
-    );
+    const text =
+      task.kind === "batch"
+        ? JSON.stringify(
+            { inputs: task.inputPaths, params: task.params, output: task.outputPath },
+            null,
+            2,
+          )
+        : JSON.stringify(
+            { input: task.inputPath, direction: task.direction, engine: task.engine },
+            null,
+            2,
+          );
     try {
       await navigator.clipboard.writeText(text);
       showToast(t("toast.copied"));
@@ -68,7 +77,21 @@ export function HistoryPage({
           {tasks.length === 0 ? (
             <div className="history-empty">{t("history.empty")}</div>
           ) : (
-            tasks.map((task) => (
+            tasks.map((task) => {
+              const isBatch = task.kind === "batch";
+              const tone =
+                task.status === "completed"
+                  ? "green"
+                  : task.status === "partial"
+                    ? "amber"
+                    : "red";
+              const label =
+                task.status === "completed"
+                  ? t("status.completed")
+                  : task.status === "partial"
+                    ? t("batch.partial")
+                    : t("status.failed");
+              return (
               <div
                 className="history-row"
                 key={task.id}
@@ -86,32 +109,54 @@ export function HistoryPage({
                 <div className="time">{formatTime(task.createdAt)}</div>
                 <div>
                   <div className="name">
-                    <FileIcon format={task.inputName.split(".").pop()} name={task.inputName} size={18} />
+                    <FileIcon
+                      format={isBatch ? null : task.inputName.split(".").pop()}
+                      name={isBatch ? "综合文档" : task.inputName}
+                      size={18}
+                    />
                     <span>{task.inputName}</span>
                   </div>
-                  <div className="sub">{task.direction} · {task.engine}</div>
+                  <div className="sub">
+                    {isBatch
+                      ? `${t("batch.kind")} · ${task.inputCount ?? task.inputPaths?.length ?? 0} ${t("batch.fileUnit")}`
+                      : task.direction} · {task.engine}
+                  </div>
                 </div>
                 <div>
-                  <span className={`badge ${task.status === "completed" ? "green" : "red"}`}>
+                  <span className={`badge ${tone}`}>
                     <span className="status-dot" />
-                    <span>{task.status === "completed" ? t("status.completed") : t("status.failed")}</span>
+                    <span>{label}</span>
                   </span>
                 </div>
-                <div>{task.stats.headings} {t("unit.headings")}</div>
+                <div>
+                  {isBatch
+                    ? `${task.counts?.chunks ?? 0} ${t("unit.chunks")}`
+                    : `${task.stats.headings} ${t("unit.headings")}`}
+                </div>
                 <div>
                   <button
                     className="link-btn"
                     onClick={(event) => {
                       event.stopPropagation();
-                      if (task.outputPath) void openPath(task.outputPath, true);
-                      else showToast(task.errorCode ?? t("history.noOutput"));
+                      if (isBatch) {
+                        if (task.outputPath) void openPath(task.outputPath);
+                        else if (task.inputPaths?.length) onRerunBatch(task);
+                        else showToast(task.errorCode ?? t("history.noOutput"));
+                      } else if (task.outputPath) {
+                        void openPath(task.outputPath, true);
+                      } else {
+                        showToast(task.errorCode ?? t("history.noOutput"));
+                      }
                     }}
                   >
-                    {task.status === "completed" ? t("action.open") : t("action.retry")}
+                    {task.status === "completed" || task.status === "partial"
+                      ? t("action.open")
+                      : t("action.retry")}
                   </button>
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </div>
@@ -134,19 +179,34 @@ export function HistoryPage({
               </button>
             </div>
             <div className="kv">
-              <b>{t("history.preset")}</b><span>{t("settings.presetStandard")}</span>
-              <b>{t("history.direction")}</b><span>{selected.direction}</span>
+              <b>{t("history.preset")}</b><span>{selected.params?.preset ?? t("settings.presetStandard")}</span>
+              <b>{t("history.direction")}</b><span>{selected.kind === "batch" ? `${t("batch.kind")} → Markdown` : selected.direction}</span>
               <b>{t("history.target")}</b><span>Markdown</span>
               <b>{t("history.engine")}</b><span>{selected.engine} · {selected.durationMs}ms</span>
               <b>{t("history.output")}</b><span>{selected.outputPath ?? t("history.noOutput")}</span>
-              <b>{t("history.stats")}</b><span>{selected.stats.chars} {t("unit.chars")} · {selected.stats.headings} {t("unit.headings")} · {selected.stats.tableRows} {t("unit.tables")}</span>
+              <b>{t("history.stats")}</b>
+              <span>
+                {selected.kind === "batch"
+                  ? `${selected.counts?.success ?? 0} ${t("status.completed")} · ${selected.counts?.skipped ?? 0} ${t("status.skipped")} · ${selected.counts?.failed ?? 0} ${t("status.failed")} · ${selected.counts?.chunks ?? 0} ${t("unit.chunks")}`
+                  : `${selected.stats.chars} ${t("unit.chars")} · ${selected.stats.headings} ${t("unit.headings")} · ${selected.stats.tableRows} ${t("unit.tables")}`}
+              </span>
               <b>{t("history.warnings")}</b><span>{selected.errorCode ?? "—"}</span>
             </div>
             <div className="actions">
-              <button className="btn primary small" onClick={() => { onRerun(selected.inputPath); setSelected(null); }}>
+              <button
+                className="btn primary small"
+                onClick={() => {
+                  if (selected.kind === "batch") onRerunBatch(selected);
+                  else onRerun(selected.inputPath);
+                  setSelected(null);
+                }}
+              >
                 {t("history.rerun")}
               </button>
-              <button className="btn secondary small" onClick={() => selected.outputPath && void openPath(selected.outputPath, true)}>
+              <button
+                className="btn secondary small"
+                onClick={() => selected.outputPath && void openPath(selected.outputPath, selected.kind !== "batch")}
+              >
                 {t("action.openOutput")}
               </button>
               <button className="btn ghost small" onClick={() => void copyParams(selected)}>

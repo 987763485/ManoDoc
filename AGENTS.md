@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S7 Change 规划；CHG-001 `mvp-implementation` 已归档（A1–A8 全部通过）** |
-| 下一阶段 | 启动 CHG-002 批量语料；随后 CHG-003 xberg OCR、CHG-004 pandoc/Typst、CHG-005 打包公证 |
-| 当前事项 | CHG-001 纵向切片已验收并归档至 `docs/comet/archive/2026-11-18-mvp-implementation/`。实现 Tauri 2 应用壳、四页导航、设置/主题/中英文、Cmd+K、anydoc 单文件 → Markdown、真实历史。实测 docx 315,999 字符/49 标题/15 表格行；文本型 PDF 正常转换不调用 OCR；封面无文本 PDF 返回 `E_NEEDS_OCR` 且不产出文件；不支持格式返回 `E_UNSUPPORTED_FORMAT`；不可写输出目录返回 `E_OUTPUT_PERMISSION`。`pnpm build`、`pnpm test`（7 项）、`cargo check`、`cargo test`（5 项 + 3 个样例测试）通过。代码已提交到 dev（ba220d2），未推送远程；S6-5 公证仍延后到发布前。 |
+| 当前阶段 | **S7 CHG-002 `batch-corpus-v2` 已归档（A1–A8 通过）** |
+| 下一阶段 | 启动 CHG-003 xberg OCR；随后 CHG-004 pandoc/Typst、CHG-005 打包公证 |
+| 当前事项 | CHG-002 已归档至 `docs/comet/archive/2026-11-18-batch-corpus-v2/`。批量语料管线包含递归扫描/队列/并发/取消/重试、清洗、H1–H3 切块与元数据、独立批次目录（`mirror/`、`chunks.jsonl`、`manifest.json`、`report.json/csv`）、批量历史与重跑、语料制作页还原。实机 example 批次：3 文件、2 成功、1 个封面 PDF `E_NEEDS_OCR`、293 chunks、2 warnings，JSONL/manifest 校验通过。`pnpm build`、`pnpm test`（10 项）、`cargo test`（18 项 + 4 个样例测试）通过。已知风险：实机取消按钮未取得直接中断证据，取消逻辑由单元测试覆盖。代码尚未提交 Git；S6-5 公证仍延后到发布前。 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -65,8 +65,8 @@
 | S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认（v1.4） |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 已确认 |
 | S6 | 技术选型 | `docs/superpowers/技术选型.md` | 已确认（v1.1）；S6-5 待发布前补公证 |
-| S7 | Change 总索引 | `CHANGE.md` | CHG-001 已归档 |
-| S7 | Change 归档 | `docs/comet/archive/2026-11-18-mvp-implementation/` | A1–A8 通过 |
+| S7 | Change 总索引 | `CHANGE.md` | CHG-001、CHG-002 已归档 |
+| S7 | Change 归档 | `docs/comet/archive/2026-11-18-mvp-implementation/`、`docs/comet/archive/2026-11-18-batch-corpus-v2/` | A1–A8 通过 |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
 
 > 文档归类规则：哪个 skill 生成，就归入 `docs/.{skill-name}/` 对应目录。
@@ -170,6 +170,8 @@
 | 2026-11-19 | S7 Build | 完成 CHG-001 纵向切片：React 19 + Vite + Tailwind 前端，Tauri 2 + anydoc 0.2.4 后端；四页导航、设置/主题/中英文、Cmd+K、单文件转换、历史与详情弹窗。真实 docx → Markdown 315,999 字符/49 标题/15 表格行；封面无文本 PDF 返回 `E_NEEDS_OCR`；不支持格式返回 `E_UNSUPPORTED_FORMAT`；语言/主题写入 `~/.dull_doc/settings.json`，历史写入 `history.json`。`pnpm build`、`pnpm test`（7 项）、`cargo check`、`cargo test`（5 项 + 3 个样例测试）通过；未提交 Git。 |
 | 2026-11-19 | S7 Verify → Archive | CHG-001 通过 Comet Verify：A1–A8 全部通过；用户接受结果并归档至 `docs/comet/archive/2026-11-18-mvp-implementation/`。补充实机验证：1440×900 与 1280×800 无横向溢出；文本型 PDF → Markdown 不触发 OCR；CSV/RTF/EPUB 由 anydoc 0.2.4 独立 harness 验证；不可写输出目录显示 `E_OUTPUT_PERMISSION`。代码仍未提交 Git。 |
 | 2026-11-19 | S7 → Git | 用户指示提交 Git；提交 CHG-001 实现、`CHANGE.md`、AGENTS 更新与 Comet 归档材料到 `dev`（`ba220d2`）；未推送远程。 |
+| 2026-11-19 | S7 Build | CHG-002 完成批量语料候选实现：新增 `batch`/`clean`/`chunk`/`corpus` Rust 模块、批量 Tauri commands、历史批量字段；前端语料制作页接入扫描/队列/配置/取消/重试/报告，历史支持批量详情与重跑。实机 example 批次 3 文件（2 成功、1 个封面 PDF `E_NEEDS_OCR`）、293 chunks、2 warnings；输出包含 mirror、chunks.jsonl、manifest.json、report.json/csv，JSONL 与 manifest 校验通过。`pnpm build`、`pnpm test`（10 项）、`cargo test`（18 项 + 4 个样例测试）通过；未提交 Git。 |
+| 2026-11-19 | S7 Verify → Archive | CHG-002 通过 Comet Verify（A1–A8）；用户接受并归档至 `docs/comet/archive/2026-11-18-batch-corpus-v2/`。原 `batch-corpus` change 的编辑复核状态在还原已批准正式材料后仍阻塞 Verify，已取消并重建为 `batch-corpus-v2`；代码、需求与验收不变。风险：实机取消按钮未取得直接中断证据，取消逻辑由单元测试覆盖。代码未提交 Git。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->

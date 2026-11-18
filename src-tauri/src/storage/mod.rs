@@ -122,6 +122,15 @@ pub fn record_task(task: crate::models::HistoryTask) -> Result<(), String> {
     save_history(&history)
 }
 
+/// 批量重试后更新同一条历史，而不是新增重复记录。
+pub fn upsert_task(task: crate::models::HistoryTask) -> Result<(), String> {
+    let mut history = load_history();
+    history.tasks.retain(|current| current.id != task.id);
+    history.tasks.insert(0, task);
+    history.tasks.truncate(50);
+    save_history(&history)
+}
+
 pub fn clear_history() -> Result<(), String> {
     save_history(&HistoryFile {
         version: 1,
