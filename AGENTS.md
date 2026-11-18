@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S5 UI 设计规范 + 高保真原型（进行中）** |
+| 当前阶段 | **S5 UI 设计规范 + 高保真原型已确认并提交；准备进入 S6 技术选型** |
 | 下一阶段 | S6 技术选型探讨 |
-| 当前事项 | 先编写 `docs/superpowers/UI设计规范.html`，再编写 `docs/superpowers/UI.html`；覆盖中英文切换、主题切换、命令面板；UI 迭代期间不提交 Git |
+| 当前事项 | S5 已确认并提交；下一步进入 S6 技术选型探讨 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -55,8 +55,8 @@
 | S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（v0.4） |
 | S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.1） |
 | S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.1） |
-| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 进行中 |
-| S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 未开始 |
+| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认 |
+| S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 已确认 |
 | S7 | Change 总索引 | `CHANGE.md` | 未开始 |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
 
@@ -132,3 +132,5 @@
 | 2026-11-18 | S4 → S5 | 用户确认 S4，状态改为「已确认」；进入 S5，先写 UI 设计规范，再做高保真原型。UI 迭代期间只改文件，不提交 Git，待用户确认 UI 阶段后统一提交。 |
 | 2026-11-18 | S5 变更 | 用户指定应用数据统一存放在 `~/.dull_doc/`；已同步 PRODUCT.md、PRD 6.4、S4 6.2/6.4 与 AGENTS。用户输出目录仍独立，不放入该目录。 |
 | 2026-11-18 | S5 变更 | 用户增补中英文切换、主题切换、Cmd+K 命令面板（P0）。已同步 PRODUCT.md、S1（v0.4）、S2（v0.4）、PRD（v1.1，REQ-103~105）、S4（v1.1）与 AGENTS；S5 设计规范与原型必须覆盖。 |
+| 2026-11-18 | S5 | 视觉方向经决策页选定 **Proofing Desk**（校样台）。生成 `UI设计规范.html`（Proofing Desk token、浅/深色、双语、命令面板、组件与验收）与 `UI.html` 高保真原型（转换/批量/历史/设置、空/加载/失败、PDF 预检、Cmd+K、主题/语言切换）。finish review 判定 fix，8 项 material fixes 已全部修复：空白校样纸空状态与单一拖放目标、开关/历史键盘可操作、英文补全、OCR 跳过恢复、深色纸张层级、SVG 校对记号、选择态改蓝、1280 适配；新增转换中状态条与 toast。Playwright 交互/视觉回归 60+ 项全部通过，无控制台错误；detector 0 反模式（仅 em-dash 建议项）。截图在 `.impeccable/review/`。等待用户确认 S5；UI 迭代期间未提交 Git。 |
+| 2026-11-18 | S5 → Git | 用户指示提交 Git；S5 状态改为「已确认」；提交 UI 设计规范、高保真原型与 AGENTS 更新；未推送远程。 |
