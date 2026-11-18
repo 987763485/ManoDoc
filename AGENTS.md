@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S2 竞品分析已生成，待用户确认** |
-| 下一阶段 | S3 需求文档（PRD）→ `需求文档.md` |
-| 当前事项 | 等待审阅 `docs/superpowers/竞品分析.html`；S3 将使用 `/grill-me` 做方案与需求可行性辩驳 |
+| 当前阶段 | **S3 需求文档（PRD）编写中** |
+| 下一阶段 | S4 功能拆解 + MVP → `软件功能设计说明.md` |
+| 当前事项 | 编写 `docs/superpowers/需求文档.md`；初稿完成后由用户执行 `/grill-me` 做可行性辩驳 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 只接 anydoc + pandoc，Marker 放 P1 |
 
 ### 已确认的产品决策
@@ -49,8 +49,8 @@
 | --- | --- | --- | --- |
 | S0 | 项目运营手册 | `AGENTS.md` | 已生成 |
 | S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认 |
-| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已生成，待确认 |
-| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 未开始 |
+| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认 |
+| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 进行中 |
 | S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 未开始 |
 | S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 未开始 |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 未开始 |
@@ -118,3 +118,4 @@
 | 2026-11-18 | Git | 初始化仓库：`main` 仅保留基线空提交，开发在 `dev`；提交 `.gitignore`、`AGENTS.md` 与 S1 产品简报；`example/` 因第三方资料仅本地保留，不纳入版本库；未配置远程、未推送。 |
 | 2026-11-18 | Git | 按用户要求：`SIMPLE.md` 属于个人知识产权，从全部提交历史中移除并加入 `.gitignore`；已重写本地 `dev` 历史、清理 reflog 与不可达对象，文件仅保留在本地工作区，未推送远程。 |
 | 2026-11-18 | S2 | 完成竞品分析与功能面矩阵：商业/在线 15 个、开源核心 8 个、组件 13 个、相邻平台 8 个；61 项功能面。真实样本验证：docx anydoc 49 标题 vs pandoc 0；xlsx 1048 表格行；PDF 因封面页无文本层 anydoc 失败，去封面后 12 标题/204 行；pandoc md→docx/html/epub 成功、md→pdf 缺 pdflatex。生成 `docs/superpowers/竞品分析.html`。 |
+| 2026-11-18 | S2 → S3 | 用户确认 S2。状态改为「已确认」；开始编写 S3 需求文档，完成后由用户执行 `/grill-me` 辩驳。 |

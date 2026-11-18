@@ -82,6 +82,7 @@
   }
   .pill strong { color: var(--ink-2); font-weight: 600; }
   .pill.status { background: var(--warn-soft); border-color: #f0dcc0; color: var(--warn); font-weight: 600; }
+  .pill.status.confirmed { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
 
   /* ---------- 卡片 ---------- */
   section.card {
@@ -262,7 +263,7 @@
     <span class="pill"><strong>版本</strong> v0.1</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>样本</strong> 40+ 产品与项目 · 61 项功能面</span>
-    <span class="pill status">状态：待确认</span>
+    <span class="pill status confirmed">状态：已确认</span>
   </div>
 
   <!-- ======================== 00 摘要 ======================== -->
@@ -1172,7 +1173,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
 
   <footer>
     <span>DullDoc · S2 竞品分析 · 2026-11-18</span>
-    <span>确认后状态将更新为「已确认」，并进入 S3 需求文档</span>
+    <span>S2 已确认 · 进入 S3 需求文档</span>
   </footer>
 
 </div>
