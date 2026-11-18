@@ -244,10 +244,10 @@
     <span>项目文档</span><span class="sep">/</span><span>产品简报</span><span class="sep">/</span><span class="current">S1</span>
   </nav>
   <h1>DullDoc</h1>
-  <p class="tagline">本地优先的文档 → Markdown 工作台</p>
+  <p class="tagline">本地优先的文档转换工作台</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.4</span>
-    <span class="pill"><strong>变更</strong> i18n · 主题 · 命令面板</span>
+    <span class="pill"><strong>版本</strong> v0.6</span>
+    <span class="pill"><strong>变更</strong> 多方向 · 引擎 · 图标 · 无预览</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>形态</strong> Tauri 2 · macOS Apple Silicon</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -255,7 +255,7 @@
 
   <div class="hero-quote">
     <div class="label">一句话</div>
-    <p style="color:#f4faf7">把常见的可读文档，一次性转换成排版清晰、能直接使用的 Markdown；需要时，再把一批文档洗成可入库的语料包。全程本地、离线、不联网。</p>
+    <p style="color:#f4faf7">把常见的可读文档转换成排版清晰、可直接使用的 Markdown，同时保留 Word、PDF、HTML、EPUB、图片等基础一对一互转；同一方向有多个引擎时可选择。需要时，再把一批文档洗成可入库的语料包。全程本地、离线、不联网。</p>
     <div class="sub">不是又一个在线转换网站，也不是需要写脚本的 CLI 集合——是一个把「转 → 洗 → 切 → 打包」串起来的桌面工具。</div>
   </div>
 
@@ -360,8 +360,23 @@
         </thead>
         <tbody>
           <tr>
-            <td>单文件</td><td>格式识别 + 转换 + 预览 + 保存</td>
-            <td>anydoc 负责 docx / pdf / xlsx / pptx / odt / rtf / epub / csv；支持拖拽与文件选择。</td>
+            <td>单文件</td><td>格式识别 + 转换 + 保存</td>
+            <td>anydoc 负责 docx / pdf / xlsx / pptx / odt / rtf / epub / csv；支持拖拽与文件选择；转换进度与错误在配置卡内联显示，不提供文档预览。</td>
+            <td><span class="tag p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>多方向转换</td><td>基础一对一文档互转</td>
+            <td>Word ↔ Markdown、PDF → Markdown / Word、Markdown → Word / PDF / HTML / EPUB、PNG/JPEG → Markdown、Excel/CSV 与 PowerPoint → Markdown；PDF→Word 与 Markdown→PDF 标注质量/渲染器限制。</td>
+            <td><span class="tag p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>引擎选择</td><td>自动 + 显式引擎</td>
+            <td>同一方向有多个引擎时列出兼容引擎；自动按格式、质量与可用性路由，显式选择优先并写入 manifest。</td>
+            <td><span class="tag p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>文件图标</td><td>文件类型标记</td>
+            <td>转换页、批量、历史与方向矩阵使用统一图标；缺失时回退通用文档图标。</td>
             <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
@@ -381,7 +396,7 @@
           </tr>
           <tr>
             <td>清洗</td><td>页眉页脚 / 页码 / 水印 / 断行 / 空段 / 标题规范</td>
-            <td>逐项可勾选，默认保守；每步改动可在预览中对比。</td>
+            <td>逐项可勾选，默认保守；每次改动可在输出与警告中核对。</td>
             <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
@@ -391,7 +406,7 @@
           </tr>
           <tr>
             <td>语料包</td><td>chunks.jsonl + manifest.json</td>
-            <td>厂商中立字段：id、text、source、title、headings、page、hash 等。</td>
+            <td>厂商中立字段：id、text、source、title、headings、page、hash 等；完成行可打开输出文件或目录。</td>
             <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
@@ -405,19 +420,24 @@
             <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
+            <td>Python 运行时</td><td>uv + 隔离 .venv</td>
+            <td>内置 uv；在 ~/.dull_doc/runtimes/&lt;engine&gt;/.venv 按需安装；不依赖系统 Python，不静默下载。</td>
+            <td><span class="tag p1">P1</span></td>
+          </tr>
+          <tr>
             <td>扫描件备选</td><td>Marker 引擎接入</td>
-            <td>Marker 作为 P1 的高质量备选；MVP 的扫描件由 xberg 覆盖。</td>
+            <td>Marker 作为 P1 的高质量备选；MVP 的扫描件由 xberg 覆盖；通过 uv 托管运行时。</td>
             <td><span class="tag p1">P1</span></td>
           </tr>
           <tr>
             <td>OCR 增强</td><td>PaddleOCR（P1）</td>
-            <td>中文 OCR / PP-Structure；检测环境 + 引导安装；xberg 低置信度或用户选择时启用。</td>
+            <td>中文 OCR / PP-Structure；通过 uv 隔离 .venv 按需安装；xberg 低置信度或用户选择时启用。</td>
             <td><span class="tag p1">P1</span></td>
           </tr>
           <tr>
             <td>PDF 输出</td><td>Markdown → PDF</td>
-            <td>需评估 LaTeX / Typst 运行时与分发体积。</td>
-            <td><span class="tag p1">P1</span></td>
+            <td>基础用 Typst / WebKit 打印；精修与 LaTeX 另行评估；缺失渲染器时阻止并提示。</td>
+            <td><span class="tag p0">P0</span></td>
           </tr>
           <tr>
             <td>自动化</td><td>文件夹监听、预设、命令行入口</td>

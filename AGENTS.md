@@ -18,20 +18,25 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S5 UI 设计规范 + 高保真原型已确认并提交；准备进入 S6 技术选型** |
+| 当前阶段 | **S5 已确认（2026-11-18）：多方向转换 / 引擎选择 / uv 运行时 / 文件图标 / 取消文档与语料预览** |
 | 下一阶段 | S6 技术选型探讨 |
-| 当前事项 | S5 已确认并提交；下一步进入 S6 技术选型探讨 |
+| 当前事项 | UI 原型、设计规范与 PRD/S4 已按「无预览」同步并提交；全套回归 119 项通过；下一步进入 S6 技术选型探讨 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
 
-- **引擎分工**：anydoc 负责 Office/文本型 PDF 的快速路径；xberg（原 Kreuzberg，Rust/MIT）作为第二内核，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；PaddleOCR（P1，Apache-2.0）作为中文 OCR 增强组件；pandoc 负责 Markdown → HTML/DOCX/EPUB 导出；Marker 保留为 P1 的备选高质量引擎。
+- **引擎分工**：anydoc 负责 Office/文本型 PDF 的快速路径；xberg（原 Kreuzberg，Rust/MIT）作为第二内核，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；pandoc 负责 Markdown ↔ DOCX/HTML/EPUB 与部分格式兜底；PaddleOCR（P1，Apache-2.0）作为中文 OCR 增强组件；pdf2docx 作为 PDF→Word 备选；Marker 保留为 P1 的备选高质量引擎。
 - **引擎路由**：按文件内容判定格式；文本型 PDF 先由 anydoc 处理，失败或质量不足时回退 xberg；扫描件优先 xberg OCR，中文低置信度或用户选择时可用 PaddleOCR（P1）；xberg/PaddleOCR 均不可用时才进入「跳过无文本页 / 提示需要 OCR」的降级路径，不得静默失败。
 - **批量知识库产物**：厂商中立的「镜像 `.md` + `chunks.jsonl` + `manifest.json`」语料包；清洗、切块、元数据均为可勾选项；不绑定 Dify / RAGFlow 等具体平台。
 - **测试样本**：`example/` 下为测试文件——`.docx`（GB/T 28448-2019 等保测评要求，表格密集）、50 页 PDF（有完整文本层，约 6.1 万字）、`.xlsx`（等保指标清单）、`.md`（1074 行，用于验证 Markdown 再导出）。
 - **名称与协议**：产品名保留 DullDoc；开源协议 MIT；pandoc 以独立 sidecar 按 GPL 合规分发。
 - **图片策略**：默认输出到同目录 `assets/` 并使用相对路径；单文件导出可选内嵌 base64。
-- **历史记录**：保留最近 50 条任务元数据（可配置），只存路径、参数、哈希与结果摘要，不复制文件。
+- **历史记录**：保留最近 50 条任务元数据（可配置），只存路径、参数、方向、引擎、哈希与结果摘要，不复制文件。
+- **多方向转换（2026-11-18 已确认）**：保留 Word ↔ Markdown、PDF → Markdown/Word、Markdown → Word/PDF/HTML/EPUB、PNG/JPEG → Markdown、Excel/CSV 与 PowerPoint → Markdown 等基础一对一方向；同一方向多引擎时提供「自动 + 显式引擎」选择；不支持的组合禁用并说明原因。
+- **Python 运行时（2026-11-18，P1）**：内置 uv sidecar；在 `~/.dull_doc/runtimes/<engine>/.venv` 为每个 Python 引擎创建隔离环境，按需安装 PaddleOCR / Marker / pdf2docx 等包；不依赖系统 Python，不静默下载，安装前提示体积，记录版本与哈希。
+- **文件图标（2026-11-18，P0）**：转换页、批量、历史与方向矩阵统一使用 `icons/` 下的文件类型图标；缺失时回退综合文档；本次补齐 Markdown、HTML、EPUB、RTF、ODT、ODS、ODP、TXT。
+- **取消预览（2026-11-18）**：按用户决定，文档转换页不提供文档预览（部分格式无法可靠预览），语料制作完成行也不提供 Markdown 预览；完成行只保留「打开」。进度与 OCR 错误改为配置卡内联显示；PRD 中 REQ-020~022、REQ-048、REQ-111 标记为已取消，编号保留不复用。
+- **单文件与语料配置分工（2026-11-18）**：文档转换页只保留方向、引擎、预设与 PDF 策略；页眉页脚、中文标题、表格分级、图片资产、切块、元数据与语料包开关全部集中在「语料制作」配置。 语料制作的输出格式固定 Markdown，其他格式禁用；其他格式走单文件转换。
 - **体验偏好（2026-11-18 追加，P0）**：中英文切换（中文默认、英文完整、无需重启）；主题切换（跟随系统/浅色/深色）；Cmd+K 命令面板（页面/操作/最近文件，危险操作二次确认）。所有 UI 组件与颜色必须走 token，禁止硬编码。
 
 ## 三、技术原理（初步）
@@ -43,7 +48,7 @@
   - **PaddleOCR**（P1，Python，Apache-2.0）：中文 OCR / PP-Structure；作为 xberg 之外的中文 OCR 增强组件，检测环境或引导安装，不随包分发模型。
   - **pandoc**（3.8.3，已安装）：通用标记语言转换器，负责 Markdown → HTML / DOCX / ODT / EPUB / LaTeX 等导出，以及部分格式兜底。以 sidecar 方式随应用分发。
   - **Marker**（`marker-pdf`，Datalab，Python + ML 模型）：扫描 PDF / 图片 / 复杂版式 → Markdown / HTML / JSON，含版面分析、OCR、表格与公式识别。资源占用高，保留为 P1 备选。
-- **数据处理原则**：本地优先、默认不上传；应用数据统一存放 `~/.dull_doc/`（settings/presets/history/logs/tmp），用户输出目录独立；转换任务异步化、可取消、可查看进度与日志；失败可重试并保留中间产物。
+- **数据处理原则**：本地优先、默认不上传；应用数据统一存放 `~/.dull_doc/`（settings/presets/history/logs/tmp/runtimes），用户输出目录独立；转换任务异步化、可取消、可查看进度与日志；失败可重试并保留中间产物。
 - **日志与错误**：全局日志、全局错误处理、任务级错误归因；敏感信息（API Key、token）不得落盘或写日志，本地敏感信息存系统钥匙串。
 
 ## 四、文档索引
@@ -51,11 +56,11 @@
 | 阶段 | 文档 | 路径 | 状态 |
 | --- | --- | --- | --- |
 | S0 | 项目运营手册 | `AGENTS.md` | 已生成 |
-| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.4） |
-| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（v0.4） |
-| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.1） |
-| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.1） |
-| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认 |
+| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.6） |
+| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（v0.6） |
+| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.4） |
+| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.4） |
+| S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认（v1.1） |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 已确认 |
 | S7 | Change 总索引 | `CHANGE.md` | 未开始 |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
@@ -134,3 +139,11 @@
 | 2026-11-18 | S5 变更 | 用户增补中英文切换、主题切换、Cmd+K 命令面板（P0）。已同步 PRODUCT.md、S1（v0.4）、S2（v0.4）、PRD（v1.1，REQ-103~105）、S4（v1.1）与 AGENTS；S5 设计规范与原型必须覆盖。 |
 | 2026-11-18 | S5 | 视觉方向经决策页选定 **Proofing Desk**（校样台）。生成 `UI设计规范.html`（Proofing Desk token、浅/深色、双语、命令面板、组件与验收）与 `UI.html` 高保真原型（转换/批量/历史/设置、空/加载/失败、PDF 预检、Cmd+K、主题/语言切换）。finish review 判定 fix，8 项 material fixes 已全部修复：空白校样纸空状态与单一拖放目标、开关/历史键盘可操作、英文补全、OCR 跳过恢复、深色纸张层级、SVG 校对记号、选择态改蓝、1280 适配；新增转换中状态条与 toast。Playwright 交互/视觉回归 60+ 项全部通过，无控制台错误；detector 0 反模式（仅 em-dash 建议项）。截图在 `.impeccable/review/`。等待用户确认 S5；UI 迭代期间未提交 Git。 |
 | 2026-11-18 | S5 → Git | 用户指示提交 Git；S5 状态改为「已确认」；提交 UI 设计规范、高保真原型与 AGENTS 更新；未推送远程。 |
+| 2026-11-18 | S5 变更 | 用户要求历史详情以弹窗呈现。历史页改为全宽任务列表；点击行打开原生 `<dialog>` 详情，支持 Esc/遮罩/关闭按钮退出、焦点返回触发行、行内打开/重试动作与弹窗内复制/打开反馈；同步 UI 设计规范与验收清单。新增弹窗回归测试 25 项；UI 迭代期间未提交。 |
+| 2026-11-18 | S5 变更 / 范围扩展 | 用户优化请求：① 保留基础一对一互转（Word/PDF/Markdown/PNG/JPEG 等）并在多引擎方向提供引擎选择；② Python 引擎使用内置 uv 在应用数据目录创建 `.venv`；③ 补齐文件类型图标。已更新 UI 原型（方向/引擎选择、支持的方向矩阵、批量输出/引擎、历史图标与输出格式、设置页 Python 运行时）、UI 设计规范、PRD v1.2、S4 v1.2、S1/S2 v0.5 与 PRODUCT.md；新增 8 个图标；全套回归 118 项通过。UI 迭代期间未提交。 |
+| 2026-11-18 | S5 变更 | 按用户要求将一级菜单改为「文档转换 / 语料制作 / 转换历史 / 系统设置」；单文件页移除清洗/切块/语料开关，全部并入语料制作配置；同步 UI、UI 规范、PRD、S4 与 AGENTS。UI 迭代期间未提交。 |
+| 2026-11-18 | S5 变更 | 「批量配置」标题改为「配置」；语料制作输出格式锁定 Markdown，Word/PDF 选项禁用并给出提示；同步 UI 规范、PRD、S4 与 AGENTS。 |
+| 2026-11-18 | S5 变更 | 语料制作列表完成行增加 Markdown 预览：预览渲染 GFM，仅保留预览；新增 REQ-111，同步 PRD v1.3、S4 v1.3、UI 规范与 AGENTS。 |
+| 2026-11-18 | S5 变更 | 语料制作完成行新增 Markdown 预览；仅保留预览（按用户要求移除编辑）；新增 REQ-111，PRD/S4 升至 v1.3；全套回归 145 项通过、detector 0 反模式；未提交 Git。 |
+| 2026-11-18 | S5 变更 | 按用户决定取消预览：移除转换页文档预览块与语料制作 Markdown 预览/编辑，进度与 OCR 错误改为配置卡内联；同步 UI、UI 规范、PRD v1.4、S4 v1.4、S1/S2 v0.6、PRODUCT 与 AGENTS；REQ-020~022、REQ-048、REQ-111 标记已取消（编号保留）；新增内联状态样式与空态拖放区；回归 119 项通过、detector 0 反模式；已提交 Git，未推送远程。 |
+| 2026-11-18 | S5 → Git | 用户指示提交 Git；S1/S2 v0.6、PRD v1.4、S4 v1.4、UI 规范 v1.1 与原型状态改为「已确认」；提交 UI、设计文档、需求文档与 `icons/`；未推送远程。 |

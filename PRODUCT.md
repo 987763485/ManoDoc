@@ -20,7 +20,7 @@ Tauri 2（Rust 后端 + WebView 前端）；UI 原型使用纯 HTML / CSS / 原�
 
 ## Product Purpose
 
-DullDoc 是一个 **macOS 本地优先的文档 → Markdown 工作台**：把常见的可读文档转换成排版清晰、可直接使用的 Markdown；需要时，再把一批文档清洗、切块、补充元数据，产出厂商中立的语料包。
+DullDoc 是一个 **macOS 本地优先的文档转换工作台**：以 Markdown 为核心，同时保留 Word、PDF、HTML、EPUB、图片等基础一对一转换；需要时，再把一批文档清洗、切块、补充元数据，产出厂商中立的语料包。
 
 成功意味着：日常 80% 的转换不再需要打开终端或浏览器；断网可用；失败可定位；同输入 + 同预设可复现。
 
@@ -29,14 +29,14 @@ DullDoc 是一个 **macOS 本地优先的文档 → Markdown 工作台**：把�
 不是在线转换站，也不是需要写脚本的 CLI 集合。DullDoc 的机制是：
 
 1. **本地离线**：默认零网络请求，不上传、不登录、不埋点。
-2. **引擎分层**：anydoc 快路径 + xberg OCR/复杂表格/回退 + PaddleOCR（P1）中文 OCR 增强 + pandoc 导出。
+2. **引擎分层与可选**：anydoc 快路径 + xberg OCR/复杂表格/回退 + PaddleOCR（P1）中文 OCR 增强 + pandoc 互转；同一方向有多个引擎时由用户选择或自动路由。
 3. **最后一公里**：把「转 → 洗 → 切 → 打包」串成一个桌面工作台，而不是散落的工具。
 4. **可解释**：每个文件显示引擎、参数、警告与错误；质量分级不承诺做不到的事。
 
 ## Operating Context
 
 - 用户通常在 macOS 上处理内部标准、测评报告、合同与制度文件；这些文件不适合上传到第三方服务。
-- **应用数据统一存放在 `~/.dull_doc/`**：`settings.json`、`presets.json`、`history.json`、`logs/`、`tmp/`；用户输出目录独立，可配置。
+- **应用数据统一存放在 `~/.dull_doc/`**：`settings.json`、`presets.json`、`history.json`、`logs/`、`tmp/`、`runtimes/`；用户输出目录独立，可配置。
 - 典型任务：单个文件快速转换；一个资料文件夹批量转换；把一批文档变成可入库的 Markdown + JSONL 语料包。
 - 产物要能放进 Obsidian、静态站点、RAG / 向量库或直接交给同事。
 - 用户可能不熟悉命令行，但愿意为「准确、省事、可复现」付出学习成本。
@@ -44,13 +44,15 @@ DullDoc 是一个 **macOS 本地优先的文档 → Markdown 工作台**：把�
 
 ## Capabilities and Constraints
 
-**已确认能力**：docx / pdf / xlsx / pptx / odt / rtf / epub / csv / md 输入；Markdown 输出；pandoc 导出 HTML / DOCX / EPUB；PDF 页级预检；xberg OCR 与复杂表格回退；PaddleOCR（P1）中文 OCR；批量队列；清洗；切块；元数据；`chunks.jsonl` + `manifest.json`；历史；预设；全局日志与错误处理；中英文切换；跟随系统/浅色/深色主题；Cmd+K 命令面板。
+**已确认能力**：Word / PDF / Markdown / PNG / JPEG 等基础一对一转换（含 Word→Markdown、PDF→Markdown、PDF→Word、Markdown→Word、Markdown→PDF、图片→Markdown）；多引擎方向可显式选择引擎；docx / pdf / xlsx / pptx / odt / rtf / epub / csv / md 输入；pandoc 导出 HTML / DOCX / EPUB；PDF 页级预检；xberg OCR 与复杂表格回退；PaddleOCR（P1）中文 OCR；批量队列；清洗；切块；元数据；`chunks.jsonl` + `manifest.json`；历史；预设；全局日志与错误处理；中英文切换；跟随系统/浅色/深色主题；Cmd+K 命令面板；文件类型图标。
 
 **约束**：
 - 首发 macOS Apple Silicon；Windows / Linux 为 P2。
-- MVP 不接 Marker / MinerU 为主路径；PaddleOCR 为 P1 可选组件。
+- Marker / PaddleOCR 等 Python 引擎为 P1 可选组件；由内置 `uv` 在 `~/.dull_doc/runtimes/<engine>/.venv` 按需安装，不依赖系统 Python，不静默下载。
+- PDF→Word 走 `pdf2docx` 或 PDF→Markdown→Word 管线；Markdown→PDF 需 PDF 渲染器（Typst / WebKit 打印 / LaTeX）；复杂版式不承诺像素级保真。
 - MVP 使用本地 JSON 存储，统一放在 `~/.dull_doc/`，不引入数据库；用户输出目录独立。
 - 默认离线；任何云服务必须显式开启并二次确认。
+- 语料制作的输出格式固定 Markdown；其他格式走单文件转换；清洗/切块/语料开关集中在语料制作配置。
 - 应用 MIT；pandoc 以独立 sidecar 按 GPL 合规分发；PaddleOCR Apache-2.0。
 
 ## Brand Commitments
@@ -69,7 +71,7 @@ DullDoc 是一个 **macOS 本地优先的文档 → Markdown 工作台**：把�
 
 1. **本地优先**：默认离线、不上传、不埋点。
 2. **保真优先**：标题、表格、列表、公式、图片位置尽量保留；宁可慢，不可错。
-3. **一站式**：格式识别、引擎选择、清洗、切块、打包都在界面内完成。
+3. **一站式**：格式识别、转换方向、引擎选择、清洗、切块、打包都在界面内完成。
 4. **可解释**：每个文件都能看到引擎、参数、警告与失败原因。
 5. **可复现**：输入哈希、引擎版本、预设与参数写入 manifest。
 

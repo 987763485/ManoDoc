@@ -98,9 +98,12 @@
   .shell .side b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 18px; }
   .shell .side div { padding: 8px 10px; border-radius: 6px; margin-bottom: 4px; }
   .shell .side .on { background: var(--blue-soft); color: var(--blue); font-weight: 650; }
-  .shell .main { padding: 18px; display: grid; grid-template-columns: 1fr 140px; gap: 14px; }
-  .shell .sheet { background: var(--paper); border: 1px solid var(--line); padding: 18px; }
-  .shell .margin { border-left: 1px solid var(--line); padding-left: 14px; font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+  .shell .main { padding: 18px; display: grid; place-items: center; }
+  .shell .panel { width: min(100%, 420px); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .shell .panel h3 { margin: 0; font-size: 15px; }
+  .shell .panel p { margin: 0; font-size: 12px; color: var(--ink-3); }
+  .shell .fake-field { border: 1px solid var(--line-strong); border-radius: 7px; padding: 9px 10px; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .shell .fake-field img { width: 18px; height: 18px; }
   .demo { border: 1px solid var(--line); border-radius: 12px; padding: 20px; background: var(--surface-2); }
   .demo + .demo { margin-top: 14px; }
   .demo .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -126,12 +129,21 @@
   .badge.amber { background: var(--amber-soft); color: var(--amber); }
   .progress { height: 8px; background: #E6DFD1; border-radius: 999px; overflow: hidden; }
   .progress span { display: block; height: 100%; width: 62%; background: var(--blue); border-radius: 999px; }
-  .margin-rail { border-left: 1px solid var(--line-strong); padding-left: 16px; display: flex; flex-direction: column; gap: 18px; }
-  .mark { font-family: var(--mono); font-size: 12px; color: var(--ink-3); line-height: 1.6; }
-  .mark b { display: block; font-family: var(--sans); font-size: 12px; color: var(--red); margin-bottom: 3px; }
-  .mark.blue b { color: var(--blue); }
-  .proof-glyph { width: 24px; height: 24px; stroke: var(--red); fill: none; stroke-width: 1.8; stroke-linecap: round; display: block; margin-bottom: 5px; transform: rotate(-3deg); }
-  .mark.blue .proof-glyph { stroke: var(--blue); }
+  .modal-demo { background: rgba(22, 22, 22, .38); border-radius: 14px; padding: 24px; display: grid; place-items: center; }
+  .modal-demo-card { width: min(520px, 100%); background: var(--paper); border: 1px solid var(--line-strong); border-radius: 12px; padding: 22px; box-shadow: var(--shadow); }
+  .modal-demo-head { display: flex; align-items: flex-start; gap: 14px; }
+  .modal-demo-head h4 { margin: 0 0 4px; font-size: 19px; line-height: 1.35; letter-spacing: -.02em; }
+  .modal-demo-head p { margin: 0 0 16px; font-size: 12px; color: var(--ink-3); }
+  .modal-demo-close { flex: 0 0 auto; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px; display: grid; place-items: center; background: var(--surface); color: var(--ink-2); }
+  .modal-demo-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .modal-demo-card .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+  .icon-item { border: 1px solid var(--line); border-radius: 8px; padding: 10px 8px; text-align: center; background: var(--surface-2); font-size: 11px; color: var(--ink-3); }
+  .icon-item img { width: 38px; height: 38px; display: block; margin: 0 auto 6px; }
+  .direction-demo { display: grid; grid-template-columns: 1.6fr 1fr; gap: 12px; align-items: end; }
+  .direction-control { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); border-radius: 7px; padding: 8px 10px; background: var(--surface); font-size: 13px; color: var(--ink); }
+  .direction-control img { width: 18px; height: 18px; }
+  .direction-control .arrow { color: var(--ink-3); font-family: var(--mono); }
   .kv { display: grid; grid-template-columns: 90px 1fr; gap: 8px 14px; font-size: 13px; color: var(--ink-2); }
   .kv b { color: var(--ink-3); font-weight: 600; }
   .footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-3); }
@@ -147,19 +159,19 @@
   <h1>UI 设计规范</h1>
   <p class="tagline">Proofing Desk · 为文档转换而做的校样台</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.1</span>
+    <span class="pill"><strong>版本</strong> v1.1</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>模式</strong> Operate · 桌面</span>
-    <span class="pill status">状态：待确认</span>
+    <span class="pill status">状态：已确认</span>
   </div>
 
   <section id="direction" class="card">
     <h2><span class="num">01</span>设计方向</h2>
-    <p><strong>Proofing Desk（校样台）</strong>：把「转换、清洗、质量检查」做成看得见的页边批注，而不是上传/下载网页或命令行输出。界面首先是一个工作台：标准导航、标准控件、可扫描的数据；世界只贡献字体、颜色、密度和一个签名动作——右侧的页边校样轨。</p>
+    <p><strong>Proofing Desk（校样台）</strong>：把「转换、清洗、质量检查」做成看得见的页边批注，而不是上传/下载网页或命令行输出。界面首先是一个工作台：标准导航、标准控件、可扫描的数据；世界只贡献字体、颜色、密度和一个签名动作——红蓝校对记号。</p>
     <div class="grid-3">
       <div class="callout"><b>是</b><br>文档校样台、页边批注、套准线、红蓝铅笔、克制的编辑气质。</div>
       <div class="callout warn"><b>不是</b><br>在线转换网站、开发者终端、Office Ribbon、AI 聊天主界面、卡片堆叠。</div>
-      <div class="callout"><b>签名动作</b><br>页边校样轨：清洗与质量警告以红/蓝校对记号落在正文旁，可定位、可复核。</div>
+      <div class="callout"><b>签名动作</b><br>红蓝校对记号：错误、警告与成功沿用校样批注的颜色和图形；转换进度与 OCR 错误内联在配置卡内，可定位、可操作。</div>
     </div>
     <h3>五条原则</h3>
     <ol>
@@ -213,7 +225,7 @@
 
   <section id="type" class="card">
     <h2><span class="num">03</span>字体</h2>
-    <p>UI 用系统无衬线，文档预览用编辑衬线，页边注记与代码用等宽。三种字体各司其职，不做「全站衬线」的复古表演。</p>
+    <p>UI 用系统无衬线，文档正文示例用编辑衬线，批注与代码用等宽。三种字体各司其职，不做「全站衬线」的复古表演。</p>
     <div class="type-row"><div class="sample ui-sample" style="font-size:34px;font-weight:800;letter-spacing:-.03em">转换台 / Convert</div><div class="spec">UI 34 / 800 / -0.03em</div></div>
     <div class="type-row"><div class="sample ui-sample" style="font-size:20px;font-weight:700">GB/T 28448—2019 测评要求</div><div class="spec">UI 20 / 700</div></div>
     <div class="type-row"><div class="sample ui-sample" style="font-size:14px">把常见的可读文档转换成排版清晰的 Markdown。</div><div class="spec">UI 14 / 400 / 1.6</div></div>
@@ -267,24 +279,28 @@
 
   <section id="layout" class="card">
     <h2><span class="num">05</span>布局</h2>
-    <p>桌面应用外壳：左侧 216px 导航，顶部 56px 面包屑，主内容 8pt 网格。转换页为「文件与预设 318px + 校样纸 + 168px 页边轨」；批量页为「筛选 + 队列 + 右侧配置」；历史页为「列表 + 详情」；设置页为「分组导航 + 表单」。</p>
+    <p>桌面应用外壳：左侧 216px 导航，顶部 56px 面包屑，主内容 8pt 网格。文档转换页为居中 760px 配置卡（文件、方向/引擎、预设），转换进度与错误内联在卡内，不提供文档预览；语料制作页为「筛选 + 队列 + 右侧配置（清洗、切块、语料）」；转换历史页为「全宽任务列表 + 详情弹窗」；系统系统设置页为「分组导航 + 表单」。</p>
     <div class="shell">
       <div class="bar"><i></i><i></i><i></i><span>DullDoc · 1440×900</span></div>
       <div class="body">
-        <div class="side"><b>DullDoc</b><div class="on">转换</div><div>批量</div><div>历史</div><div>设置</div></div>
+        <div class="side"><b>DullDoc</b><div class="on">文档转换</div><div>语料制作</div><div>转换历史</div><div>系统设置</div></div>
         <div class="main">
-          <div class="sheet"><h3 style="margin-top:0">网络安全等级保护测评要求</h3><p class="small">GB/T 28448—2019 · 6.1.2</p><p class="serif-sample" style="font-size:13px;line-height:1.9">机房应设置防盗报警系统或专人值守，应对设备或主要部件进行固定。</p></div>
-          <div class="margin"><div class="mark"><svg class="proof-glyph" viewBox="0 0 32 32" aria-hidden="true"><path d="M8 6h16v18H8zM8 13h16M15 6v18"/><path d="M10 24c4-5 9-8 15-9"/></svg><b>表格</b>合并单元格需复核</div><div class="mark blue"><svg class="proof-glyph" viewBox="0 0 32 32" aria-hidden="true"><path d="M8 8v12h14M17 15l5 5-5 5"/></svg><b>断行</b>已合并</div></div>
+          <div class="panel">
+            <h3>网络安全等级保护测评要求.docx</h3>
+            <p>2.4 MB · Word 文档</p>
+            <div class="fake-field"><img src="../../icons/WORD.svg" alt=""><span>Word → Markdown</span><span style="margin-left:auto;color:var(--ink-3)">自动</span></div>
+            <button class="btn primary" style="width:100%">开始转换</button>
+          </div>
         </div>
       </div>
     </div>
     <div class="table-wrap" style="margin-top:16px">
       <table>
-        <thead><tr><th>尺寸</th><th>侧栏</th><th>左栏</th><th>页边轨</th><th>内容</th></tr></thead>
+        <thead><tr><th>尺寸</th><th>侧栏</th><th>内容</th><th>说明</th></tr></thead>
         <tbody>
-          <tr><td>1440×900</td><td>216</td><td>318</td><td>168</td><td>剩余宽度，校样纸最大 760</td></tr>
-          <tr><td>1280×800</td><td>200</td><td>280</td><td>140</td><td>校样纸自适应</td></tr>
-          <tr><td>最小窗口</td><td>可折叠</td><td>可折叠</td><td>可收起</td><td>预览优先</td></tr>
+          <tr><td>1440×900</td><td>216</td><td>剩余宽度</td><td>配置卡居中，最大 760</td></tr>
+          <tr><td>1280×800</td><td>200</td><td>剩余宽度</td><td>配置卡自适应，无横向滚动</td></tr>
+          <tr><td>最小窗口</td><td>可折叠</td><td>单列</td><td>配置卡优先</td></tr>
         </tbody>
       </table>
     </div>
@@ -298,18 +314,95 @@
     <p class="small">主按钮使用墨色，红色只用于危险操作；不使用渐变、发光或玻璃。</p>
     <h3>表单</h3>
     <div class="demo"><div class="row"><div class="field"><label>输出目录</label><input value="~/Documents/DullDoc Output" readonly></div><div class="field"><label>转换预设</label><select><option>标准文档</option><option>表格清单</option><option>知识库</option></select></div><div class="field"><label>并发</label><select><option>4</option><option>1</option><option>8</option></select></div></div></div>
+    <h3>转换方向与引擎</h3>
+    <p>源格式自动识别；目标格式只列兼容项；同一方向有多个引擎时提供「自动 / 显式引擎」选择，显式选择优先。</p>
+    <div class="demo">
+      <div class="direction-demo">
+        <div class="field"><label>方向</label><div class="direction-control"><img src="../../icons/WORD.svg" alt=""><span>Word</span><span class="arrow">→</span><span>Markdown</span></div></div>
+        <div class="field"><label>引擎</label><select><option>自动（推荐）</option><option>anydoc</option><option>xberg</option><option>pandoc</option></select></div>
+      </div>
+      <p class="small" style="margin:12px 0 0">Word → Markdown · 3 个引擎可用；自动优先 anydoc，失败或质量不足时回退 xberg。</p>
+    </div>
     <h3>开关与徽标</h3>
     <div class="demo"><div class="row"><span class="switch"></span><span class="small">清洗页眉页脚</span><span class="switch off"></span><span class="small">保留批注</span><span class="badge green">A 级表格</span><span class="badge amber">需复核</span><span class="badge red">失败</span><span class="badge blue">OCR</span></div></div>
+    <h3>文件类型图标</h3>
+    <p>统一图标语言：左侧格式色块 + 白色格式字母，右侧内容面板。转换页 46px，列表 18px，方向矩阵 16px；缺失时回退综合文档。</p>
+    <div class="icon-grid">
+      <div class="icon-item"><img src="../../icons/WORD.svg" alt=""><span>Word</span></div>
+      <div class="icon-item"><img src="../../icons/PDF.svg" alt=""><span>PDF</span></div>
+      <div class="icon-item"><img src="../../icons/ECEL.svg" alt=""><span>Excel</span></div>
+      <div class="icon-item"><img src="../../icons/PPT.svg" alt=""><span>PowerPoint</span></div>
+      <div class="icon-item"><img src="../../icons/MD.svg" alt=""><span>Markdown</span></div>
+      <div class="icon-item"><img src="../../icons/HTML.svg" alt=""><span>HTML</span></div>
+      <div class="icon-item"><img src="../../icons/EPUB.svg" alt=""><span>EPUB</span></div>
+      <div class="icon-item"><img src="../../icons/RTF.svg" alt=""><span>RTF</span></div>
+      <div class="icon-item"><img src="../../icons/ODT.svg" alt=""><span>ODT</span></div>
+      <div class="icon-item"><img src="../../icons/ODS.svg" alt=""><span>ODS</span></div>
+      <div class="icon-item"><img src="../../icons/ODP.svg" alt=""><span>ODP</span></div>
+      <div class="icon-item"><img src="../../icons/TXT.svg" alt=""><span>TXT</span></div>
+      <div class="icon-item"><img src="../../icons/CSV.svg" alt=""><span>CSV</span></div>
+      <div class="icon-item"><img src="../../icons/PNG.svg" alt=""><span>PNG</span></div>
+      <div class="icon-item"><img src="../../icons/JPG.svg" alt=""><span>JPG</span></div>
+      <div class="icon-item"><img src="../../icons/综合文档.svg" alt=""><span>Generic</span></div>
+    </div>
     <h3>进度</h3>
     <div class="demo"><div class="progress"><span></span></div><p class="small" style="margin:10px 0 0">62% · 清洗中 · 3/5 文件</p></div>
-    <h3>页边校样轨</h3>
-    <div class="demo"><div class="margin-rail"><div class="mark"><svg class="proof-glyph" viewBox="0 0 32 32" aria-hidden="true"><path d="M8 6h16v18H8zM8 13h16M15 6v18"/><path d="M10 24c4-5 9-8 15-9"/></svg><b>表格 · 合并单元格</b>第 2 行第 3 列疑似串行，建议人工复核。</div><div class="mark blue"><svg class="proof-glyph" viewBox="0 0 32 32" aria-hidden="true"><path d="M8 8v12h14M17 15l5 5-5 5"/></svg><b>断行 · 已合并</b>“固定，并设置”已从硬换行恢复为一段。</div><div class="mark"><svg class="proof-glyph" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 13h16c4 0 4 7 0 7H9"/><path d="M12 8c2 3 5 5 9 5"/></svg><b>页眉 · 已移除</b>“GB/T 28448—2019”重复出现 12 次。</div></div></div>
+    <h3>内联转换状态</h3>
+    <p>转换进度与 OCR 错误直接出现在配置卡内，不切换页面、不打开右侧面板。错误必须给出可执行的下一步。</p>
+    <div class="demo">
+      <div class="progress"><span></span></div>
+      <p class="small" style="margin:10px 0 0">正在转换 · 第 24 / 50 页 · 62%</p>
+      <p class="small" style="margin:10px 0 0"><b style="color:var(--red)">E_NEEDS_OCR</b> · 第 1 页没有文本层。</p>
+      <div class="row" style="margin-top:8px"><button class="btn secondary small">跳过第 1 页并继续</button><button class="btn ghost small">了解 OCR 组件</button></div>
+    </div>
     <h3>空、错误、无权限</h3>
     <div class="grid-3">
       <div class="demo"><h3 style="margin-top:0">空状态</h3><p class="small">把文档放到校样纸上，或选择文件。支持 docx / pdf / xlsx / md。</p><button class="btn secondary small">选择文件</button></div>
       <div class="demo"><h3 style="margin-top:0">错误</h3><p class="small"><b>E_NEEDS_OCR</b> · 该 PDF 第 1 页没有文本层。可跳过该页，或安装 OCR 组件。</p><button class="btn secondary small">查看详情</button></div>
       <div class="demo"><h3 style="margin-top:0">无权限</h3><p class="small">需要在系统设置中允许访问该文件夹，才能写入输出。</p><button class="btn secondary small">打开系统设置</button></div>
     </div>
+    <h3>历史详情弹窗</h3>
+    <p>历史页保持全宽列表；点击任务打开弹窗，聚焦查看预设、引擎、输出与警告。Esc 或关闭按钮退出，焦点返回触发行。</p>
+    <div class="modal-demo">
+      <div class="modal-demo-card" role="dialog" aria-label="历史详情示例">
+        <div class="modal-demo-head">
+          <div style="flex:1;min-width:0">
+            <h4>GB/T 28448—2019.docx</h4>
+            <p>单文件转换 · 2026-11-18 14:32</p>
+          </div>
+          <span class="modal-demo-close" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="kv">
+          <b>预设</b><span>标准文档</span>
+          <b>引擎</b><span>anydoc 0.2.4 · 1.2s</span>
+          <b>输出</b><span>~/Documents/DullDoc Output/GB-T-28448.md</span>
+          <b>统计</b><span>53,210 字符 · 49 标题 · 2 表格</span>
+          <b>警告</b><span>1 个表格提示（B 级）</span>
+        </div>
+        <div class="actions"><button class="btn primary small">重跑</button><button class="btn secondary small">打开输出</button><button class="btn ghost small">复制参数</button></div>
+      </div>
+    </div>
+    <h3>转换方向矩阵</h3>
+    <p>基础一对一方向全部可达；同一方向多引擎时在转换页选择。PDF→Word 与 Markdown→PDF 标注质量/渲染器限制。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>输入</th><th>输出</th><th>引擎</th></tr></thead>
+        <tbody>
+          <tr><td>Word</td><td>Markdown</td><td>anydoc · xberg · pandoc</td></tr>
+          <tr><td>PDF</td><td>Markdown</td><td>anydoc · xberg · Marker</td></tr>
+          <tr><td>PDF</td><td>Word</td><td>pdf2docx · PDF→MD→Word</td></tr>
+          <tr><td>Markdown</td><td>Word</td><td>pandoc</td></tr>
+          <tr><td>Markdown</td><td>PDF</td><td>pandoc + PDF renderer</td></tr>
+          <tr><td>Markdown</td><td>HTML / EPUB</td><td>pandoc</td></tr>
+          <tr><td>PNG / JPEG</td><td>Markdown</td><td>xberg · PaddleOCR · Marker</td></tr>
+          <tr><td>Excel / CSV / ODS</td><td>Markdown</td><td>anydoc · xberg</td></tr>
+          <tr><td>PowerPoint / ODP</td><td>Markdown</td><td>anydoc · xberg</td></tr>
+          <tr><td>HTML / RTF / ODT / EPUB</td><td>Markdown</td><td>anydoc · xberg</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Python 运行时</h3>
+    <div class="callout"><b>uv + 隔离 .venv</b><br>Python 引擎（PaddleOCR / Marker / pdf2docx）不依赖系统 Python。应用在 <code>~/.dull_doc/runtimes/&lt;engine&gt;/.venv</code> 创建隔离环境，按需安装并记录版本；安装前提示包体积与网络，不静默下载。</div>
   </section>
 
   <section id="theme" class="card">
@@ -345,7 +438,7 @@
       <table>
         <thead><tr><th>分组</th><th>示例动作</th><th>快捷键</th><th>备注</th></tr></thead>
         <tbody>
-          <tr><td>前往</td><td>转换 / 批量 / 历史 / 设置</td><td>G 然后 1–4</td><td>可搜索</td></tr>
+          <tr><td>前往</td><td>文档转换 / 语料制作 / 转换历史 / 系统设置</td><td>G 然后 1–4</td><td>可搜索</td></tr>
           <tr><td>动作</td><td>开始转换、开始批量、导出 HTML、打开输出目录</td><td>—</td><td>危险动作二次确认</td></tr>
           <tr><td>偏好</td><td>切换主题、切换语言</td><td>—</td><td>即时生效</td></tr>
           <tr><td>最近</td><td>最近文件 / 最近任务</td><td>—</td><td>最多 5 条</td></tr>
@@ -370,13 +463,18 @@
   <section id="check" class="card">
     <h2><span class="num">11</span>验收清单</h2>
     <ul>
-      <li>1440×900 与 1280×800 下，侧栏、左栏、页边轨、状态条不重叠、不截断。</li>
+      <li>1440×900 与 1280×800 下，侧栏、配置卡、内联状态不重叠、不截断，无横向滚动。</li>
       <li>浅色/深色/跟随系统三种主题正常；所有颜色来自 token。</li>
       <li>中文/English 切换覆盖菜单、按钮、错误、对话框；重启后保持。</li>
       <li>Cmd+K 可打开、搜索、执行、Esc 关闭；危险操作二次确认。</li>
-      <li>转换页：空、加载、成功、失败、PDF 预检、无权限状态齐全。</li>
+      <li>转换页：空、转换中、成功、失败、PDF 预检、无权限状态齐全；进度与错误内联在配置卡内。</li>
+      <li>历史页：全宽任务列表；点击任务打开详情弹窗，Esc/关闭退出，焦点返回触发行。</li>
+      <li>转换页：源→目标方向、兼容引擎与「支持的方向」矩阵可发现；多引擎方向可选择；单文件不出现清洗/切块/语料开关。</li>
+      <li>语料制作页：配置包含页眉页脚、中文标题、表格分级、图片资产、切块、元数据与语料包开关；输出格式固定 Markdown，其他格式禁用。</li>
+            <li>所有支持格式显示文件类型图标；缺失资源回退综合文档；浅色/深色可辨识。</li>
+      <li>设置页显示 Python 运行时（uv + 隔离 .venv）状态与路径；不依赖系统 Python。</li>
       <li>批量页：等待/转换/清洗/完成/跳过/失败六种状态齐全。</li>
-      <li>页边校样轨的每条警告可定位到正文；颜色 + 文字双重编码。</li>
+      <li>错误与警告均给出原因与可执行下一步；颜色 + 文字双重编码。</li>
       <li>表格、输入、按钮、开关、对话框的焦点与禁用态可见。</li>
     </ul>
   </section>

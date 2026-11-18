@@ -258,10 +258,10 @@
     <span>项目文档</span><span class="sep">/</span><span>竞品分析</span><span class="sep">/</span><span class="current">S2</span>
   </nav>
   <h1>竞品分析</h1>
-  <p class="tagline">文档 → Markdown：功能面、实现原理与 DullDoc 的机会</p>
+  <p class="tagline">文档互转与 Markdown 工作台：功能面、实现原理与 DullDoc 的机会</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.4</span>
-    <span class="pill"><strong>变更</strong> 体验增补：i18n · 主题 · 命令面板</span>
+    <span class="pill"><strong>版本</strong> v0.6</span>
+    <span class="pill"><strong>变更</strong> 范围收敛：取消预览，补多方向/图标/运行时</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>样本</strong> 40+ 产品与项目 · 61 项功能面</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -509,7 +509,7 @@
             <td>SDK / 私有化；商业授权</td>
             <td>高保真 PDF 渲染、转换、OCR、脱敏、签署、注释、表单、文档比较</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>面向嵌入式文档体验；说明「高保真渲染」本身是产品力，DullDoc 的预览应借鉴其稳定与速度。</td>
+            <td>面向嵌入式文档体验；DullDoc 不提供预览，仅借鉴其文档处理的稳定与速度。</td>
           </tr>
           <tr>
             <td><a href="https://docparser.com/" target="_blank" rel="noopener">Docparser</a></td>
@@ -707,7 +707,7 @@
           <tr><td>F-51</td><td>平台导入</td><td>Dify/RAGFlow/向量库；厂商中立 JSONL 优先</td><td><span class="tag p2">P2</span></td></tr>
 
           <tr class="group-row"><td colspan="4">F. 体验与平台</td></tr>
-          <tr><td>F-52</td><td>预览 / 差异</td><td>渲染 + 源码；原文档与 Markdown 对照</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-52</td><td>预览 / 差异</td><td>原计划渲染 + 源码；2026-11-18 按用户决定取消，DullDoc 不提供预览</td><td><span class="tag p2">已取消</span></td></tr>
           <tr><td>F-53</td><td>错误诊断</td><td>文件、页、引擎、原因、下一步；可导出报告</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-54</td><td>中文界面 / 深色</td><td>中文优先；深色模式 P1</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-55</td><td>macOS / Apple Silicon</td><td>原生 arm64；MPS 加速可用</td><td><span class="tag p0">P0</span></td></tr>
@@ -806,7 +806,8 @@
       <b>但组合起来，空白非常明确：</b>macOS 原生、完全离线、中文优先、anydoc 快速解析 + xberg OCR/表格增强 + pandoc 导出、PDF 页级预检、清洗/切块/语料包、批量队列与可解释诊断——目前没有产品同时做到。
     </div>
     <div class="callout warn" style="margin-top:14px">
-      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。同日增补中英文切换、跟随系统/浅色/深色主题与 Cmd+K 命令面板。本节的竞品分析结论保持不变；实施要求见 S3 PRD 的 REQ-097 ~ REQ-105。
+      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。同日增补中英文切换、跟随系统/浅色/深色主题与 Cmd+K 命令面板。
+      <br><br><b>范围再扩展（2026-11-18 优化请求）：</b>保留基础一对一互转（Word ↔ Markdown、PDF → Markdown / Word、Markdown → Word / PDF / HTML / EPUB、PNG/JPEG → Markdown 等），同一方向多引擎时提供引擎选择；Python 引擎由内置 uv 在应用数据目录创建隔离 `.venv`；文件类型统一使用图标。竞品中「格式互转」已是基础能力，DullDoc 的差异仍在离线、可解释的多引擎编排与语料化；实施要求见 PRD REQ-106 ~ REQ-110。
     </div>
   </section>
 
@@ -855,7 +856,7 @@
       <div class="arrow">→</div>
       <div class="step"><span class="n">STEP 04</span><b>清洗与规范化</b><span>中文空格、标题编号、页眉页脚、目录点线</span></div>
       <div class="arrow">→</div>
-      <div class="step"><span class="n">STEP 05</span><b>预览 / 导出 / 语料化</b><span>pandoc 导出；切块、元数据、manifest</span></div>
+      <div class="step"><span class="n">STEP 05</span><b>导出 / 语料化</b><span>pandoc 导出；切块、元数据、manifest</span></div>
     </div>
 
     <div class="two-col">
@@ -903,7 +904,7 @@
 
     <h3>6.7 Tauri 2 的桌面架构</h3>
     <div class="pipeline">
-      <div class="step"><span class="n">UI</span><b>WebView 前端</b><span>拖拽、队列、预览、设置；组件化 UI</span></div>
+      <div class="step"><span class="n">UI</span><b>WebView 前端</b><span>拖拽、队列、内联状态、设置；组件化 UI</span></div>
       <div class="arrow">⇄</div>
       <div class="step"><span class="n">CORE</span><b>Rust 后端</b><span>任务编排、文件系统、进程管理、日志、错误</span></div>
       <div class="arrow">→</div>
@@ -1018,7 +1019,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr><td>01</td><td>PDF 页级预检与「跳过无文本页」</td><td>封面/插图页导致整份 PDF 失败</td><td>anydoc 全有或全无；商业套件不暴露页级诊断</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>02</td><td>中文排版清洗规则集</td><td>字间空格、标题编号、目录点线、全半角</td><td>开源引擎只做结构，不做中文规范化</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>03</td><td>表格保护与质量分级</td><td>合并单元格、跨页表格、复杂单元格</td><td>anydoc 尽力而为；商业套件不产 Markdown</td><td><span class="tag p0">P0</span></td></tr>
-          <tr><td>04</td><td>质量诊断与差异预览</td><td>用户不知道哪里转坏了</td><td>开源 CLI 只给退出码；商业 GUI 不解释结构</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>04</td><td>质量诊断与内联错误</td><td>用户不知道哪里转坏了</td><td>开源 CLI 只给退出码；商业 GUI 不解释结构</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>05</td><td>批量队列：并发、取消、重试、跳过已存在</td><td>文件夹转换不可控</td><td>开源引擎缺 GUI；在线服务不适合内部资料</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>06</td><td>语料包：chunks.jsonl + manifest</td><td>转完还要写脚本切块与加元数据</td><td>RAGFlow/Unstructured 重且平台化；桌面产品缺失</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>07</td><td>预设与可复现</td><td>每次参数不同，结果不可比</td><td>多数工具只记全局设置，不记引擎版本与哈希</td><td><span class="tag p0">P0</span></td></tr>
@@ -1063,7 +1064,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr>
             <td>中文清洗规则误伤</td>
             <td>过度去空格可能破坏英文、代码、URL、化学式。</td>
-            <td>规则分域：CJK 之间去空格；CJK 与 Latin 之间保留；代码/公式块跳过；提供预览与开关。</td>
+            <td>规则分域：CJK 之间去空格；CJK 与 Latin 之间保留；代码/公式块跳过；提供规则开关与输出核对。</td>
           </tr>
           <tr>
             <td>Marker / MinerU 的模型许可</td>
