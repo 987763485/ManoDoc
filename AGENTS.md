@@ -18,15 +18,15 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S3 需求文档已按 xberg 内核变更修订，待 `/grill-me` 辩驳** |
+| 当前阶段 | **S3 需求文档已按 xberg / PaddleOCR 变更修订，待 `/grill-me` 辩驳** |
 | 下一阶段 | S4 功能拆解 + MVP → `软件功能设计说明.md` |
-| 当前事项 | xberg 已写入 PRD 作为第二内核；等待用户执行 `/grill-me` 辩驳后定稿 |
-| 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核 |
+| 当前事项 | xberg（P0）与 PaddleOCR（P1）已写入 PRD；等待用户执行 `/grill-me` 辩驳后定稿 |
+| 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件） |
 
 ### 已确认的产品决策
 
-- **引擎分工**：anydoc 负责 Office/文本型 PDF 的快速路径；xberg（原 Kreuzberg，Rust/MIT）作为第二内核，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；pandoc 负责 Markdown → HTML/DOCX/EPUB 导出；Marker 保留为 P1 的备选高质量引擎。
-- **引擎路由**：按文件内容判定格式；文本型 PDF 先由 anydoc 处理，失败或质量不足时回退 xberg；扫描件优先 xberg OCR；xberg 不可用时才进入「跳过无文本页 / 提示需要 OCR」的降级路径，不得静默失败。
+- **引擎分工**：anydoc 负责 Office/文本型 PDF 的快速路径；xberg（原 Kreuzberg，Rust/MIT）作为第二内核，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；PaddleOCR（P1，Apache-2.0）作为中文 OCR 增强组件；pandoc 负责 Markdown → HTML/DOCX/EPUB 导出；Marker 保留为 P1 的备选高质量引擎。
+- **引擎路由**：按文件内容判定格式；文本型 PDF 先由 anydoc 处理，失败或质量不足时回退 xberg；扫描件优先 xberg OCR，中文低置信度或用户选择时可用 PaddleOCR（P1）；xberg/PaddleOCR 均不可用时才进入「跳过无文本页 / 提示需要 OCR」的降级路径，不得静默失败。
 - **批量知识库产物**：厂商中立的「镜像 `.md` + `chunks.jsonl` + `manifest.json`」语料包；清洗、切块、元数据均为可勾选项；不绑定 Dify / RAGFlow 等具体平台。
 - **测试样本**：`example/` 下为测试文件——`.docx`（GB/T 28448-2019 等保测评要求，表格密集）、50 页 PDF（有完整文本层，约 6.1 万字）、`.xlsx`（等保指标清单）、`.md`（1074 行，用于验证 Markdown 再导出）。
 - **名称与协议**：产品名保留 DullDoc；开源协议 MIT；pandoc 以独立 sidecar 按 GPL 合规分发。
@@ -36,9 +36,10 @@
 ## 三、技术原理（初步）
 
 - **应用框架**：Tauri 2。Rust 负责文件系统、进程管理、转换编排与安全边界；前端使用 WebView 渲染界面。
-- **转换内核**（四引擎，按能力路由）：
+- **转换内核**（四个解析/导出引擎 + 可选 OCR 组件）：
   - **anydoc**（Firecrawl，纯 Rust，MIT）：Word / PowerPoint / Excel / OpenDocument / RTF / EPUB / CSV / 文本型 PDF → GitHub 风格 Markdown；速度快、无网络、无 OCR。Rust 可直接以 crate 形式嵌入 Tauri 后端。
   - **xberg**（原 Kreuzberg，Rust，MIT）：107 种格式 → 文本 / Markdown / HTML / JSON / DocTags；内置 OCR（Tesseract / PaddleOCR / Candle / VLM）、版面与表格识别、语法切块、CLI/API/MCP。作为第二内核，负责扫描件、复杂 PDF 表格与 anydoc 回退。
+  - **PaddleOCR**（P1，Python，Apache-2.0）：中文 OCR / PP-Structure；作为 xberg 之外的中文 OCR 增强组件，检测环境或引导安装，不随包分发模型。
   - **pandoc**（3.8.3，已安装）：通用标记语言转换器，负责 Markdown → HTML / DOCX / ODT / EPUB / LaTeX 等导出，以及部分格式兜底。以 sidecar 方式随应用分发。
   - **Marker**（`marker-pdf`，Datalab，Python + ML 模型）：扫描 PDF / 图片 / 复杂版式 → Markdown / HTML / JSON，含版面分析、OCR、表格与公式识别。资源占用高，保留为 P1 备选。
 - **数据处理原则**：本地优先、默认不上传；转换任务异步化、可取消、可查看进度与日志；失败可重试并保留中间产物。
@@ -49,9 +50,9 @@
 | 阶段 | 文档 | 路径 | 状态 |
 | --- | --- | --- | --- |
 | S0 | 项目运营手册 | `AGENTS.md` | 已生成 |
-| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.2 追加 xberg） |
-| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（含 xberg 决策说明） |
-| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | v0.2，待辩驳 |
+| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.3 追加 PaddleOCR） |
+| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（含 xberg / PaddleOCR 决策说明） |
+| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | v0.3，待辩驳 |
 | S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 未开始 |
 | S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 未开始 |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 未开始 |
@@ -99,15 +100,16 @@
 
 ## 六、注意事项与风险
 
-1. **anydoc 无 OCR**：图片型 PDF 会返回 `NeedsOcr`，必须优先路由 xberg；xberg 不可用时才提示用户跳过或等待 OCR。
+1. **anydoc 无 OCR**：图片型 PDF 会返回 `NeedsOcr`，必须优先路由 xberg；xberg 不可用但 PaddleOCR 可用时路由 PaddleOCR；两者均不可用时才提示用户跳过或等待 OCR。
 2. **xberg 依赖与模型**：OCR / 版面模型可能增加安装体积与平台差异；优先检测环境或使用最小模型，禁止静默下载；S6 用真实样本验证速度、体积与许可。
-3. **Marker 体量大**：保留为 P1 备选；Python 环境 + ML 模型可能达到数 GB，优先“检测系统环境 / 引导安装”，避免打包模型。
-4. **pandoc 为 GPL 程序**：以独立 sidecar 进程调用，不静态链接；分发时附带许可证与源码获取说明。
-5. **pandoc 输出 PDF** 需要 LaTeX 引擎或替代方案（如 WebView 打印、Typst），需在 S6 选型时单独评估。
-6. **Tauri 跨平台 WebView 差异**：macOS WebKit、Windows WebView2、Linux WebKitGTK 的字体与渲染需分别验证。
-7. **macOS 签名与公证**：包含外部二进制、xberg 模型与可选 Python 环境时，分发前需处理 Hardened Runtime、entitlements 与 notarization。
-8. **安全**：所有外部命令以参数数组调用，禁止拼接 shell 字符串；限制文件路径与符号链接，防止命令注入。
-9. **隐私**：默认完全本地转换；仅当用户显式开启 OCR 云服务时才上传，并明确提示。
+3. **PaddleOCR 依赖**：Python + Paddle 模型，macOS 上以 CPU 为主；作为 P1 可选组件，必须引导安装、不可静默下载；中文低置信度时才启用，避免默认变慢。
+4. **Marker 体量大**：保留为 P1 备选；Python 环境 + ML 模型可能达到数 GB，优先“检测系统环境 / 引导安装”，避免打包模型。
+5. **pandoc 为 GPL 程序**：以独立 sidecar 进程调用，不静态链接；分发时附带许可证与源码获取说明。
+6. **pandoc 输出 PDF** 需要 LaTeX 引擎或替代方案（如 WebView 打印、Typst），需在 S6 选型时单独评估。
+7. **Tauri 跨平台 WebView 差异**：macOS WebKit、Windows WebView2、Linux WebKitGTK 的字体与渲染需分别验证。
+8. **macOS 签名与公证**：包含外部二进制、xberg 模型与可选 Python 环境时，分发前需处理 Hardened Runtime、entitlements 与 notarization。
+9. **安全**：所有外部命令以参数数组调用，禁止拼接 shell 字符串；限制文件路径与符号链接，防止命令注入。
+10. **隐私**：默认完全本地转换；仅当用户显式开启 OCR 云服务时才上传，并明确提示。
 
 ## 七、工作日志
 
@@ -123,3 +125,4 @@
 | 2026-11-18 | S2 → S3 | 用户确认 S2。状态改为「已确认」；开始编写 S3 需求文档，完成后由用户执行 `/grill-me` 辩驳。 |
 | 2026-11-18 | S3 | 生成 `docs/superpowers/需求文档.md` 初稿：菜单结构、REQ-001~096、NFR-001~012、文件/语料 schema、PDF 预检策略、错误码、验收标准与 12 个待辩驳问题。MVP 采用本地 JSON 存储，暂不引入数据库。等待 `/grill-me`。 |
 | 2026-11-18 | S3 变更 | 用户指示增加 xberg 内核。已同步 S1（v0.2）、S2（v0.2 决策说明）与 PRD（v0.2，REQ-097~100、REQ-015/016、路由/验收/风险）；xberg 按 P0 第二内核设计，S6 验证不达标可降级 P1。 |
+| 2026-11-18 | S3 变更 | 用户指示 P1 增加 PaddleOCR。已同步 S1/S2/PRD 至 v0.3：新增 P1 中文 OCR 组件、REQ-101/102、OCR 路由/回退、验收与风险；xberg 仍为 P0 主 OCR 路径。 |

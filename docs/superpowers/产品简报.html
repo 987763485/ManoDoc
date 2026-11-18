@@ -246,8 +246,8 @@
   <h1>DullDoc</h1>
   <p class="tagline">本地优先的文档 → Markdown 工作台</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.2</span>
-    <span class="pill"><strong>变更</strong> 追加 xberg 内核</span>
+    <span class="pill"><strong>版本</strong> v0.3</span>
+    <span class="pill"><strong>变更</strong> xberg P0 · PaddleOCR P1</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>形态</strong> Tauri 2 · macOS Apple Silicon</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -405,6 +405,11 @@
             <td><span class="tag p1">P1</span></td>
           </tr>
           <tr>
+            <td>OCR 增强</td><td>PaddleOCR（P1）</td>
+            <td>中文 OCR / PP-Structure；检测环境 + 引导安装；xberg 低置信度或用户选择时启用。</td>
+            <td><span class="tag p1">P1</span></td>
+          </tr>
+          <tr>
             <td>PDF 输出</td><td>Markdown → PDF</td>
             <td>需评估 LaTeX / Typst 运行时与分发体积。</td>
             <td><span class="tag p1">P1</span></td>
@@ -480,6 +485,11 @@
             <td>S6 用真实样本验证；若不可行则降级 P1，回退到 anydoc + 跳过策略。</td>
           </tr>
           <tr>
+            <td>PaddleOCR 依赖</td>
+            <td>Python + Paddle 模型，macOS 上以 CPU 为主；体积与速度需评估。</td>
+            <td>P1 可选组件，引导安装；不进入 MVP 默认路径。</td>
+          </tr>
+          <tr>
             <td>Marker 体量</td>
             <td>Python + 模型数 GB，不适合塞进 MVP 安装包。</td>
             <td>P1 采用「检测环境 + 引导安装」或本地服务方式。</td>
@@ -534,6 +544,12 @@
             <td>S6 验证不达标时降级 P1，需用户确认。</td>
           </tr>
           <tr>
+            <td>OCR 增强</td>
+            <td><strong>PaddleOCR（P1）</strong></td>
+            <td>Apache-2.0，中文 OCR 强；作为 xberg 低置信度时的可选组件，不随包分发模型。</td>
+            <td>若 macOS 依赖过重，保留为可安装组件，不影响 MVP。</td>
+          </tr>
+          <tr>
             <td>开源协议</td>
             <td><strong>MIT</strong></td>
             <td>与 anydoc 一致，个人与小团队采用门槛最低；pandoc 作为独立 sidecar 按 GPL 合规分发，并在「关于」页给出源码获取方式。</td>
@@ -543,12 +559,12 @@
       </table>
     </div>
     <div class="callout" style="margin-top:18px">
-      <b>已确认的组合：</b>DullDoc · 图片落 assets/ · 保留 50 条元数据 · MIT · xberg 第二内核。前四项在 S1 确认；xberg 为 2026-11-18 追加决策，可在 S3 定稿前调整。</div>
+      <b>已确认的组合：</b>DullDoc · 图片落 assets/ · 保留 50 条元数据 · MIT · xberg P0 · PaddleOCR P1。前四项在 S1 确认；xberg 与 PaddleOCR 为 2026-11-18 追加决策，可在 S3 定稿前调整。</div>
   </section>
 
   <footer>
     <span>DullDoc · S1 产品简报 · 2026-11-18</span>
-    <span>S1 已确认 · v0.2 追加 xberg 内核（2026-11-18）</span>
+    <span>S1 已确认 · v0.3 追加 xberg（P0）与 PaddleOCR（P1）</span>
   </footer>
 
 </div>

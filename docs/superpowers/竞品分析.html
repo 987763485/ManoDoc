@@ -260,8 +260,8 @@
   <h1>竞品分析</h1>
   <p class="tagline">文档 → Markdown：功能面、实现原理与 DullDoc 的机会</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.2</span>
-    <span class="pill"><strong>变更</strong> 追加 xberg 内核决策</span>
+    <span class="pill"><strong>版本</strong> v0.3</span>
+    <span class="pill"><strong>变更</strong> xberg P0 · PaddleOCR P1</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>样本</strong> 40+ 产品与项目 · 61 项功能面</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -605,7 +605,7 @@
           <tr><td><a href="https://github.com/getomni-ai/zerox" target="_blank" rel="noopener">Zerox</a></td><td>TypeScript · MIT</td><td>视觉模型 OCR → Markdown</td><td>VLM 路线的参考；默认依赖云模型，不符合离线优先。</td></tr>
           <tr><td><a href="https://github.com/ocrmypdf/OCRmyPDF" target="_blank" rel="noopener">OCRmyPDF</a></td><td>Python · MPL-2.0</td><td>给扫描 PDF 加文本层</td><td>PDF 预检后的「补 OCR」候选；需 Tesseract/Ghostscript。</td></tr>
           <tr><td><a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="noopener">Tesseract</a></td><td>C++ · Apache-2.0</td><td>OCR 引擎</td><td>离线 OCR 的稳妥选择；中文精度一般，需要预处理。</td></tr>
-          <tr><td><a href="https://github.com/PaddlePaddle/PaddleOCR" target="_blank" rel="noopener">PaddleOCR</a></td><td>Python · Apache-2.0</td><td>OCR / 版面 / 表格</td><td>中文 OCR 强；体积与 Python 依赖重，适合 P1。</td></tr>
+          <tr><td><a href="https://github.com/PaddlePaddle/PaddleOCR" target="_blank" rel="noopener">PaddleOCR</a></td><td>Python · Apache-2.0</td><td>OCR / 版面 / 表格</td><td>中文 OCR 强；2026-11-18 用户决定纳入 P1 可选 OCR 组件；体积与 Python 依赖重。</td></tr>
           <tr><td><a href="https://github.com/jsvine/pdfplumber" target="_blank" rel="noopener">pdfplumber</a></td><td>Python · MIT</td><td>PDF 文本/表格/坐标提取</td><td>表格修复与页级预检的参考实现。</td></tr>
           <tr><td><a href="https://github.com/camelot-dev/camelot" target="_blank" rel="noopener">Camelot</a></td><td>Python · MIT</td><td>PDF 表格提取</td><td>规则型表格抽取；对合并单元格有限。</td></tr>
           <tr><td><a href="https://github.com/grobidOrg/grobid" target="_blank" rel="noopener">GROBID</a></td><td>Java · Apache-2.0</td><td>学术 PDF → TEI/XML</td><td>学术结构化参考；不是通用文档工具。</td></tr>
@@ -649,7 +649,7 @@
           <tr><td>F-01</td><td>Office 文档</td><td>doc/docx/ppt/pptx/xls/xlsx；含旧版 OLE 格式</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-02</td><td>ODF / RTF / EPUB / CSV</td><td>odt/ods/odp、rtf、epub、csv；anydoc 已覆盖</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-03</td><td>文本型 PDF</td><td>有文本层；需页级预检，避免「一页失败、整份失败」</td><td><span class="tag p0">P0</span></td></tr>
-          <tr><td>F-04</td><td>扫描件 / 图片 PDF</td><td>MVP 只做检测与提示；P1 接 OCR 引擎</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-04</td><td>扫描件 / 图片 PDF</td><td>xberg OCR（P0）；PaddleOCR（P1）中文增强；均不可用时提示跳过/失败</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-05</td><td>图片输入</td><td>PNG/JPG/TIFF；依赖 OCR，P1</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>F-06</td><td>HTML / MHTML / Markdown</td><td>HTML 转 Markdown；Markdown 直通并清洗</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-07</td><td>邮件</td><td>EML/MSG；附件递归</td><td><span class="tag p2">P2</span></td></tr>
@@ -806,7 +806,7 @@
       <b>但组合起来，空白非常明确：</b>macOS 原生、完全离线、中文优先、anydoc 快速解析 + xberg OCR/表格增强 + pandoc 导出、PDF 页级预检、清洗/切块/语料包、批量队列与可解释诊断——目前没有产品同时做到。
     </div>
     <div class="callout warn" style="margin-top:14px">
-      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退。本节的竞品分析结论保持不变；实施要求见 S3 PRD 的 REQ-097 ~ REQ-100。
+      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。本节的竞品分析结论保持不变；实施要求见 S3 PRD 的 REQ-097 ~ REQ-102。
     </div>
   </section>
 
@@ -1027,6 +1027,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr><td>10</td><td>监听文件夹 + CLI + Finder 快捷操作</td><td>固定投递目录与自动化</td><td>商业套件有但重；开源引擎只有 CLI</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>11</td><td>中文标准文档专项</td><td>红头文件、印章、条款编号、竖排</td><td>通用工具不处理中国公文/标准格式</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>12</td><td>集成导出（Obsidian / Dify / RAGFlow / Webhook）</td><td>转完还要手工搬运</td><td>平台各自为政；DullDoc 可做中立出口</td><td><span class="tag p2">P2</span></td></tr>
+          <tr><td>13</td><td>PaddleOCR 中文 OCR 增强</td><td>中文扫描件、低置信度 OCR</td><td>xberg 内置 OCR 可选 PaddleOCR 后端；独立组件更可控</td><td><span class="tag p1">P1</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -1082,6 +1083,11 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
             <td>xberg 的稳定性与模型依赖</td>
             <td>项目刚更名，OCR/表格模型可能带来体积、平台差异与许可问题。</td>
             <td>已定为 P0 第二引擎；S6 用真实样本验证体积、速度与许可，不达标再降级 P1。</td>
+          </tr>
+          <tr>
+            <td>PaddleOCR 依赖</td>
+            <td>Python + Paddle 模型，macOS 上以 CPU 为主；体积与速度需评估。</td>
+            <td>P1 可选组件，引导安装；不进入 MVP 默认路径。</td>
           </tr>
           <tr>
             <td>macOS 签名 / 公证</td>
