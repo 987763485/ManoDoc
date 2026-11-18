@@ -115,3 +115,4 @@
 | 2026-11-18 | S0 → S1 | 用户确认：`maker` = Marker；场景覆盖通用互转 + 批量知识库；macOS Apple Silicon 首发；MVP 仅 anydoc + pandoc。清点测试样本（`example/` 四份文档）。进入 S1 头脑风暴。 |
 | 2026-11-18 | S1 | 确认核心场景为「常见可读文档 → 排版清晰的 Markdown」，痛点为工具离散与强制联网；语料包定为厂商中立 Markdown + JSONL。生成 `docs/superpowers/产品简报.html`（含 MVP 范围、成功标准、风险与 4 项待确认）。等待用户确认。 |
 | 2026-11-18 | S1 → S2 | 用户确认 S1 简报及四项决策（DullDoc / assets / 50 条历史 / MIT）。S1 状态改为「已确认」；开始 S2 竞品分析。 |
+| 2026-11-18 | Git | 初始化仓库：`main` 仅保留基线空提交，开发在 `dev`；提交 `.gitignore`、`SIMPLE.md`、`AGENTS.md` 与 S1 产品简报；`example/` 因第三方资料仅本地保留，不纳入版本库；未配置远程、未推送。 |
