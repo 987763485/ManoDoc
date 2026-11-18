@@ -20,8 +20,8 @@
 | 产品名 | **DullDoc**（暂定，S1 确认） |
 | 当前阶段 | **S5 UI 设计规范 + 高保真原型（进行中）** |
 | 下一阶段 | S6 技术选型探讨 |
-| 当前事项 | 先编写 `docs/superpowers/UI设计规范.html`，再编写 `docs/superpowers/UI.html`；UI 迭代期间不提交 Git |
-| 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件） |
+| 当前事项 | 先编写 `docs/superpowers/UI设计规范.html`，再编写 `docs/superpowers/UI.html`；覆盖中英文切换、主题切换、命令面板；UI 迭代期间不提交 Git |
+| 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
 
@@ -32,6 +32,7 @@
 - **名称与协议**：产品名保留 DullDoc；开源协议 MIT；pandoc 以独立 sidecar 按 GPL 合规分发。
 - **图片策略**：默认输出到同目录 `assets/` 并使用相对路径；单文件导出可选内嵌 base64。
 - **历史记录**：保留最近 50 条任务元数据（可配置），只存路径、参数、哈希与结果摘要，不复制文件。
+- **体验偏好（2026-11-18 追加，P0）**：中英文切换（中文默认、英文完整、无需重启）；主题切换（跟随系统/浅色/深色）；Cmd+K 命令面板（页面/操作/最近文件，危险操作二次确认）。所有 UI 组件与颜色必须走 token，禁止硬编码。
 
 ## 三、技术原理（初步）
 
@@ -50,10 +51,10 @@
 | 阶段 | 文档 | 路径 | 状态 |
 | --- | --- | --- | --- |
 | S0 | 项目运营手册 | `AGENTS.md` | 已生成 |
-| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.3 追加 PaddleOCR） |
-| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（含 xberg / PaddleOCR 决策说明） |
-| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.0） |
-| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.0） |
+| S1 | 产品简报 | `docs/superpowers/产品简报.html` | 已确认（v0.4） |
+| S2 | 竞品分析 + 功能面矩阵 | `docs/superpowers/竞品分析.html` | 已确认（v0.4） |
+| S3 | 需求文档（PRD） | `docs/superpowers/需求文档.md` | 已确认（v1.1） |
+| S4 | 软件功能设计说明 | `docs/superpowers/软件功能设计说明.md` | 已确认（v1.1） |
 | S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 进行中 |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 未开始 |
 | S7 | Change 总索引 | `CHANGE.md` | 未开始 |
@@ -130,3 +131,4 @@
 | 2026-11-18 | S4 | 生成 `docs/superpowers/软件功能设计说明.md`：模块/菜单拆解（每行含 REQ）、6 个功能流程、5 个页面流程、5 个业务流程、数据流转、组件/SDK、状态/错误/日志、82 条 REQ + 12 条 NFR 追溯、里程碑。等待用户确认。 |
 | 2026-11-18 | S4 → S5 | 用户确认 S4，状态改为「已确认」；进入 S5，先写 UI 设计规范，再做高保真原型。UI 迭代期间只改文件，不提交 Git，待用户确认 UI 阶段后统一提交。 |
 | 2026-11-18 | S5 变更 | 用户指定应用数据统一存放在 `~/.dull_doc/`；已同步 PRODUCT.md、PRD 6.4、S4 6.2/6.4 与 AGENTS。用户输出目录仍独立，不放入该目录。 |
+| 2026-11-18 | S5 变更 | 用户增补中英文切换、主题切换、Cmd+K 命令面板（P0）。已同步 PRODUCT.md、S1（v0.4）、S2（v0.4）、PRD（v1.1，REQ-103~105）、S4（v1.1）与 AGENTS；S5 设计规范与原型必须覆盖。 |

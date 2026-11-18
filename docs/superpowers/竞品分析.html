@@ -260,8 +260,8 @@
   <h1>竞品分析</h1>
   <p class="tagline">文档 → Markdown：功能面、实现原理与 DullDoc 的机会</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v0.3</span>
-    <span class="pill"><strong>变更</strong> xberg P0 · PaddleOCR P1</span>
+    <span class="pill"><strong>版本</strong> v0.4</span>
+    <span class="pill"><strong>变更</strong> 体验增补：i18n · 主题 · 命令面板</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>样本</strong> 40+ 产品与项目 · 61 项功能面</span>
     <span class="pill status confirmed">状态：已确认</span>
@@ -806,7 +806,7 @@
       <b>但组合起来，空白非常明确：</b>macOS 原生、完全离线、中文优先、anydoc 快速解析 + xberg OCR/表格增强 + pandoc 导出、PDF 页级预检、清洗/切块/语料包、批量队列与可解释诊断——目前没有产品同时做到。
     </div>
     <div class="callout warn" style="margin-top:14px">
-      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。本节的竞品分析结论保持不变；实施要求见 S3 PRD 的 REQ-097 ~ REQ-102。
+      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。同日增补中英文切换、跟随系统/浅色/深色主题与 Cmd+K 命令面板。本节的竞品分析结论保持不变；实施要求见 S3 PRD 的 REQ-097 ~ REQ-105。
     </div>
   </section>
 
@@ -1028,6 +1028,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr><td>11</td><td>中文标准文档专项</td><td>红头文件、印章、条款编号、竖排</td><td>通用工具不处理中国公文/标准格式</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>12</td><td>集成导出（Obsidian / Dify / RAGFlow / Webhook）</td><td>转完还要手工搬运</td><td>平台各自为政；DullDoc 可做中立出口</td><td><span class="tag p2">P2</span></td></tr>
           <tr><td>13</td><td>PaddleOCR 中文 OCR 增强</td><td>中文扫描件、低置信度 OCR</td><td>xberg 内置 OCR 可选 PaddleOCR 后端；独立组件更可控</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>14</td><td>中英文切换 / 主题 / 命令面板</td><td>双语用户、长时间使用、键盘操作</td><td>商业套件有中英文与主题，但命令面板通常只有开发者工具具备</td><td><span class="tag p0">P0</span></td></tr>
         </tbody>
       </table>
     </div>

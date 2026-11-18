@@ -44,7 +44,7 @@ DullDoc 是一个 **macOS 本地优先的文档 → Markdown 工作台**：把�
 
 ## Capabilities and Constraints
 
-**已确认能力**：docx / pdf / xlsx / pptx / odt / rtf / epub / csv / md 输入；Markdown 输出；pandoc 导出 HTML / DOCX / EPUB；PDF 页级预检；xberg OCR 与复杂表格回退；PaddleOCR（P1）中文 OCR；批量队列；清洗；切块；元数据；`chunks.jsonl` + `manifest.json`；历史；预设；全局日志与错误处理。
+**已确认能力**：docx / pdf / xlsx / pptx / odt / rtf / epub / csv / md 输入；Markdown 输出；pandoc 导出 HTML / DOCX / EPUB；PDF 页级预检；xberg OCR 与复杂表格回退；PaddleOCR（P1）中文 OCR；批量队列；清洗；切块；元数据；`chunks.jsonl` + `manifest.json`；历史；预设；全局日志与错误处理；中英文切换；跟随系统/浅色/深色主题；Cmd+K 命令面板。
 
 **约束**：
 - 首发 macOS Apple Silicon；Windows / Linux 为 P2。
@@ -55,7 +55,7 @@ DullDoc 是一个 **macOS 本地优先的文档 → Markdown 工作台**：把�
 
 ## Brand Commitments
 
-- 名称：**DullDoc**；中文优先。
+- 名称：**DullDoc**；中英文双语，默认中文。
 - 语气：克制、专业、直接；错误信息给原因与下一步，不卖萌、不堆感叹号。
 - 不虚构客户、案例、价格或性能数据。
 
@@ -75,5 +75,5 @@ DullDoc 是一个 **macOS 本地优先的文档 → Markdown 工作台**：把�
 
 ## Accessibility & Inclusion
 
-- 目标 WCAG AA 对比度；键盘可完成主要流程；焦点可见；支持减少动效。
-- 中文界面优先，文案避免截断；错误信息不使用仅靠颜色传达的状态。
+- 目标 WCAG AA 对比度；键盘可完成主要流程（含 Cmd+K 命令面板）；焦点可见；支持减少动效。
+- 中英文完整，切换不重启；浅色/深色主题均满足对比度；错误信息不使用仅靠颜色传达的状态。
