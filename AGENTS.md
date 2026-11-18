@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S6 技术选型已确认（v1.0）；spike：S6-1 / S6-2 / S6-3 通过（OCR 模型约 36MB 需预置），S6-4~6 未完成** |
+| 当前阶段 | **S6 技术选型已确认（v1.0）；spike：S6-1 / S6-2 / S6-3 / S6-4 通过，S6-5~6 未完成** |
 | 下一阶段 | S7 Change 规划（S6 spike 全部达标后） |
-| 当前事项 | S6-1 通过；S6-2 通过（xberg `paddle-ocr-ort` 中文 OCR 1.58s/页，模型缓存 36MB，需预置）；S6-3 通过（pandoc `-s` + Typst 0.15.1，中文系统字体正常）；S6-4~6 未完成 |
+| 当前事项 | S6-1/2/3/4 通过：xberg ONNX OCR 1.58s/页、Typst 中文 PDF 正常；uv 0.13.9 独立 Python，PaddleOCR venv 约 795MB；S6-5 签名/公证与 S6-6 质量复核未完成 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -33,7 +33,7 @@
 - **图片策略**：默认输出到同目录 `assets/` 并使用相对路径；单文件导出可选内嵌 base64。
 - **历史记录**：保留最近 50 条任务元数据（可配置），只存路径、参数、方向、引擎、哈希与结果摘要，不复制文件。
 - **多方向转换（2026-11-18 已确认）**：保留 Word ↔ Markdown、PDF → Markdown/Word、Markdown → Word/PDF/HTML/EPUB、PNG/JPEG → Markdown、Excel/CSV 与 PowerPoint → Markdown 等基础一对一方向；同一方向多引擎时提供「自动 + 显式引擎」选择；不支持的组合禁用并说明原因。
-- **Python 运行时（2026-11-18，P1）**：内置 uv 0.6.12 sidecar；在 `~/.dull_doc/runtimes/<engine>/.venv` 为每个 Python 引擎创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积、来源与哈希，用户确认后才联网；不依赖系统 Python，不静默下载；按需安装 PaddleOCR / Marker 等包并记录版本。pdf2docx 不默认安装、不随包分发。
+- **Python 运行时（2026-11-18，P1）**：内置 uv 0.13.9 sidecar；在 `~/.dull_doc/runtimes/<engine>/.venv` 为每个 Python 引擎创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积、来源与哈希，用户确认后才联网；不依赖系统 Python，不静默下载；安装时使用 `--no-bin`，不向 `~/.local/bin` 写可执行文件；按需安装 PaddleOCR / Marker 等包并记录版本。pdf2docx 不默认安装、不随包分发。
 - **文件图标（2026-11-18，P0）**：转换页、批量、历史与方向矩阵统一使用 `icons/` 下的文件类型图标；缺失时回退综合文档；本次补齐 Markdown、HTML、EPUB、RTF、ODT、ODS、ODP、TXT。
 - **取消预览（2026-11-18）**：按用户决定，文档转换页不提供文档预览（部分格式无法可靠预览），语料制作完成行也不提供 Markdown 预览；完成行只保留「打开」。进度、成功、错误与无权限改为配置卡内联显示；PRD 中 REQ-020~022、REQ-048、REQ-111 标记为已取消，编号保留不复用。
 - **单文件与语料配置分工（2026-11-18）**：文档转换页只保留方向、引擎与预设，PDF 无文本页策略在预检弹窗选择；页眉页脚、中文标题、表格分级、图片资产、切块、元数据与语料包开关集中在「语料制作」的每任务配置。系统设置 → 输出保留语料包全局默认，批次内可覆盖。语料制作的输出格式固定 Markdown，其他格式禁用；其他格式走单文件转换。
@@ -111,7 +111,7 @@
 
 1. **anydoc 无 OCR**：图片型 PDF 会返回 `NeedsOcr`，必须优先路由 xberg；xberg 不可用但 PaddleOCR 可用时路由 PaddleOCR；两者均不可用时才提示用户跳过或等待 OCR。
 2. **xberg 依赖与模型**：xberg 1.4.0 要求 Rust 1.99；OCR / 版面模型可能增加安装体积与平台差异；PP-OCRv6 small 模型缓存约 36MB，需随包预置或经确认下载；最小 feature 集、显式模型目录、禁止静默下载；需实机验证速度、体积、离线与许可。
-3. **PaddleOCR 依赖**：Python + Paddle 模型，macOS 上以 CPU 为主；作为 P1 可选组件，必须引导安装、不可静默下载；中文低置信度时才启用，避免默认变慢。
+3. **PaddleOCR 依赖**：Python + Paddle 模型，macOS 上以 CPU 为主；本项目实测 `.venv` 约 795MB；作为 P1 可选组件，必须引导安装、不可静默下载；中文低置信度时才启用，避免默认变慢。
 4. **Marker 体量与许可**：代码 Apache-2.0，权重 OpenRAIL-M，含营收/竞品限制；仅 P1 用户显式安装，不随包分发模型。
 5. **pandoc 为 GPL 程序**：以独立 sidecar 进程调用，不静态链接；分发时附带许可证与源码获取说明。
 6. **PDF 输出**：MVP 采用 pandoc → Typst → PDF，不使用 LaTeX；需验证中文字体、分页、表格与图片，Typst sidecar 需独立签名。
@@ -158,3 +158,5 @@
 | 2026-11-18 | S6 spike | 补充 S6-2 模型结论：PP-OCRv6 small det≈9.9MB、rec≈21.2MB，总计约 31MB；建议随包预置或经确认下载并校验哈希。S6-3 已通过（pandoc `-s` + Typst 0.15.1，24 页中文 PDF，691KB，系统字体正常）。 |
 | 2026-11-18 | S6 spike | S6-2 通过：`paddle-ocr-ort` 104.4MB/2m12s，中文扫描页 1.58s、文本正确；tract 同页 30.4s 弃用；官方 HF 模型缓存 36MB，hf-mirror 缺 ETag 失败，正式版需预置模型。 |
 | 2026-11-19 | S6 → Git | 用户指示提交 Git；提交技术选型 v1.0、S6-1/2/3 spike 结果、PRD/S4/S1/S2/UI 同步与 `tools/` 忽略规则；未推送远程。 |
+| 2026-11-19 | S6 spike | S6-4 通过（项目 uv 0.13.9）：CPython 3.12.16 下载 24.1MB/4.86s、安装 67MB；`.venv` 指向项目内 Python；paddleocr 3.7.0 + paddlepaddle 3.3.1 安装 30s，venv 795MB，CPU 导入正常；离线无缓存下载失败、已有 Python 可离线建 venv、缓存包可离线安装。 |
+| 2026-11-19 | S6-4 → Git | 用户指示提交 Git；提交 S6-4 uv 0.13.9 验证结果、PaddleOCR venv 795MB/离线行为、`--no-bin` 约束与文档同步；未推送远程。 |
