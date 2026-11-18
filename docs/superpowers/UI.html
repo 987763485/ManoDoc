@@ -388,6 +388,15 @@
       border-color: var(--ink-3);
     }
 
+    .btn.danger {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn.danger:hover {
+      filter: brightness(.92);
+    }
+
     .btn.ghost {
       background: transparent;
       color: var(--ink-2);
@@ -633,6 +642,11 @@
       text-align: center;
       color: var(--ink-3);
       font-size: 13px;
+    }
+
+    .file-empty .hint {
+      font-size: 12px;
+      color: var(--ink-3);
     }
 
     .file-icon {
@@ -895,6 +909,51 @@
     }
 
     .file-panel .error-card .actions .btn {
+      flex: 0 0 auto;
+      width: auto;
+    }
+
+    .success-card {
+      display: none;
+      margin: 14px 0 0;
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+      padding: 18px;
+      border-radius: 8px;
+    }
+
+    .success-card.show { display: block; }
+
+    .success-card h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      color: var(--green);
+    }
+
+    .success-card p {
+      margin: 0 0 14px;
+      color: var(--ink-3);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .success-card .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .success-card .actions .btn {
+      flex: 0 0 auto;
+      width: auto;
+    }
+
+    .file-panel .success-card .actions {
+      flex-direction: row;
+      margin-top: 0;
+    }
+
+    .file-panel .success-card .actions .btn {
       flex: 0 0 auto;
       width: auto;
     }
@@ -1821,6 +1880,8 @@
               <option value="empty" data-i18n="state.empty">空状态</option>
               <option value="converting" data-i18n="state.converting">转换中</option>
               <option value="error" data-i18n="state.error">失败 / 需要 OCR</option>
+              <option value="success" data-i18n="state.success">成功</option>
+              <option value="permission" data-i18n="state.permission">无权限</option>
             </select>
           </div>
         </div>
@@ -1857,6 +1918,7 @@
               </div>
               <div class="file-empty" id="file-empty">
                 <span data-i18n="file.empty">拖入文件或选择文件</span>
+                <span class="hint" data-i18n="file.emptyHint">支持 docx / pdf / xlsx / pptx / md / png / jpg</span>
                 <button class="link-btn" id="choose-file" data-i18n="empty.choose">选择文件</button>
               </div>
               <div class="route-row">
@@ -1901,6 +1963,22 @@
                   <button class="link-btn" id="cancel-convert" data-i18n="action.cancel">取消</button>
                 </div>
               </div>
+              <div class="success-card" id="convert-success">
+                <h3 data-i18n="success.title">转换完成</h3>
+                <p><b>GB-T-28448.md</b> · <span data-i18n="success.desc">53,210 字符 · 49 标题 · 2 表格 · 1 个表格提示</span></p>
+                <div class="actions">
+                  <button class="btn primary small" id="success-open" data-i18n="success.open">打开输出</button>
+                  <button class="btn secondary small" id="success-folder" data-i18n="success.folder">打开输出目录</button>
+                </div>
+              </div>
+              <div class="error-card" id="convert-permission">
+                <h3 data-i18n="permission.title">无法写入输出目录</h3>
+                <p><b>E_PERMISSION_DENIED</b> · <span data-i18n="permission.desc">请在系统设置中授权文件夹访问，或更换输出目录。</span></p>
+                <div class="actions">
+                  <button class="btn secondary small" id="permission-settings" data-i18n="permission.open">打开系统设置</button>
+                  <button class="btn ghost small" id="permission-change" data-i18n="permission.change">更换目录</button>
+                </div>
+              </div>
               <div class="error-card" id="convert-error">
                 <h3 data-i18n="error.title">需要 OCR</h3>
                 <p><b>E_NEEDS_OCR</b> · <span data-i18n="error.desc">该 PDF 第 1 页没有文本层。可以跳过该页继续，或安装 OCR 组件后再试。</span></p>
@@ -1921,6 +1999,8 @@
             <p data-i18n="batch.sub">一个文件夹，一次完成转换、清洗与打包</p>
             <div class="actions">
               <button class="btn secondary small" data-i18n="batch.add">添加文件</button>
+              <button class="btn secondary small" id="add-folder" data-i18n="batch.addFolder">添加文件夹</button>
+              <button class="btn secondary small" id="batch-report" data-i18n="batch.report">导出报告</button>
               <button class="btn primary small" id="start-batch" data-i18n="batch.start">开始批量</button>
             </div>
           </div>
@@ -2004,6 +2084,28 @@
                         <div class="row-actions"><button class="link-btn" data-i18n="action.remove">移除</button></div>
                       </td>
                     </tr>
+                    <tr data-state="cleaning">
+                      <td><span class="file-cell"><img class="file-type-icon" src="../../icons/WORD.svg" alt="">等保测评报告.docx</span></td>
+                      <td><span class="badge blue"><span class="status-dot"></span><span
+                            data-i18n="status.cleaning">清洗中</span></span></td>
+                      <td>anydoc</td>
+                      <td>—</td>
+                      <td>3.8s</td>
+                      <td>
+                        <div class="row-actions"><button class="link-btn" data-i18n="action.cancel">取消</button></div>
+                      </td>
+                    </tr>
+                    <tr data-state="skipped">
+                      <td><span class="file-cell"><img class="file-type-icon" src="../../icons/PDF.svg" alt="">索引说明.pdf</span></td>
+                      <td><span class="badge gray"><span class="status-dot"></span><span
+                            data-i18n="status.skipped">已跳过</span></span></td>
+                      <td>—</td>
+                      <td>—</td>
+                      <td>—</td>
+                      <td>
+                        <div class="row-actions"><button class="link-btn" data-i18n="action.remove">移除</button></div>
+                      </td>
+                    </tr>
                     <tr data-state="failed">
                       <td><span class="file-cell"><img class="file-type-icon" src="../../icons/WORD.svg" alt="">制度汇编.docx</span></td>
                       <td><span class="badge red"><span class="status-dot"></span><span
@@ -2060,6 +2162,14 @@
                   <option>pandoc</option>
                 </select>
               </div>
+              <div class="field">
+                <label data-i18n="batch.concurrency">并发</label>
+                <select>
+                  <option data-i18n="batch.concurrencyDefault">4（默认）</option>
+                  <option>2</option>
+                  <option>8</option>
+                </select>
+              </div>
               <div class="label" data-i18n="batch.cleaning">清洗与语料</div>
               <div class="rows">
                 <div class="row"><span class="grow" data-i18n="opt.headers">清洗页眉页脚</span><span class="switch"></span>
@@ -2082,6 +2192,15 @@
                   <option data-i18n="chunk.2000">2000 字符</option>
                 </select>
               </div>
+              <div class="field">
+                <label data-i18n="batch.overlap">切块重叠</label>
+                <select>
+                  <option>0</option>
+                  <option selected>50</option>
+                  <option>100</option>
+                  <option>200</option>
+                </select>
+              </div>
               <div class="actions">
                 <button class="btn primary" data-i18n="batch.start">开始批量</button>
                 <button class="btn secondary" data-i18n="batch.openCorpus">打开语料包目录</button>
@@ -2095,7 +2214,7 @@
           <div class="page-head">
             <h1 data-i18n="history.title">转换历史</h1>
             <p data-i18n="history.sub">最近 50 条任务，点击查看详情、重跑或打开输出</p>
-            <div class="actions"><button class="btn ghost small" data-i18n="history.clear">清空历史</button></div>
+            <div class="actions"><button class="btn ghost small" id="history-clear" data-i18n="history.clear">清空历史</button></div>
           </div>
           <h2 class="sr-only" data-i18n="history.srTitle">历史任务</h2>
           <div class="history-grid">
@@ -2155,6 +2274,7 @@
               <button class="on" data-settings="general" data-i18n="settings.general">通用</button>
               <button data-settings="engines" data-i18n="settings.engines">引擎</button>
               <button data-settings="output" data-i18n="settings.output">输出</button>
+              <button data-settings="presets" data-i18n="settings.presets">预设</button>
               <button data-settings="logs" data-i18n="settings.logs">日志</button>
               <button data-settings="about" data-i18n="settings.about">关于</button>
             </aside>
@@ -2190,6 +2310,11 @@
                   </div>
                   <div class="control"><button class="btn secondary small" data-i18n="settings.openData">打开</button>
                   </div>
+                </div>
+                <div class="setting-row">
+                  <div class="info"><b data-i18n="settings.permissions">文件夹访问</b><span
+                      data-i18n="settings.permissionsDesc">输出目录与批量输入需要系统授权；失败时给出系统设置引导。</span></div>
+                  <div class="control"><span class="badge green" data-i18n="settings.granted">已授权</span></div>
                 </div>
               </section>
               <section class="settings-section" id="set-engines">
@@ -2259,6 +2384,43 @@
                   <div class="control"><span class="switch off"></span></div>
                 </div>
               </section>
+              <section class="settings-section" id="set-presets">
+                <h2 data-i18n="settings.presets">预设</h2>
+                <p class="intro" data-i18n="settings.presetsIntro">内置预设可直接使用；自定义预设保存在 ~/.dull_doc/presets，可复制或导入导出。</p>
+                <div class="engine-card">
+                  <div>
+                    <div class="name" data-i18n="preset.standard">标准文档</div>
+                    <div class="meta" data-i18n="preset.standardMeta">内置 · 通用转换 · 清洗保守</div>
+                  </div>
+                  <div class="spacer row-actions"><button class="link-btn" data-i18n="action.edit">编辑</button><button class="link-btn" data-i18n="action.duplicate">复制</button></div>
+                </div>
+                <div class="engine-card">
+                  <div>
+                    <div class="name" data-i18n="preset.table">表格清单</div>
+                    <div class="meta" data-i18n="preset.tableMeta">内置 · 表格优先 · 保留分级警告</div>
+                  </div>
+                  <div class="spacer row-actions"><button class="link-btn" data-i18n="action.edit">编辑</button><button class="link-btn" data-i18n="action.duplicate">复制</button></div>
+                </div>
+                <div class="engine-card">
+                  <div>
+                    <div class="name" data-i18n="preset.corpus">知识库</div>
+                    <div class="meta" data-i18n="preset.corpusMeta">内置 · 切块、元数据与语料包</div>
+                  </div>
+                  <div class="spacer row-actions"><button class="link-btn" data-i18n="action.edit">编辑</button><button class="link-btn" data-i18n="action.duplicate">复制</button></div>
+                </div>
+                <div class="engine-card">
+                  <div>
+                    <div class="name" data-i18n="preset.custom">我的研究预设</div>
+                    <div class="meta" data-i18n="preset.customMeta">自定义 · 基于知识库</div>
+                  </div>
+                  <div class="spacer row-actions"><button class="link-btn" data-i18n="action.edit">编辑</button><button class="link-btn" data-i18n="action.duplicate">复制</button><button class="link-btn" data-i18n="action.delete">删除</button></div>
+                </div>
+                <div class="row-actions" style="margin-top:12px">
+                  <button class="btn secondary small" data-i18n="settings.presetNew">新建预设</button>
+                  <button class="btn secondary small" data-i18n="settings.presetImport">导入</button>
+                  <button class="btn secondary small" data-i18n="settings.presetExport">导出</button>
+                </div>
+              </section>
               <section class="settings-section" id="set-logs">
                 <h2 data-i18n="settings.logs">日志</h2>
                 <p class="intro" data-i18n="settings.logsIntro">本地日志，不含文件正文与密钥；可导出脱敏诊断包。</p>
@@ -2314,6 +2476,7 @@
       </div>
       <div class="kv">
         <b data-i18n="detail.preset">预设</b><span id="detail-preset">标准文档</span>
+        <b data-i18n="detail.direction">方向</b><span id="detail-direction">Word → Markdown</span>
         <b data-i18n="detail.target">输出格式</b><span id="detail-target">Markdown</span>
         <b data-i18n="detail.engine">引擎</b><span id="detail-engine">anydoc 0.2.4 · 1.2s</span>
         <b data-i18n="detail.output">输出</b><span id="detail-output">~/Documents/DullDoc Output/GB-T-28448.md</span>
@@ -2330,6 +2493,23 @@
   </dialog>
 
   <!-- 转换方向矩阵 -->
+  <dialog class="history-dialog" id="clear-dialog" aria-labelledby="clear-title">
+    <div class="history-modal">
+      <div class="history-modal-head">
+        <div class="history-modal-title">
+          <h2 id="clear-title" data-i18n="clear.title">清空转换历史？</h2>
+          <div class="sub" data-i18n="clear.desc">只删除任务记录，不删除输出文件。此操作不可撤销。</div>
+        </div>
+        <button class="icon-btn history-modal-close" id="clear-close" type="button" title="关闭" aria-label="关闭" data-i18n-title="action.close" data-i18n-aria="action.close">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="actions">
+        <button class="btn ghost small" id="clear-cancel" data-i18n="action.cancel">取消</button>
+        <button class="btn danger small" id="clear-confirm" data-i18n="clear.confirm">清空历史</button>
+      </div>
+    </div>
+  </dialog>
   <dialog class="history-dialog matrix-dialog" id="matrix-dialog" aria-labelledby="matrix-title">
     <div class="history-modal matrix-modal">
       <div class="history-modal-head">
@@ -2391,28 +2571,28 @@
         "nav.convert": "文档转换", "nav.batch": "语料制作", "nav.history": "转换历史", "nav.settings": "系统设置",
         "side.offline": "离线 · 引擎就绪", "crumb.convert": "文档转换", "crumb.historySub": "最近 50 条", "crumb.settingsSub": "通用",
         "convert.title": "文档转换", "convert.srTitle": "转换任务", "convert.sub": "把文档转换成 Markdown、Word 或 PDF", "convert.pdfDemo": "PDF 预检示例", "convert.export": "导出",
-        "file.current": "当前文件", "file.preset": "转换预设", "preset.standard": "标准文档", "preset.table": "表格清单", "preset.corpus": "知识库",
+        "file.current": "当前文件", "file.preset": "转换预设", "preset.standard": "标准文档", "preset.table": "表格清单", "preset.corpus": "知识库", "preset.standardMeta": "内置 · 通用转换 · 清洗保守", "preset.tableMeta": "内置 · 表格优先 · 保留分级警告", "preset.corpusMeta": "内置 · 切块、元数据与语料包", "preset.custom": "我的研究预设", "preset.customMeta": "自定义 · 基于知识库",
         "opt.headers": "清洗页眉页脚", "opt.cjk": "中文标题规范化", "opt.tables": "表格质量分级", "opt.assets": "图片落 assets/", "opt.corpus": "生成语料包",
         "convert.start": "开始转换", "convert.open": "打开输出目录", "convert.running": "正在转换 · 第 24 / 50 页", "convert.direction": "方向", "convert.engine": "引擎", "format.markdown": "Markdown", "format.word": "Word", "format.pdf": "PDF", "engine.auto": "自动", "engine.autoBatch": "自动（按文件）", "engine.routeHint": "Word → Markdown · 3 个引擎可用；自动优先 anydoc。", "engine.anydocHint": "anydoc：Office / 文本型 PDF 快速路径。", "engine.selectHint": "自动优先 anydoc；失败或质量不足时回退 xberg。", "engine.xbergHint": "xberg：OCR、复杂表格与 anydoc 回退。", "engine.pandocHint": "pandoc：Markdown 与 DOCX / HTML / EPUB 互转。", "matrix.open": "支持的方向", "matrix.title": "支持的方向", "matrix.sub": "基础一对一转换；多引擎方向可在转换页选择。", "matrix.note": "PDF → Word 走 pdf2docx 或 PDF → Markdown → Word；Markdown → PDF 需 PDF 渲染器。Python 引擎由 uv 在应用数据目录创建 .venv。", "empty.choose": "选择文件",
-        "sheet.stamp": "已校验", "error.title": "需要 OCR", "error.desc": "该 PDF 第 1 页没有文本层。可以跳过该页继续，或安装 OCR 组件后再试。", "error.skip": "跳过第 1 页并继续", "error.install": "了解 OCR 组件",
+        "sheet.stamp": "已校验", "error.title": "需要 OCR", "error.desc": "该 PDF 第 1 页没有文本层。可以跳过该页继续，或安装 OCR 组件后再试。", "error.skip": "跳过第 1 页并继续", "error.install": "了解 OCR 组件", "success.title": "转换完成", "success.desc": "53,210 字符 · 49 标题 · 2 表格 · 1 个表格提示", "success.open": "打开输出", "success.folder": "打开输出目录", "permission.title": "无法写入输出目录", "permission.desc": "请在系统设置中授权文件夹访问，或更换输出目录。", "permission.open": "打开系统设置", "permission.change": "更换目录", "clear.title": "清空转换历史？", "clear.desc": "只删除任务记录，不删除输出文件。此操作不可撤销。", "clear.confirm": "清空历史",
         "mark.table": "表格 · 合并单元格", "mark.tableDesc": "第 2 行第 3 列疑似串行，建议人工复核。", "mark.line": "断行 · 已合并", "mark.lineDesc": "“固定，并设置”已从硬换行恢复为一段。", "mark.header": "页眉 · 已移除", "mark.headerDesc": "“GB/T 28448—2019”重复出现 12 次。",
         "batch.title": "语料制作", "batch.sub": "一个文件夹，一次完成转换、清洗与打包", "batch.add": "添加文件", "batch.start": "开始批量", "batch.files": "文件 · 已导入", "batch.chunks": "语料块 · 待生成", "batch.warnings": "警告 · 需复核",
         "batch.queue": "队列", "batch.all": "全部", "batch.running": "进行中", "batch.failed": "失败", "batch.search": "搜索文件…", "th.file": "文件", "th.status": "状态", "th.engine": "引擎", "th.grade": "表格", "th.time": "耗时", "th.action": "操作",
-        "batch.config": "配置", "batch.configDesc": "应用到本批次所有文件；单个文件可在队列中覆盖。", "batch.preset": "预设", "batch.outputFormat": "输出格式", "batch.engine": "引擎", "batch.outputLocked": "批量输出固定为 Markdown；其他格式请在单文件转换中选择。", "batch.cleaning": "清洗与语料", "opt.clean": "清洗与规范化", "opt.chunk": "切块", "opt.meta": "元数据", "batch.chunkSize": "切块上限", "batch.openCorpus": "打开语料包目录",
+        "batch.config": "配置", "batch.configDesc": "应用到本批次所有文件；单个文件可在队列中覆盖。", "batch.preset": "预设", "batch.outputFormat": "输出格式", "batch.engine": "引擎", "batch.addFolder": "添加文件夹", "batch.report": "导出报告", "batch.concurrency": "并发", "batch.concurrencyDefault": "4（默认）", "batch.overlap": "切块重叠", "batch.outputLocked": "批量输出固定为 Markdown；其他格式请在单文件转换中选择。", "batch.cleaning": "清洗与语料", "opt.clean": "清洗与规范化", "opt.chunk": "切块", "opt.meta": "元数据", "batch.chunkSize": "切块上限", "batch.openCorpus": "打开语料包目录",
         "history.title": "转换历史", "history.sub": "最近 50 条任务，点击查看详情、重跑或打开输出", "history.clear": "清空历史", "history.srTitle": "历史任务", "history.item1sub": "单文件 · 标准文档预设", "history.item2sub": "批量 · 12 文件 · 知识库预设", "history.item3sub": "单文件 · xberg OCR", "history.item4sub": "批量 · 失败 · E_ENGINE_FAILED", "history.item1count": "49 标题", "history.item2count": "248 块", "history.item3count": "12 标题",
-        "detail.preset": "预设", "detail.target": "输出格式", "detail.engine": "引擎", "detail.output": "输出", "detail.stats": "统计", "detail.warnings": "警告", "detail.rerun": "重跑", "detail.open": "打开输出", "detail.copy": "复制参数",
-        "settings.title": "系统设置", "settings.sub": "输出、引擎、语言与主题", "settings.general": "通用", "settings.engines": "引擎", "settings.output": "输出", "settings.logs": "日志", "settings.about": "关于",
+        "detail.preset": "预设", "detail.target": "输出格式", "detail.engine": "引擎", "detail.output": "输出", "detail.stats": "统计", "detail.warnings": "警告", "detail.direction": "方向", "detail.rerun": "重跑", "detail.open": "打开输出", "detail.copy": "复制参数",
+        "settings.title": "系统设置", "settings.sub": "输出、引擎、语言与主题", "settings.general": "通用", "settings.engines": "引擎", "settings.output": "输出", "settings.presets": "预设", "settings.presetsIntro": "内置预设可直接使用；自定义预设保存在 ~/.dull_doc/presets，可复制或导入导出。", "settings.presetNew": "新建预设", "settings.presetImport": "导入", "settings.presetExport": "导出", "settings.logs": "日志", "settings.about": "关于",
         "settings.generalIntro": "语言与主题即时生效；应用数据统一存放在 ~/.dull_doc。", "settings.lang": "界面语言", "settings.langDesc": "中文默认；英文完整；切换无需重启。",
         "settings.theme": "主题", "settings.themeDesc": "跟随系统、浅色或深色；所有颜色来自 token。", "theme.system": "跟随系统", "theme.light": "浅色", "theme.dark": "深色",
-        "settings.change": "更改", "settings.data": "应用数据目录", "settings.openData": "打开", "settings.enginesIntro": "默认完全本地；缺失组件会给出安装说明，不静默下载。",
+        "settings.change": "更改", "settings.data": "应用数据目录", "settings.permissions": "文件夹访问", "settings.permissionsDesc": "输出目录与批量输入需要系统授权；失败时给出系统设置引导。", "settings.granted": "已授权", "settings.openData": "打开", "settings.enginesIntro": "默认完全本地；缺失组件会给出安装说明，不静默下载。",
         "settings.outputIntro": "Markdown、图片与语料包的默认行为。", "settings.imageMode": "图片模式", "settings.imageModeDesc": "默认落 assets/；单文件可切换 base64。", "settings.assets": "assets/ 相对路径",
         "settings.overwrite": "同名文件", "settings.overwriteDesc": "默认跳过并警告。", "settings.skip": "跳过", "settings.overwriteOpt": "覆盖", "settings.rename": "重命名", "settings.corpus": "语料包", "settings.corpusDesc": "输出 chunks.jsonl + manifest.json。",
         "settings.logsIntro": "本地日志，不含文件正文与密钥；可导出脱敏诊断包。", "settings.level": "日志级别", "settings.logDir": "日志目录", "settings.open": "打开", "settings.diagnostics": "诊断包", "settings.diagnosticsDesc": "设置快照 + 引擎版本 + 错误摘要。", "settings.exportDiag": "导出",
-        "file.meta": "958 KB · 2 表格 · 1 图片", "file.empty": "拖入文件或选择文件",
-        "state.label": "原型状态", "state.loaded": "已有文件", "state.empty": "空状态", "state.converting": "转换中", "state.error": "失败 / 需要 OCR",
+        "file.meta": "958 KB · 2 表格 · 1 图片", "file.empty": "拖入文件或选择文件", "file.emptyHint": "支持 docx / pdf / xlsx / pptx / md / png / jpg",
+        "state.label": "原型状态", "state.loaded": "已有文件", "state.empty": "空状态", "state.converting": "转换中", "state.error": "失败 / 需要 OCR", "state.success": "成功", "state.permission": "无权限",
         "status.headings": "49 标题", "status.tables": "2 表格", "status.tableWarn": "1 个表格提示", "status.chars": "字符", "status.chunks": "语料块",
-        "status.converting": "转换中", "status.ocr": "OCR", "status.done": "完成", "status.waiting": "等待", "status.failed": "失败", "status.warn3": "3 警告",
-        "action.cancel": "取消", "action.open": "打开", "action.remove": "移除", "action.retry": "重试", "action.detail": "详情", "action.close": "关闭",
+        "status.converting": "转换中", "status.ocr": "OCR", "status.done": "完成", "status.waiting": "等待", "status.cleaning": "清洗中", "status.skipped": "已跳过", "status.failed": "失败", "status.warn3": "3 警告",
+        "action.cancel": "取消", "action.open": "打开", "action.remove": "移除", "action.retry": "重试", "action.detail": "详情", "action.close": "关闭", "action.edit": "编辑", "action.duplicate": "复制", "action.delete": "删除",
         "chunk.1200": "1200 字符", "chunk.800": "800 字符", "chunk.2000": "2000 字符",
         "engine.ready": "就绪", "engine.missing": "未安装", "engine.anydocMeta": "0.2.4 · Office / 文本型 PDF 快速路径", "engine.xbergMeta": "1.3.10 · OCR / 复杂表格 / 回退", "engine.paddleMeta": "P1 · 中文 OCR 增强 · uv 按需安装", "engine.pandocMeta": "3.8.3 · HTML / DOCX / EPUB 导出", "engine.pythonTitle": "Python 运行时", "engine.pythonMeta": "uv · 按引擎隔离 .venv", "engine.onDemand": "按需安装", "engine.runtimeHint": "Python 引擎由内置 uv 在 ~/.dull_doc/runtimes/<engine>/.venv 中按需安装，不依赖系统 Python；安装前提示包体积。", "aria.nav": "主导航", "aria.language": "语言", "aria.theme": "切换主题", "aria.palette": "命令面板", "aria.commandPalette": "命令面板", "aria.remove": "移除",
         "palette.select": "选择", "palette.run": "执行", "palette.close": "关闭", "palette.placeholder": "搜索命令、页面或最近文件…", "palette.empty": "没有找到匹配的命令", "palette.group.goto": "前往", "palette.group.action": "动作", "palette.group.pref": "偏好", "palette.group.recent": "最近",
@@ -2424,28 +2604,28 @@
         "nav.convert": "Convert", "nav.batch": "Corpus", "nav.history": "History", "nav.settings": "Settings",
         "side.offline": "Offline · engines ready", "crumb.convert": "Convert", "crumb.historySub": "Last 50", "crumb.settingsSub": "General",
         "convert.title": "Convert", "convert.srTitle": "Conversion task", "convert.sub": "Turn documents into Markdown, Word or PDF", "convert.pdfDemo": "PDF preflight demo", "convert.export": "Export",
-        "file.current": "Current file", "file.preset": "Preset", "preset.standard": "Standard document", "preset.table": "Table list", "preset.corpus": "Knowledge base",
+        "file.current": "Current file", "file.preset": "Preset", "preset.standard": "Standard document", "preset.table": "Table list", "preset.corpus": "Knowledge base", "preset.standardMeta": "Built-in · General conversion · Conservative cleaning", "preset.tableMeta": "Built-in · Table-first · Keep grade warnings", "preset.corpusMeta": "Built-in · Chunking, metadata and corpus package", "preset.custom": "My research preset", "preset.customMeta": "Custom · Based on Knowledge base",
         "opt.headers": "Clean headers & footers", "opt.cjk": "Normalize Chinese headings", "opt.tables": "Grade table quality", "opt.assets": "Images to assets/", "opt.corpus": "Build corpus",
         "convert.start": "Start conversion", "convert.open": "Open output folder", "convert.running": "Converting · page 24 of 50", "convert.direction": "Direction", "convert.engine": "Engine", "format.markdown": "Markdown", "format.word": "Word", "format.pdf": "PDF", "engine.auto": "Auto", "engine.autoBatch": "Auto (per file)", "engine.routeHint": "Word → Markdown · 3 engines available; Auto prefers anydoc.", "engine.anydocHint": "anydoc: fast path for Office and text-based PDF.", "engine.selectHint": "Auto prefers anydoc; falls back to xberg on failure or low quality.", "engine.xbergHint": "xberg: OCR, complex tables, and anydoc fallback.", "engine.pandocHint": "pandoc: Markdown and DOCX / HTML / EPUB conversion.", "matrix.open": "Supported directions", "matrix.title": "Supported directions", "matrix.sub": "Basic one-to-one conversions; choose an engine when more than one is available.", "matrix.note": "PDF → Word uses pdf2docx or PDF → Markdown → Word; Markdown → PDF needs a PDF renderer. Python engines run from a uv-managed .venv in the app data folder.", "empty.choose": "Choose a file",
-        "sheet.stamp": "Reviewed", "error.title": "OCR required", "error.desc": "Page 1 of this PDF has no text layer. Skip it, or install the OCR component and try again.", "error.skip": "Skip page 1 and continue", "error.install": "Learn about OCR",
+        "sheet.stamp": "Reviewed", "error.title": "OCR required", "error.desc": "Page 1 of this PDF has no text layer. Skip it, or install the OCR component and try again.", "error.skip": "Skip page 1 and continue", "error.install": "Learn about OCR", "success.title": "Conversion complete", "success.desc": "53,210 chars · 49 headings · 2 tables · 1 table warning", "success.open": "Open output", "success.folder": "Open output folder", "permission.title": "Cannot write to the output folder", "permission.desc": "Grant folder access in Settings, or choose another output folder.", "permission.open": "Open settings", "permission.change": "Change folder", "clear.title": "Clear conversion history?", "clear.desc": "Task records are deleted; output files are not. This cannot be undone.", "clear.confirm": "Clear history",
         "mark.table": "Table · merged cells", "mark.tableDesc": "Row 2, column 3 looks misaligned. Review it.", "mark.line": "Line break · merged", "mark.lineDesc": "“fixed, and set” was restored to one paragraph.", "mark.header": "Header · removed", "mark.headerDesc": "“GB/T 28448—2019” appeared 12 times.",
         "batch.title": "Batch", "batch.sub": "One folder, one pass: convert, clean, package", "batch.add": "Add files", "batch.start": "Start batch", "batch.files": "files · imported", "batch.chunks": "chunks · pending", "batch.warnings": "warnings · review",
         "batch.queue": "Queue", "batch.all": "All", "batch.running": "Running", "batch.failed": "Failed", "batch.search": "Search files…", "th.file": "File", "th.status": "Status", "th.engine": "Engine", "th.grade": "Grade", "th.time": "Time", "th.action": "Action",
-        "batch.config": "Configuration", "batch.configDesc": "Applied to every file; override per file in the queue.", "batch.preset": "Preset", "batch.outputFormat": "Output format", "batch.engine": "Engine", "batch.outputLocked": "Batch output is fixed to Markdown; use single-file conversion for other formats.", "batch.cleaning": "Cleaning & corpus", "opt.clean": "Clean & normalize", "opt.chunk": "Chunk", "opt.meta": "Metadata", "batch.chunkSize": "Chunk limit", "batch.openCorpus": "Open corpus folder",
+        "batch.config": "Configuration", "batch.configDesc": "Applied to every file; override per file in the queue.", "batch.preset": "Preset", "batch.outputFormat": "Output format", "batch.engine": "Engine", "batch.addFolder": "Add folder", "batch.report": "Export report", "batch.concurrency": "Concurrency", "batch.concurrencyDefault": "4 (default)", "batch.overlap": "Chunk overlap", "batch.outputLocked": "Batch output is fixed to Markdown; use single-file conversion for other formats.", "batch.cleaning": "Cleaning & corpus", "opt.clean": "Clean & normalize", "opt.chunk": "Chunk", "opt.meta": "Metadata", "batch.chunkSize": "Chunk limit", "batch.openCorpus": "Open corpus folder",
         "history.title": "History", "history.sub": "Last 50 tasks. Open one for details, rerun, or open output.", "history.clear": "Clear history", "history.srTitle": "History tasks", "history.item1sub": "Single file · Standard preset", "history.item2sub": "Batch · 12 files · Knowledge base preset", "history.item3sub": "Single file · xberg OCR", "history.item4sub": "Batch · failed · E_ENGINE_FAILED", "history.item1count": "49 headings", "history.item2count": "248 chunks", "history.item3count": "12 headings",
-        "detail.preset": "Preset", "detail.target": "Output format", "detail.engine": "Engine", "detail.output": "Output", "detail.stats": "Stats", "detail.warnings": "Warnings", "detail.rerun": "Rerun", "detail.open": "Open output", "detail.copy": "Copy settings",
-        "settings.title": "Settings", "settings.sub": "Output, engines, language and theme", "settings.general": "General", "settings.engines": "Engines", "settings.output": "Output", "settings.logs": "Logs", "settings.about": "About",
+        "detail.preset": "Preset", "detail.target": "Output format", "detail.engine": "Engine", "detail.output": "Output", "detail.stats": "Stats", "detail.warnings": "Warnings", "detail.direction": "Direction", "detail.rerun": "Rerun", "detail.open": "Open output", "detail.copy": "Copy settings",
+        "settings.title": "Settings", "settings.sub": "Output, engines, language and theme", "settings.general": "General", "settings.engines": "Engines", "settings.output": "Output", "settings.presets": "Presets", "settings.presetsIntro": "Built-in presets are ready to use; custom presets live in ~/.dull_doc/presets and can be duplicated or exported.", "settings.presetNew": "New preset", "settings.presetImport": "Import", "settings.presetExport": "Export", "settings.logs": "Logs", "settings.about": "About",
         "settings.generalIntro": "Language and theme apply instantly; app data lives in ~/.dull_doc.", "settings.lang": "Language", "settings.langDesc": "Chinese by default; complete English; no restart.",
         "settings.theme": "Theme", "settings.themeDesc": "Follow system, light or dark; all colors come from tokens.", "theme.system": "Follow system", "theme.light": "Light", "theme.dark": "Dark",
-        "settings.change": "Change", "settings.data": "App data folder", "settings.openData": "Open", "settings.enginesIntro": "Fully local by default; missing components get install guidance, never silent downloads.",
+        "settings.change": "Change", "settings.data": "App data folder", "settings.permissions": "Folder access", "settings.permissionsDesc": "Output and batch input need system authorization; failures link back to Settings.", "settings.granted": "Granted", "settings.openData": "Open", "settings.enginesIntro": "Fully local by default; missing components get install guidance, never silent downloads.",
         "settings.outputIntro": "Defaults for Markdown, images and corpus packages.", "settings.imageMode": "Image mode", "settings.imageModeDesc": "assets/ by default; base64 for single files.", "settings.assets": "assets/ relative path",
         "settings.overwrite": "Existing files", "settings.overwriteDesc": "Skip and warn by default.", "settings.skip": "Skip", "settings.overwriteOpt": "Overwrite", "settings.rename": "Rename", "settings.corpus": "Corpus package", "settings.corpusDesc": "Write chunks.jsonl + manifest.json.",
         "settings.logsIntro": "Local logs without document text or secrets; export a redacted diagnostics bundle.", "settings.level": "Log level", "settings.logDir": "Log folder", "settings.open": "Open", "settings.diagnostics": "Diagnostics", "settings.diagnosticsDesc": "Settings snapshot + engine versions + error summary.", "settings.exportDiag": "Export",
-        "file.meta": "958 KB · 2 tables · 1 image", "file.empty": "Drop a file or choose one",
-        "state.label": "Prototype state", "state.loaded": "File loaded", "state.empty": "Empty state", "state.converting": "Converting", "state.error": "Failed / OCR required",
+        "file.meta": "958 KB · 2 tables · 1 image", "file.empty": "Drop a file or choose one", "file.emptyHint": "Supports docx / pdf / xlsx / pptx / md / png / jpg",
+        "state.label": "Prototype state", "state.loaded": "File loaded", "state.empty": "Empty state", "state.converting": "Converting", "state.error": "Failed / OCR required", "state.success": "Success", "state.permission": "No permission",
         "status.headings": "49 headings", "status.tables": "2 tables", "status.tableWarn": "1 table warning", "status.chars": "chars", "status.chunks": "chunks",
-        "status.converting": "Converting", "status.ocr": "OCR", "status.done": "Done", "status.waiting": "Waiting", "status.failed": "Failed", "status.warn3": "3 warnings",
-        "action.cancel": "Cancel", "action.open": "Open", "action.remove": "Remove", "action.retry": "Retry", "action.detail": "Details", "action.close": "Close",
+        "status.converting": "Converting", "status.ocr": "OCR", "status.done": "Done", "status.waiting": "Waiting", "status.cleaning": "Cleaning", "status.skipped": "Skipped", "status.failed": "Failed", "status.warn3": "3 warnings",
+        "action.cancel": "Cancel", "action.open": "Open", "action.remove": "Remove", "action.retry": "Retry", "action.detail": "Details", "action.close": "Close", "action.edit": "Edit", "action.duplicate": "Duplicate", "action.delete": "Delete",
         "chunk.1200": "1200 chars", "chunk.800": "800 chars", "chunk.2000": "2000 chars",
         "engine.ready": "Ready", "engine.missing": "Not installed", "engine.anydocMeta": "0.2.4 · Office / text PDF fast path", "engine.xbergMeta": "1.3.10 · OCR / complex tables / fallback", "engine.paddleMeta": "P1 · Chinese OCR enhancement · uv on demand", "engine.pandocMeta": "3.8.3 · HTML / DOCX / EPUB export", "engine.pythonTitle": "Python runtime", "engine.pythonMeta": "uv · isolated .venv per engine", "engine.onDemand": "Install on demand", "engine.runtimeHint": "Python engines are installed on demand by the bundled uv into ~/.dull_doc/runtimes/<engine>/.venv; system Python is not required. Size is shown before install.", "aria.nav": "Main navigation", "aria.language": "Language", "aria.theme": "Toggle theme", "aria.palette": "Command palette", "aria.commandPalette": "Command palette", "aria.remove": "Remove",
         "palette.select": "select", "palette.run": "run", "palette.close": "close", "palette.placeholder": "Search commands, pages or recent files…", "palette.empty": "No matching commands", "palette.group.goto": "Go to", "palette.group.action": "Actions", "palette.group.pref": "Preferences", "palette.group.recent": "Recent",
@@ -2505,6 +2685,7 @@
     // ---------- 导航 ----------
     const pages = document.querySelectorAll(".page");
     const navButtons = document.querySelectorAll(".nav button");
+    let activeSettings = "general";
     function goPage(id) {
       currentPage = id;
       pages.forEach(p => p.classList.toggle("active", p.id === "page-" + id));
@@ -2519,7 +2700,7 @@
       const sub = currentPage === "convert" ? "GB/T 28448—2019"
         : currentPage === "batch" ? "等保资料 · 2026-11"
           : currentPage === "history" ? I18N[lang]["crumb.historySub"]
-            : I18N[lang]["crumb.settingsSub"];
+            : I18N[lang]["settings." + activeSettings] || I18N[lang]["crumb.settingsSub"];
       crumb.innerHTML = `<span>${label}</span><span class="sep">/</span><b>${sub}</b>`;
     }
     navButtons.forEach(b => b.addEventListener("click", () => goPage(b.dataset.page)));
@@ -2528,6 +2709,8 @@
     const fileCard = document.querySelector(".file-card");
     const fileEmpty = document.getElementById("file-empty");
     const errorCard = document.getElementById("convert-error");
+    const successCard = document.getElementById("convert-success");
+    const permissionCard = document.getElementById("convert-permission");
     const progress = document.getElementById("convert-progress");
     const routeRow = document.querySelector(".route-row");
     const presetField = document.querySelector(".file-panel > .field");
@@ -2543,8 +2726,11 @@
       presetField.style.display = v === "empty" ? "none" : "flex";
       progress.classList.toggle("show", v === "converting");
       errorCard.classList.toggle("show", v === "error");
+      successCard.classList.toggle("show", v === "success");
+      permissionCard.classList.toggle("show", v === "permission");
       startBtn.disabled = v === "empty" || v === "converting";
-      if (v === "error") requestAnimationFrame(() => errorCard.scrollIntoView({ block: "nearest" }));
+      const activeCard = v === "error" ? errorCard : v === "success" ? successCard : v === "permission" ? permissionCard : null;
+      if (activeCard) requestAnimationFrame(() => activeCard.scrollIntoView({ block: "nearest" }));
     }
     function showToast(message) {
       const el = document.getElementById("toast");
@@ -2566,7 +2752,7 @@
       setConvertState("converting");
       showToast(lang === "zh" ? "正在转换…" : "Converting…");
       convertTimer = setTimeout(() => {
-        setConvertState("loaded");
+        setConvertState("success");
         showToast(lang === "zh" ? "转换完成" : "Conversion complete");
       }, 1800);
     });
@@ -2574,6 +2760,10 @@
       setConvertState("loaded");
       showToast(lang === "zh" ? "已取消转换" : "Conversion cancelled");
     });
+    document.getElementById("success-open").addEventListener("click", () => showToast(lang === "zh" ? "已打开 GB-T-28448.md" : "Opened GB-T-28448.md"));
+    document.getElementById("success-folder").addEventListener("click", () => showToast(lang === "zh" ? "已打开输出目录" : "Output folder opened"));
+    document.getElementById("permission-settings").addEventListener("click", () => { goPage("settings"); showToast(lang === "zh" ? "请在系统中授权文件夹访问" : "Grant folder access in system settings"); });
+    document.getElementById("permission-change").addEventListener("click", () => showToast(lang === "zh" ? "请选择新的输出目录" : "Choose a new output folder"));
 
     // 开关与历史行必须可用键盘操作
     document.querySelectorAll(".switch").forEach(el => {
@@ -2595,9 +2785,16 @@
         f.classList.add("on");
         const fv = f.dataset.filter;
         document.querySelectorAll("#queue-body tr").forEach(tr => {
-          tr.style.display = (fv === "all" || tr.dataset.state === fv) ? "" : "none";
+          const inRunning = fv === "running" && (tr.dataset.state === "running" || tr.dataset.state === "cleaning");
+          tr.style.display = (fv === "all" || inRunning || tr.dataset.state === fv) ? "" : "none";
         });
       });
+    });
+    document.getElementById("add-folder").addEventListener("click", () => {
+      showToast(lang === "zh" ? "已添加文件夹，扫描到 12 个文件" : "Folder added; 12 files found");
+    });
+    document.getElementById("batch-report").addEventListener("click", () => {
+      showToast(lang === "zh" ? "报告已导出为 CSV 与 JSON" : "Report exported as CSV and JSON");
     });
     document.getElementById("start-batch").addEventListener("click", () => {
       document.querySelectorAll('#queue-body tr[data-state="waiting"]').forEach(tr => {
@@ -2613,6 +2810,7 @@
         title: "GB/T 28448—2019.docx",
         icon: "WORD",
         target: { zh: "Markdown", en: "Markdown" },
+        direction: { zh: "Word → Markdown", en: "Word → Markdown" },
         sub: { zh: "单文件转换 · 2026-11-18 14:32", en: "Single file · 2026-11-18 14:32" },
         preset: { zh: "标准文档", en: "Standard" },
         engine: "anydoc 0.2.4 · 1.2s",
@@ -2624,6 +2822,7 @@
         title: "等保资料 · 2026-11",
         icon: "综合文档",
         target: { zh: "Markdown + 语料包", en: "Markdown + corpus" },
+        direction: { zh: "混合格式 → Markdown + 语料包", en: "Mixed formats → Markdown + corpus" },
         sub: { zh: "批量 · 12 文件 · 2026-11-18 14:18", en: "Batch · 12 files · 2026-11-18 14:18" },
         preset: { zh: "知识库", en: "Knowledge base" },
         engine: "anydoc + xberg",
@@ -2635,6 +2834,7 @@
         title: "高风险判定指引.pdf",
         icon: "PDF",
         target: { zh: "Markdown", en: "Markdown" },
+        direction: { zh: "PDF → Markdown", en: "PDF → Markdown" },
         sub: { zh: "单文件转换 · 2026-11-18 13:56", en: "Single file · 2026-11-18 13:56" },
         preset: { zh: "标准文档", en: "Standard" },
         engine: "xberg 1.3.10 · OCR",
@@ -2646,6 +2846,7 @@
         title: "制度汇编.docx",
         icon: "WORD",
         target: { zh: "Markdown", en: "Markdown" },
+        direction: { zh: "Word → Markdown", en: "Word → Markdown" },
         sub: { zh: "批量 · 失败 · 2026-11-18 11:40", en: "Batch · failed · 2026-11-18 11:40" },
         preset: { zh: "标准文档", en: "Standard" },
         engine: "anydoc 0.2.4",
@@ -2661,6 +2862,7 @@
       document.getElementById("detail-title").textContent = d.title;
       document.getElementById("detail-sub").textContent = d.sub[lang] || d.sub.zh;
       document.getElementById("detail-preset").textContent = d.preset[lang] || d.preset.zh;
+      document.getElementById("detail-direction").textContent = d.direction[lang] || d.direction.zh;
       document.getElementById("detail-target").textContent = d.target[lang] || d.target.zh;
       document.getElementById("detail-icon").src = `../../icons/${d.icon}.svg`;
       document.getElementById("detail-engine").textContent = d.engine;
@@ -2669,6 +2871,15 @@
       document.getElementById("detail-warn").textContent = d.warn[lang] || d.warn.zh;
     }
     const historyDialog = document.getElementById("history-dialog");
+    const clearDialog = document.getElementById("clear-dialog");
+    document.getElementById("history-clear").addEventListener("click", () => clearDialog.showModal());
+    document.getElementById("clear-close").addEventListener("click", () => clearDialog.close());
+    document.getElementById("clear-cancel").addEventListener("click", () => clearDialog.close());
+    clearDialog.addEventListener("click", e => { if (e.target === clearDialog) clearDialog.close(); });
+    document.getElementById("clear-confirm").addEventListener("click", () => {
+      clearDialog.close();
+      showToast(lang === "zh" ? "历史记录已清空" : "History cleared");
+    });
     const historyFeedback = document.getElementById("history-feedback");
     let feedbackTimer;
     function showHistoryFeedback(message) {
@@ -2773,6 +2984,8 @@
         b.classList.add("on");
         document.querySelectorAll(".settings-section").forEach(s => s.classList.remove("on"));
         document.getElementById("set-" + b.dataset.settings).classList.add("on");
+        activeSettings = b.dataset.settings;
+        updateCrumb();
       });
     });
 

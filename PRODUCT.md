@@ -52,7 +52,7 @@ DullDoc 是一个 **macOS 本地优先的文档转换工作台**：以 Markdown 
 - PDF→Word 走 `pdf2docx` 或 PDF→Markdown→Word 管线；Markdown→PDF 需 PDF 渲染器（Typst / WebKit 打印 / LaTeX）；复杂版式不承诺像素级保真。
 - MVP 使用本地 JSON 存储，统一放在 `~/.dull_doc/`，不引入数据库；用户输出目录独立。
 - 默认离线；任何云服务必须显式开启并二次确认。
-- 语料制作的输出格式固定 Markdown；其他格式走单文件转换；清洗/切块/语料开关集中在语料制作配置。
+- 语料制作的输出格式固定 Markdown；其他格式走单文件转换；清洗/切块/语料开关集中在语料制作配置，系统设置仅保留语料包全局默认。
 - 应用 MIT；pandoc 以独立 sidecar 按 GPL 合规分发；PaddleOCR Apache-2.0。
 
 ## Brand Commitments
