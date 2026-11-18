@@ -21,6 +21,10 @@ pub struct CorpusFile {
     pub table_rows: usize,
     pub chunks: usize,
     pub warnings: Vec<String>,
+    pub engine: String,
+    pub fallback_reason: Option<String>,
+    pub ocr_pages: Vec<u32>,
+    pub ocr_engine: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -85,7 +89,11 @@ pub fn write_package(
             "headings": file.headings,
             "tableRows": file.table_rows,
             "chunks": file.chunks,
-            "warnings": file.warnings
+            "warnings": file.warnings,
+            "engineUsed": file.engine,
+            "fallbackReason": file.fallback_reason,
+            "ocrPages": file.ocr_pages,
+            "ocrEngine": file.ocr_engine
         })).collect::<Vec<_>>()
     });
     atomic_write(
@@ -263,7 +271,7 @@ fn manifest(
     json!({
         "schema": "dulldoc.corpus.v1",
         "tool": { "name": "DullDoc", "version": env!("CARGO_PKG_VERSION") },
-        "engine": { "name": "anydoc", "version": "0.2.4" },
+        "engine": { "name": meta.engine.clone(), "version": "anydoc 0.2.4; xberg 1.4.0" },
         "batchId": meta.batch_id,
         "batchName": meta.batch_name,
         "createdAt": meta.created_at,
@@ -284,7 +292,11 @@ fn manifest(
             "headings": file.headings,
             "tableRows": file.table_rows,
             "chunks": file.chunks,
-            "warnings": file.warnings
+            "warnings": file.warnings,
+            "engineUsed": file.engine,
+            "fallbackReason": file.fallback_reason,
+            "ocrPages": file.ocr_pages,
+            "ocrEngine": file.ocr_engine
         })).collect::<Vec<_>>(),
         "totals": {
             "files": files.len(),
@@ -382,6 +394,10 @@ mod tests {
             table_rows: 0,
             chunks: 1,
             warnings: vec![],
+            engine: "xberg".into(),
+            fallback_reason: Some("anydoc:needs-ocr".into()),
+            ocr_pages: vec![1],
+            ocr_engine: Some("paddleocr".into()),
         }];
         let chunks = vec![Chunk {
             id: "chunk-1".into(),
@@ -398,6 +414,8 @@ mod tests {
                 engine: "anydoc".into(),
                 params: json!({"chunkSize": 1200}),
                 chars: 2,
+                ocr_engine: None,
+                ocr_pages: Vec::new(),
             },
         }];
         (root, meta, files, chunks)
@@ -411,6 +429,14 @@ mod tests {
         assert!(root.join("manifest.json").is_file());
         assert!(root.join("report.csv").is_file());
         validate_package(&root, true).expect("校验应成功");
+
+        let manifest: Value =
+            serde_json::from_slice(&fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        let file = &manifest["files"][0];
+        assert_eq!(file["engineUsed"], "xberg");
+        assert_eq!(file["ocrPages"][0], 1);
+        assert_eq!(file["ocrEngine"], "paddleocr");
+        assert_eq!(file["fallbackReason"], "anydoc:needs-ocr");
 
         let path = root.join("chunks.jsonl");
         let mut text = fs::read_to_string(&path).unwrap();

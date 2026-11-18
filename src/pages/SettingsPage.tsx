@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useI18n } from "../i18n";
 import { chooseDirectory, type Settings } from "../lib/ipc";
+import { OcrModelCard } from "../components/OcrModelCard";
 
 type Tab = "general" | "engines" | "output" | "presets" | "logs" | "about";
 
@@ -105,12 +106,13 @@ export function SettingsPage({
                 <div className="spacer"><span className="badge green">{t("settings.ready")}</span></div>
               </div>
               <div className="engine-card">
-                <div><div className="name">xberg</div><div className="meta">1.4.0 · {t("settings.later")}</div></div>
-                <div className="spacer"><span className="badge gray">{t("settings.later")}</span></div>
+                <div><div className="name">xberg</div><div className="meta">1.4.0 · {t("settings.xbergMeta")}</div></div>
+                <div className="spacer"><span className="badge green">{t("settings.ready")}</span></div>
               </div>
+              <OcrModelCard showToast={showToast} />
               <div className="engine-card">
-                <div><div className="name">PaddleOCR</div><div className="meta">P1 · {t("settings.later")}</div></div>
-                <div className="spacer"><span className="badge gray">{t("settings.later")}</span></div>
+                <div><div className="name">PaddleOCR</div><div className="meta">{t("settings.paddleMeta")}</div></div>
+                <div className="spacer"><span className="badge gray">{t("settings.paddleBuiltin")}</span></div>
               </div>
               <div className="engine-card">
                 <div><div className="name">{t("settings.python")}</div><div className="meta">{t("settings.pythonMeta")}</div></div>

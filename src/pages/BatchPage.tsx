@@ -7,6 +7,7 @@ import {
   chooseDirectory,
   chooseFiles,
   errorToAppError,
+  getEngineInfo,
   onBatchProgress,
   openPath,
   retryBatchFile,
@@ -30,6 +31,11 @@ type RowStatus =
 
 interface Row extends BatchInput {
   status: RowStatus;
+  engine?: string;
+  engineChoice?: string;
+  fallbackReason?: string | null;
+  ocrPages?: number[];
+  ocrEngine?: string | null;
   tableGrade?: string | null;
   durationMs?: number;
   warnings?: string[];
@@ -98,7 +104,19 @@ export function BatchPage({
   const [result, setResult] = useState<BatchResult | null>(null);
   const [detail, setDetail] = useState<Row | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [ocrReady, setOcrReady] = useState(true);
   const batchRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    void getEngineInfo()
+      .then((info) => {
+        setOcrReady(info.ocrReady);
+        if (!info.ocrReady) {
+          setConfig((current) => (current.engine === "xberg" ? { ...current, engine: "auto" } : current));
+        }
+      })
+      .catch(() => setOcrReady(false));
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onBatchProgress((event) => {
@@ -378,7 +396,13 @@ export function BatchPage({
                         </span>
                       </td>
                       <td>{rowBadge(row)}</td>
-                      <td>{row.status === "waiting" || row.status === "skipped" ? "—" : "anydoc"}</td>
+                      <td>
+                        {row.engine
+                          ? `${row.engine}${row.ocrPages && row.ocrPages.length > 0 ? " · OCR" : ""}`
+                          : row.status === "converting" || row.status === "cleaning" || row.status === "chunking"
+                            ? "…"
+                            : "—"}
+                      </td>
                       <td>
                         {row.tableGrade ? (
                           <span className={`badge ${row.tableGrade === "A" ? "green" : row.tableGrade === "B" ? "amber" : "red"}`}>
@@ -439,9 +463,12 @@ export function BatchPage({
             <select value={config.engine} onChange={(event) => updateConfig("engine", event.target.value)}>
               <option value="auto">{t("convert.engineAuto")}</option>
               <option value="anydoc">anydoc</option>
-              <option disabled>xberg · {t("convert.engineLater")}</option>
+              <option value="xberg" disabled={!ocrReady}>
+                xberg{t("convert.engineOcrSuffix")}
+              </option>
               <option disabled>pandoc · {t("convert.engineLater")}</option>
             </select>
+            {!ocrReady ? <p className="hint">{t("convert.ocrModelMissing")}</p> : null}
           </div>
 
           <div className="field">

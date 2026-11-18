@@ -1,0 +1,153 @@
+schema: comet.native.delta.v1
+capability: mvp
+base_hash: e48df528360d8dc5bf5cd1a53c1d54eb18beb6ee0e4ac0cc0ff5ed4822cbdb3b
+base_version: 1
+legacy_hash: 4aac21321261d60e978478602c814cb5c9f762832b909565043f738c95a891b3
+base_requirements:
+  batch-chunking: 5b1ab75572d6b72382336e76162bbb5478d789832c4800ea647b03ad751443a5
+  batch-cleaning: fc23adb87ef659313138c39fc18e184ee4b95b600f91517309bab3bf719332e2
+  batch-corpus: 273d8845b9ec3283111edc34a9bc2c3e47f74feea2addb54c26471f439fc9492
+  batch-history: 65d9dbb7c1558ba09326ba05845711dd047a9c675f92ae92500a6d0dc357d073
+  batch-pipeline: 81470c0378af072153dba4caf93337915514f961afce2ba0e60943efdba0ced6
+  batch-runtime: 8b2edbb302734b3df1978e3548341e2596c8c6f6baa06974cc8da868d29e7035
+  batch-ui: aa3a1b02d62182718f249caf93a362dca81568ef00cf10bf288afb28f1644c69
+operations:
+  - id: ocr-engine
+    operation: add
+    title: xberg 第二内核与 OCR
+    body: |-
+      > 本节新增 xberg 第二内核，替代第 7 节「xberg OCR、PaddleOCR、Marker、扫描件与图片型 PDF」的非目标，并补齐 REQ-097 的 P0 行为。Python PaddleOCR 与 Marker 仍不在本 change 范围内。
+
+      - xberg 1.4.0 以 Rust crate 嵌入后端，启用 `formats-no-heic`、`tokio-runtime`、`paddle-ocr-ort`；不使用 `xberg-cli` sidecar。
+      - OCR 后端固定为 xberg 内置 PaddleOCR ONNX：`backend="paddleocr"`、`language=["ch"]`、`model_version="pp-ocrv6"`、`model_tier="small"`、`use_angle_cls=false`、`enable_table_detection=true`。
+      - PDF 使用 `ocr_strategy=auto`：文本层可用的页面走原生抽取，只有低质量或无文本页进入 OCR；`force_ocr` 默认关闭。
+      - PNG/JPEG 输入通过内容识别进入 xberg OCR，输出 Markdown；本 change 只支持图片 → Markdown。
+      - 输出格式固定 Markdown；表格由 xberg 表格识别输出 GFM，无法可靠还原时保留最佳结果并写警告。
+      - 抽取结果携带 `engine="xberg"`、`ocr_engine="paddleocr"`、`ocr_pages`、`extraction_method`（native/ocr/mixed）与耗时；历史参数记录同一信息。
+      - 模型未安装时，需要 OCR 的输入不得执行 xberg OCR，也不得返回空文本；按 `E_NEEDS_OCR` 处理。
+      - xberg 解析失败沿用 `E_PARSE_FAILED` / `E_ENCRYPTED` / `E_RESOURCE_LIMIT`；错误卡包含原因、下一步与可复制诊断。
+
+      #### Scenario: 扫描 PDF 自动 OCR
+
+      - Given OCR 模型已安装
+      - When 用户转换封面页无文本层的 PDF
+      - Then 输出非空 Markdown 且包含可读中文
+      - And 结果与历史显示实际引擎 `xberg`、OCR 页与来源
+
+      验收：A2
+
+      #### Scenario: 文本型文档不触发 OCR
+
+      - Given 用户选择 docx、xlsx、文本型 PDF 或 CSV
+      - When 使用默认 auto 引擎转换
+      - Then anydoc 完成转换，xberg 与 OCR 模型均未被加载
+      - And 显式选择 anydoc 时结果相同
+
+      验收：A3
+
+      #### Scenario: 图片 OCR
+
+      - Given OCR 模型已安装
+      - When 用户选择包含中文正文的 PNG 或 JPEG
+      - Then 输出 Markdown 文本包含可读中文
+      - And 界面与历史显示 `xberg` 与 OCR 来源
+
+      验收：A5
+  - id: ocr-routing
+    operation: add
+    title: 引擎路由、回退与可见性
+    body: |-
+      > 本节补齐 REQ-098、REQ-107/110 的引擎选择与回退行为；路由只影响引擎，不改变输出方向。
+
+      - 引擎选项为 `auto`（默认）、`anydoc`、`xberg`；选择随任务写入历史参数，不写全局设置。
+      - `auto` 规则：
+        - anydoc 支持的文档先由 anydoc 抽取。
+        - anydoc 返回 `NeedsOcr`、解析失败，或清洗后表格质量为 C 且 xberg 可用时，回退 xberg 重新抽取。
+        - 图片直接走 xberg OCR。
+        - 每次回退记录 `engineChoice`、`engineUsed`、`fallbackReason` 与 `ocrPages`；同一文件最多回退一次，不重复转换。
+      - 显式 `anydoc` 不触发回退；需要 OCR 时返回 `E_NEEDS_OCR`。
+      - 显式 `xberg` 在模型缺失时：文本型文档仍可由 xberg 原生抽取；需要 OCR 的文件返回 `E_NEEDS_OCR`。
+      - 模型未安装时 xberg 引擎选项禁用并注明「需安装 OCR 模型」；不影响 anydoc 与文本型文档。
+      - 界面在成功/错误卡显示实际引擎与回退原因；历史详情展示引擎选择、实际引擎、OCR 页与原因。
+      - 回退不得导致不完整输出或静默丢页；失败必须带错误码与下一步。
+
+      #### Scenario: OCR 不可用时明确降级
+
+      - Given 模型目录为空或所需模型文件缺失
+      - When 用户转换扫描 PDF 或图片
+      - Then 返回 `E_NEEDS_OCR`，包含页数/文件信息与「安装 OCR 模型」下一步
+      - And 不产生不完整输出，不自动下载模型
+      - And 文本型文档仍可由 anydoc 正常转换
+
+      验收：A4
+
+      #### Scenario: 引擎选择与路由可见性
+
+      - Given 用户打开文档转换或语料制作页
+      - When 展开引擎选择
+      - Then 可选 auto/anydoc/xberg；模型未安装时 xberg 禁用并说明原因
+      - When 发生回退或 OCR
+      - Then 界面显示实际引擎与原因，英文与深色主题下文案完整
+      - And 1280×800 与 1440×900 无横向溢出
+
+      验收：A7
+  - id: ocr-models
+    operation: add
+    title: OCR 模型管理
+    body: |-
+      > 本节补齐 REQ-099 的模型检测、显式安装与离线要求；模型不随 Git 提交。
+
+      - 模型目录固定 `~/.dull_doc/models/paddleocr/`，使用 Hugging Face cache 布局；`DULLDOC_MODEL_DIR` 可覆盖，仅用于测试与诊断。
+      - 必需文件为 PP-OCRv6 small：`v6/det/small/model.onnx`（9.9MB）、`v6/rec/small/model.onnx`（21.2MB）、`v6/rec/small/dict.txt`（74KB）；来源与 SHA-256 取自 xberg 的固定 manifest。
+      - 设置页 → 引擎展示 xberg 版本、OCR 模型状态（已安装/未安装/部分缺失）、目录、大小与来源。
+      - 安装是用户显式动作：点击「安装 OCR 模型」后下载缺失文件，显示逐文件进度，校验 SHA-256 后原子写入；完成后状态刷新。
+      - 提取路径设置 `HF_HUB_OFFLINE=1`，任何缺失模型都不会触发网络请求。
+      - 离线安装返回 `E_OCR_MODEL_DOWNLOAD`，包含原因与下一步；不得静默重试或回退到其他镜像。
+      - 安装失败不得留下半写模型文件；已存在且校验通过的文件不重复下载。
+      - `~/.dull_doc` 仅新增 `models/` 数据；不把模型复制到输出目录或语料包。
+
+      #### Scenario: OCR 模型状态与显式安装
+
+      - Given 模型目录为空
+      - When 用户进入系统设置 → 引擎
+      - Then 显示「未安装」、约 31MB 与下载来源
+      - When 用户点击安装
+      - Then 显示下载进度，完成后显示「已安装」
+      - And 安装前不发起模型网络请求
+
+      验收：A1
+
+      #### Scenario: 构建、离线与安全
+
+      - Given 依赖与 OCR 模型已安装
+      - When 执行构建与测试命令
+      - Then 全部通过
+      - When 断网后转换扫描 PDF
+      - Then 已安装模型完成 OCR，不发起网络请求
+      - And 模型缺失时安装返回清晰的离线错误，不静默重试
+
+      验收：A8
+  - id: ocr-batch
+    operation: add
+    title: 批量 OCR 与语料元数据
+    body: |-
+      > 本节把 OCR 接入 CHG-002 的批量语料管线；不改变既有队列、清洗、切块与语料包语义。
+
+      - 语料制作页引擎选项启用 `auto`、`anydoc`、`xberg`；默认 `auto`。
+      - 每个文件独立路由；单文件 OCR 失败只标记该行，继续处理其他文件。
+      - 批量结果与 `corpus` 文件项记录 `engine`（实际引擎）、`fallbackReason`、`ocrPages`、`ocrEngine` 与耗时。
+      - `chunks.jsonl` 元数据的 `engine` 使用实际引擎；OCR 结果追加 `ocrEngine` 与 `ocrPages`（无法确定页时为空数组）。
+      - `manifest.json` 的文件项新增 `engineUsed`、`ocrPages`、`ocrEngine`、`fallbackReason`；顶层 `engine` 保持批次配置值。
+      - `report.json` / `report.csv` 使用实际引擎；报告与 manifest 的计数、错误码与镜像保持一致。
+      - 模型缺失时，扫描 PDF 行显示 `E_NEEDS_OCR` 与安装下一步；文本型文件继续完成。
+      - 语料包校验沿用原规则；OCR 字段不参与 chunk id 计算。
+
+      #### Scenario: 批量 OCR 与语料元数据
+
+      - Given 批量队列包含 docx 与扫描 PDF，OCR 模型已安装
+      - When 开始批量并生成语料包
+      - Then 扫描 PDF 以 xberg 完成，docx 以 anydoc 完成
+      - And chunk 元数据与 manifest 记录实际引擎、OCR 页与回退原因
+      - And 语料包校验通过
+
+      验收：A6

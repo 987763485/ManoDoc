@@ -5,7 +5,6 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use anydoc::Format;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager};
@@ -130,6 +129,14 @@ pub struct BatchFileResult {
     pub hash: String,
     pub status: String,
     pub engine: String,
+    #[serde(default)]
+    pub engine_choice: String,
+    #[serde(default)]
+    pub fallback_reason: Option<String>,
+    #[serde(default)]
+    pub ocr_pages: Vec<u32>,
+    #[serde(default)]
+    pub ocr_engine: Option<String>,
     pub table_grade: Option<String>,
     pub warnings: Vec<String>,
     pub error_code: Option<String>,
@@ -275,8 +282,8 @@ fn add_file(
     if !seen.insert(key.clone()) {
         return Ok(());
     }
-    let format = detect_path(&canonical);
-    let Some(format) = format else {
+    let kind = engine::routing::detect_path(&canonical);
+    let Some(kind) = kind else {
         skipped.push(format!("跳过不支持的文件: {}", path.display()));
         return Ok(());
     };
@@ -302,18 +309,10 @@ fn add_file(
         path: canonical.to_string_lossy().into_owned(),
         name,
         relative,
-        format: engine::format_label(format).to_string(),
+        format: engine::input_format_label(&kind).to_string(),
         size_bytes,
     });
     Ok(())
-}
-
-fn detect_path(path: &Path) -> Option<Format> {
-    if let Some(format) = Format::from_path(path) {
-        return Some(format);
-    }
-    let bytes = fs::read(path).ok()?;
-    Format::from_bytes(&bytes)
 }
 
 fn add_suffix(relative: &str, index: usize) -> String {
@@ -481,6 +480,10 @@ pub fn run(app: AppHandle, request: BatchRequest) -> Result<BatchResult, AppErro
             table_rows: result.table_rows,
             chunks: result.chunks,
             warnings: result.warnings.clone(),
+            engine: result.engine.clone(),
+            fallback_reason: result.fallback_reason.clone(),
+            ocr_pages: result.ocr_pages.clone(),
+            ocr_engine: result.ocr_engine.clone(),
         })
         .collect();
 
@@ -488,7 +491,7 @@ pub fn run(app: AppHandle, request: BatchRequest) -> Result<BatchResult, AppErro
         batch_id: request.batch_id.clone(),
         batch_name: batch_name.clone(),
         preset: config.preset.clone(),
-        engine: "anydoc".into(),
+        engine: config.engine.clone(),
         params: config.params(),
         created_at: chrono::Utc::now().to_rfc3339(),
         duration_ms,
@@ -612,8 +615,10 @@ pub fn retry_file(app: AppHandle, batch_id: &str, file_id: &str) -> Result<Batch
                     file_name: &input.name,
                     format: &input.format,
                     hash: &file.hash,
-                    engine: "anydoc",
+                    engine: &file.engine,
                     params: session.config.params(),
+                    ocr_engine: file.ocr_engine.as_deref(),
+                    ocr_pages: &file.ocr_pages,
                 },
                 session.config.chunk_size,
                 session.config.overlap,
@@ -638,13 +643,17 @@ pub fn retry_file(app: AppHandle, batch_id: &str, file_id: &str) -> Result<Batch
             table_rows: result.table_rows,
             chunks: result.chunks,
             warnings: result.warnings.clone(),
+            engine: result.engine.clone(),
+            fallback_reason: result.fallback_reason.clone(),
+            ocr_pages: result.ocr_pages.clone(),
+            ocr_engine: result.ocr_engine.clone(),
         })
         .collect();
     let meta = CorpusMeta {
         batch_id: session.result.batch_id.clone(),
         batch_name: session.result.name.clone(),
         preset: session.config.preset.clone(),
-        engine: "anydoc".into(),
+        engine: session.config.engine.clone(),
         params: session.config.params(),
         created_at: chrono::Utc::now().to_rfc3339(),
         duration_ms: session.result.duration_ms,
@@ -692,7 +701,8 @@ fn process_file(
     let hash = fs::read(path)
         .map(|bytes| chunk::sha256_hex(&bytes))
         .unwrap_or_default();
-    let extracted = match engine::extract(path) {
+    let choice = crate::engine::EngineChoice::parse(&config.engine);
+    let extracted = match engine::extract(path, choice, |_| {}) {
         Ok(extracted) => extracted,
         Err(error) => {
             return (
@@ -754,8 +764,10 @@ fn process_file(
                 file_name: &input.name,
                 format: &input.format,
                 hash: &hash,
-                engine: "anydoc",
+                engine: &extracted.engine,
                 params: config.params(),
+                ocr_engine: extracted.ocr_engine.as_deref(),
+                ocr_pages: &extracted.ocr_pages,
             },
             config.chunk_size,
             config.overlap,
@@ -763,6 +775,7 @@ fn process_file(
         warnings.append(&mut chunk_warnings);
         chunks.append(&mut produced);
     }
+    warnings.extend(extracted.warnings.iter().cloned());
 
     (
         BatchFileResult {
@@ -773,7 +786,11 @@ fn process_file(
             format: input.format.clone(),
             hash,
             status: "completed".into(),
-            engine: "anydoc".into(),
+            engine: extracted.engine.clone(),
+            engine_choice: extracted.engine_choice.clone(),
+            fallback_reason: extracted.fallback_reason.clone(),
+            ocr_pages: extracted.ocr_pages.clone(),
+            ocr_engine: extracted.ocr_engine.clone(),
             table_grade: Some(cleaned.table_grade),
             warnings,
             error_code: None,
@@ -805,6 +822,10 @@ fn failed_result(
         hash: hash.to_string(),
         status: "failed".into(),
         engine: "anydoc".into(),
+        engine_choice: "auto".into(),
+        fallback_reason: None,
+        ocr_pages: Vec::new(),
+        ocr_engine: None,
         table_grade: None,
         warnings: vec![error.message.clone()],
         error_code: Some(error.code.clone()),
@@ -829,6 +850,10 @@ fn cancelled_input(input: &BatchInput) -> BatchFileResult {
         hash: String::new(),
         status: "skipped".into(),
         engine: "anydoc".into(),
+        engine_choice: "auto".into(),
+        fallback_reason: None,
+        ocr_pages: Vec::new(),
+        ocr_engine: None,
         table_grade: None,
         warnings: vec!["批次已取消".into()],
         error_code: Some("E_CANCELLED".into()),
@@ -876,7 +901,8 @@ fn record_history(result: &BatchResult, config: &BatchConfig, inputs: &[BatchInp
             .unwrap_or_default(),
         input_name: result.name.clone(),
         direction: "批量 → Markdown".into(),
-        engine: "anydoc".into(),
+        // 批量记录保留批次引擎选择；逐文件实际引擎见 manifest 与详情。
+        engine: config.engine.clone(),
         status: result.status.clone(),
         output_path: Some(result.package_dir.clone()),
         error_code: if result.counts.failed > 0 {
@@ -1035,17 +1061,27 @@ mod tests {
         let config = BatchConfig::default();
         let mut completed = 0;
         let mut chunk_count = 0;
+        let mut ocr_seen = false;
         for input in &scan.files {
             let (result, chunks) = process_file(input, &config, &temp.join("mirror"), &cancel);
             if result.status == "completed" {
                 completed += 1;
                 chunk_count += chunks.len();
+                if result.engine == "xberg" {
+                    ocr_seen = true;
+                    assert!(!result.ocr_pages.is_empty(), "xberg 结果必须记录 OCR 页");
+                    assert_eq!(result.ocr_engine.as_deref(), Some("paddleocr"));
+                    assert!(result.fallback_reason.is_some());
+                }
             } else {
                 assert!(result.error_code.is_some(), "失败行必须有错误码");
             }
         }
         assert!(completed >= 2, "completed={completed}");
         assert!(chunk_count > 0);
+        if crate::ocr::status().ready {
+            assert!(ocr_seen, "模型就绪时扫描 PDF 应走 xberg OCR");
+        }
         let _ = fs::remove_dir_all(&temp);
     }
 }

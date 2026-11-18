@@ -106,6 +106,12 @@ pub fn clean(markdown: &str, options: &CleanOptions) -> Cleaned {
     }
 }
 
+/// 表格质量分级只读入口：供引擎路由判断是否需要切换 xberg，不修改正文。
+pub fn table_grade(markdown: &str) -> String {
+    let lines: Vec<&str> = markdown.split('\n').collect();
+    grade_tables(&lines).0
+}
+
 fn is_fence(trimmed: &str) -> bool {
     trimmed.starts_with("```") || trimmed.starts_with("~~~")
 }

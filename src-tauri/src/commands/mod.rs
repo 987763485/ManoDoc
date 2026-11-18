@@ -10,10 +10,11 @@ use std::time::Instant;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::batch::{self, BatchRequest, BatchResult, BatchScan};
-use crate::engine;
+use crate::engine::{self, routing::EngineChoice};
 use crate::models::{
     AppError, ConversionResult, EngineInfo, FileInfo, HistoryTask, ProgressEvent, Settings,
 };
+use crate::ocr;
 use crate::security::{canonical_input, prepare_output_dir};
 use crate::storage;
 
@@ -44,10 +45,33 @@ pub fn get_app_data_dir() -> Result<String, AppError> {
 
 #[tauri::command(rename_all = "camelCase")]
 pub fn get_engine_info() -> EngineInfo {
+    let status = ocr::status();
     EngineInfo {
         anydoc_version: "0.2.4".into(),
+        xberg_version: "1.4.0".into(),
         ready: true,
+        ocr_ready: status.ready,
+        ocr_model_dir: status.model_dir,
     }
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn get_ocr_status() -> ocr::OcrStatus {
+    ocr::status()
+}
+
+/// 模型下载只在用户点击后发生；失败返回可读错误，不重试、不切换镜像。
+#[tauri::command(rename_all = "camelCase")]
+pub async fn install_ocr_models(app: AppHandle) -> Result<ocr::OcrStatus, AppError> {
+    tauri::async_runtime::spawn_blocking(move || ocr::install(&app))
+        .await
+        .map_err(|error| {
+            AppError::new(
+                "E_OCR_MODEL_DOWNLOAD",
+                format!("模型安装线程失败: {error}"),
+                "重启应用后重试",
+            )
+        })?
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -60,26 +84,25 @@ pub fn inspect_file(path: String) -> Result<FileInfo, AppError> {
             "确认文件仍存在并具有读取权限",
         )
     })?;
-    let format = match engine::detect_format(&bytes, &input) {
-        Some(format) => engine::format_label(format).to_string(),
-        None => {
-            return Err(AppError::new(
-                "E_UNSUPPORTED_FORMAT",
-                "无法识别该文件的格式",
-                "请选择 docx、xlsx、pptx、rtf、epub、csv 或文本型 PDF",
-            ))
-        }
-    };
+    let kind = engine::detect_input(&bytes, &input).ok_or_else(|| {
+        AppError::new(
+            "E_UNSUPPORTED_FORMAT",
+            "无法识别该文件的格式",
+            "请选择 docx、xlsx、pptx、rtf、epub、csv、文本型 PDF、PNG 或 JPEG",
+        )
+    })?;
     let name = input
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| "未命名文件".into());
+    let format = engine::input_format_label(&kind).to_string();
     Ok(FileInfo {
         name,
         path: input.to_string_lossy().into_owned(),
         size_bytes: bytes.len() as u64,
         direction: format!("{format} → Markdown"),
         format,
+        is_image: matches!(kind, engine::InputKind::Image),
     })
 }
 
@@ -89,6 +112,7 @@ pub async fn convert_file(
     input_path: String,
     output_dir: Option<String>,
     task_id: String,
+    engine_choice: Option<String>,
 ) -> Result<ConversionResult, AppError> {
     let started = Instant::now();
     let input = canonical_input(&input_path)?;
@@ -99,6 +123,7 @@ pub async fn convert_file(
     let settings = storage::load_settings();
     let target_dir = output_dir.unwrap_or(settings.output_dir);
     let output_root = prepare_output_dir(&target_dir)?;
+    let choice = EngineChoice::parse(engine_choice.as_deref().unwrap_or("auto"));
 
     emit_progress(&app, &task_id, "reading", 8);
     if take_cancelled(&app, &task_id) {
@@ -107,15 +132,27 @@ pub async fn convert_file(
     emit_progress(&app, &task_id, "converting", 24);
 
     let input_for_task = input.clone();
-    let extracted = tauri::async_runtime::spawn_blocking(move || engine::extract(&input_for_task))
-        .await
-        .map_err(|e| {
-            AppError::new(
-                "E_ENGINE_UNAVAILABLE",
-                format!("转换线程失败: {e}"),
-                "重启应用后重试",
-            )
-        })??;
+    let progress_app = app.clone();
+    let progress_task = task_id.clone();
+    let extracted = tauri::async_runtime::spawn_blocking(move || {
+        // 路由在需要切到 xberg 时回调进度，让界面从「转换」进入「OCR 识别」。
+        engine::extract(&input_for_task, choice, |stage| {
+            let (label, percent) = match stage {
+                "ocr" => ("ocr", 46),
+                "converting" => ("converting", 24),
+                _ => ("converting", 30),
+            };
+            emit_progress(&progress_app, &progress_task, label, percent);
+        })
+    })
+    .await
+    .map_err(|e| {
+        AppError::new(
+            "E_ENGINE_UNAVAILABLE",
+            format!("转换线程失败: {e}"),
+            "重启应用后重试",
+        )
+    })??;
 
     if take_cancelled(&app, &task_id) {
         return Err(cancelled_error());
@@ -127,13 +164,23 @@ pub async fn convert_file(
     emit_progress(&app, &task_id, "writing", 96);
 
     let duration_ms = started.elapsed().as_millis();
+    // 历史参数保存引擎选择、实际引擎与回退原因，便于之后解释同一文件为何走 OCR。
+    let params = serde_json::json!({
+        "engineChoice": extracted.engine_choice,
+        "engineUsed": extracted.engine,
+        "fallbackReason": extracted.fallback_reason,
+        "ocrPages": extracted.ocr_pages,
+        "ocrEngine": extracted.ocr_engine,
+        "method": extracted.method,
+        "pages": extracted.pages
+    });
     let task = HistoryTask {
         id: task_id.clone(),
         created_at: chrono::Utc::now().to_rfc3339(),
         input_path: input.to_string_lossy().into_owned(),
         input_name: input_name.clone(),
         direction: format!("{} → Markdown", extracted.format),
-        engine: "anydoc".into(),
+        engine: extracted.engine.clone(),
         status: "completed".into(),
         output_path: Some(output_path.to_string_lossy().into_owned()),
         error_code: None,
@@ -144,7 +191,7 @@ pub async fn convert_file(
         input_paths: vec![input.to_string_lossy().into_owned()],
         output_dir: None,
         counts: None,
-        params: None,
+        params: Some(params),
     };
     let _ = storage::record_task(task);
     let _ = app.emit(
@@ -165,6 +212,12 @@ pub async fn convert_file(
         output_path: output_path.to_string_lossy().into_owned(),
         stats,
         duration_ms,
+        engine_used: extracted.engine,
+        engine_choice: extracted.engine_choice,
+        fallback_reason: extracted.fallback_reason,
+        ocr_pages: extracted.ocr_pages,
+        ocr_engine: extracted.ocr_engine,
+        warnings: extracted.warnings,
     })
 }
 

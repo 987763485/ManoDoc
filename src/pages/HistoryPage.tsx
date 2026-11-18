@@ -183,6 +183,21 @@ export function HistoryPage({
               <b>{t("history.direction")}</b><span>{selected.kind === "batch" ? `${t("batch.kind")} → Markdown` : selected.direction}</span>
               <b>{t("history.target")}</b><span>Markdown</span>
               <b>{t("history.engine")}</b><span>{selected.engine} · {selected.durationMs}ms</span>
+              {selected.params?.ocrPages && selected.params.ocrPages.length > 0 ? (
+                <>
+                  <b>{t("history.ocrPages")}</b>
+                  <span>
+                    {selected.params.ocrPages.join(", ")}
+                    {selected.params.ocrEngine ? ` · ${selected.params.ocrEngine}` : ""}
+                  </span>
+                </>
+              ) : null}
+              {selected.params?.fallbackReason ? (
+                <>
+                  <b>{t("history.fallback")}</b>
+                  <span>{selected.params.fallbackReason}</span>
+                </>
+              ) : null}
               <b>{t("history.output")}</b><span>{selected.outputPath ?? t("history.noOutput")}</span>
               <b>{t("history.stats")}</b>
               <span>

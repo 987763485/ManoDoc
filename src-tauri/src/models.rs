@@ -110,6 +110,7 @@ pub struct FileInfo {
     pub size_bytes: u64,
     pub format: String,
     pub direction: String,
+    pub is_image: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -120,6 +121,12 @@ pub struct ConversionResult {
     pub output_name: String,
     pub stats: TaskStats,
     pub duration_ms: u128,
+    pub engine_used: String,
+    pub engine_choice: String,
+    pub fallback_reason: Option<String>,
+    pub ocr_pages: Vec<u32>,
+    pub ocr_engine: Option<String>,
+    pub warnings: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -134,5 +141,8 @@ pub struct ProgressEvent {
 #[serde(rename_all = "camelCase")]
 pub struct EngineInfo {
     pub anydoc_version: String,
+    pub xberg_version: String,
     pub ready: bool,
+    pub ocr_ready: bool,
+    pub ocr_model_dir: String,
 }

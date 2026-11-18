@@ -139,7 +139,22 @@ export default function App() {
 
   function rerunBatch(task: HistoryTask) {
     if (!task.inputPaths?.length || !task.params) return;
-    setBatchRerun({ inputPaths: task.inputPaths, config: task.params });
+    // 旧批量记录可能缺少后续新增字段，重跑时用当前默认值补齐。
+    const params = task.params;
+    const config: BatchConfig = {
+      preset: params.preset ?? "standard",
+      engine: params.engine ?? "auto",
+      concurrency: params.concurrency ?? 4,
+      cleanHeaders: params.cleanHeaders ?? true,
+      cleanCjk: params.cleanCjk ?? true,
+      gradeTables: params.gradeTables ?? true,
+      chunk: params.chunk ?? true,
+      metadata: params.metadata ?? true,
+      corpus: params.corpus ?? true,
+      chunkSize: params.chunkSize ?? 1200,
+      overlap: params.overlap ?? 50,
+    };
+    setBatchRerun({ inputPaths: task.inputPaths, config });
     setPage("batch");
   }
 

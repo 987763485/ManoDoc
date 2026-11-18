@@ -22,6 +22,12 @@
 .history-empty .hint { margin-top: 6px; font-size: 12px; }
 .history-empty { padding: 40px; text-align: center; color: var(--ink-3); }
 .setting-row .control select { min-width: 180px; }
+.ocr-model-card { align-items: flex-start; }
+.ocr-model-card .meta { line-height: 1.6; }
+.ocr-model-dir { word-break: break-all; }
+.ocr-model-progress { margin-top: 8px; display: grid; gap: 6px; min-width: 240px; }
+.ocr-model-error { color: var(--red); }
+.ocr-model-actions { display: flex; gap: 8px; align-items: center; }
 .brand-seal { width: 20px; height: 20px; border: 2px solid var(--red); display: grid; place-items: center; color: var(--red); font-size: 12px; font-weight: 800; transform: rotate(-3deg); }
 .palette-item .hint { margin-left: auto; }
 .toast-host { position: fixed; inset: auto 0 24px; display: grid; place-items: center; pointer-events: none; z-index: 90; }

@@ -5,6 +5,7 @@ mod commands;
 mod corpus;
 mod engine;
 mod models;
+mod ocr;
 mod security;
 mod storage;
 
@@ -25,6 +26,8 @@ pub fn run() {
             commands::save_settings,
             commands::get_app_data_dir,
             commands::get_engine_info,
+            commands::get_ocr_status,
+            commands::install_ocr_models,
             commands::inspect_file,
             commands::convert_file,
             commands::cancel_conversion,

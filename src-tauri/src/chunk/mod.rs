@@ -24,6 +24,11 @@ pub struct ChunkMetadata {
     pub engine: String,
     pub params: Value,
     pub chars: usize,
+    /// OCR 专有信息只在实际使用 OCR 时出现，旧语料读取不受影响。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ocr_engine: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ocr_pages: Vec<u32>,
 }
 
 pub struct ChunkContext<'a> {
@@ -34,6 +39,8 @@ pub struct ChunkContext<'a> {
     pub hash: &'a str,
     pub engine: &'a str,
     pub params: Value,
+    pub ocr_engine: Option<&'a str>,
+    pub ocr_pages: &'a [u32],
 }
 
 /// 按 H1–H3 切块；表格与 fenced code 作为原子块，超长时保留整块并写警告。
@@ -130,6 +137,8 @@ pub fn chunk_markdown(
                     engine: context.engine.to_string(),
                     params: context.params.clone(),
                     chars: piece.chars().count(),
+                    ocr_engine: context.ocr_engine.map(|value| value.to_string()),
+                    ocr_pages: context.ocr_pages.to_vec(),
                 },
             });
             ordinal += 1;
@@ -311,6 +320,8 @@ mod tests {
             hash: "abc",
             engine: "anydoc",
             params: json!({"chunkSize": 1200, "overlap": 50}),
+            ocr_engine: None,
+            ocr_pages: &[],
         }
     }
 

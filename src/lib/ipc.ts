@@ -18,6 +18,16 @@ export interface TaskStats {
   tableRows: number;
 }
 
+export interface HistoryParams extends Partial<BatchConfig> {
+  engineChoice?: string;
+  engineUsed?: string;
+  fallbackReason?: string | null;
+  ocrPages?: number[];
+  ocrEngine?: string | null;
+  method?: string;
+  pages?: number | null;
+}
+
 export interface HistoryTask {
   id: string;
   createdAt: string;
@@ -35,7 +45,7 @@ export interface HistoryTask {
   inputPaths?: string[];
   outputDir?: string | null;
   counts?: BatchCounts | null;
-  params?: BatchConfig | null;
+  params?: HistoryParams | null;
 }
 
 export interface BatchCounts {
@@ -124,6 +134,7 @@ export interface FileInfo {
   sizeBytes: number;
   format: string;
   direction: string;
+  isImage: boolean;
 }
 
 export interface ConversionResult {
@@ -132,6 +143,49 @@ export interface ConversionResult {
   outputName: string;
   stats: TaskStats;
   durationMs: number;
+  engineUsed: string;
+  engineChoice: string;
+  fallbackReason: string | null;
+  ocrPages: number[];
+  ocrEngine: string | null;
+  warnings: string[];
+}
+
+export interface EngineInfo {
+  anydocVersion: string;
+  xbergVersion: string;
+  ready: boolean;
+  ocrReady: boolean;
+  ocrModelDir: string;
+}
+
+export interface OcrModelFile {
+  relativePath: string;
+  sizeBytes: number;
+  sha256: string;
+  sourceUrl: string;
+  present: boolean;
+}
+
+export interface OcrStatus {
+  engine: string;
+  engineVersion: string;
+  ready: boolean;
+  partial: boolean;
+  installedBytes: number;
+  requiredBytes: number;
+  modelDir: string;
+  source: string;
+  files: OcrModelFile[];
+}
+
+export interface OcrProgress {
+  file: string;
+  downloaded: number;
+  total: number;
+  percent: number;
+  fileIndex: number;
+  fileCount: number;
 }
 
 export interface ProgressEvent {
@@ -195,20 +249,63 @@ export async function saveSettings(settings: Settings): Promise<Settings> {
   return invoke<Settings>("save_settings", { settings });
 }
 
-export async function getEngineInfo(): Promise<{ anydocVersion: string; ready: boolean }> {
-  if (!isTauri()) return { anydocVersion: "0.2.4", ready: true };
-  return invoke("get_engine_info");
+export async function getEngineInfo(): Promise<EngineInfo> {
+  if (!isTauri()) {
+    return {
+      anydocVersion: "0.2.4",
+      xbergVersion: "1.4.0",
+      ready: true,
+      ocrReady: true,
+      ocrModelDir: "~/.dull_doc/models/paddleocr",
+    };
+  }
+  return invoke<EngineInfo>("get_engine_info");
+}
+
+export async function getOcrStatus(): Promise<OcrStatus> {
+  if (!isTauri()) {
+    return {
+      engine: "xberg",
+      engineVersion: "1.4.0",
+      ready: true,
+      partial: false,
+      installedBytes: 31_186_579,
+      requiredBytes: 31_186_579,
+      modelDir: "~/.dull_doc/models/paddleocr",
+      source: "https://huggingface.co/xberg-io/paddleocr-onnx-models",
+      files: [],
+    };
+  }
+  return invoke<OcrStatus>("get_ocr_status");
+}
+
+export async function installOcrModels(): Promise<OcrStatus> {
+  if (!isTauri()) {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    return getOcrStatus();
+  }
+  return invoke<OcrStatus>("install_ocr_models");
+}
+
+export async function onOcrModelProgress(
+  handler: (event: OcrProgress) => void,
+): Promise<() => void> {
+  if (!isTauri()) return () => {};
+  return listen<OcrProgress>("ocr-model-progress", (event) => handler(event.payload));
 }
 
 export async function inspectFile(path: string): Promise<FileInfo> {
   if (!isTauri()) {
     const name = path.split("/").pop() ?? "示例文件.docx";
+    const ext = name.split(".").pop()?.toLowerCase() ?? "docx";
+    const format = ext.toUpperCase();
     return {
       name,
       path,
       sizeBytes: 958 * 1024,
-      format: name.split(".").pop()?.toUpperCase() ?? "DOCX",
-      direction: "DOCX → Markdown",
+      format,
+      direction: `${format} → Markdown`,
+      isImage: ["png", "jpg", "jpeg"].includes(ext),
     };
   }
   return invoke<FileInfo>("inspect_file", { path });
@@ -222,7 +319,10 @@ export async function chooseFile(): Promise<string | null> {
     filters: [
       {
         name: "支持的文件",
-        extensions: ["doc", "docx", "odt", "rtf", "epub", "pdf", "ppt", "pptx", "xls", "xlsx", "csv"],
+        extensions: [
+          "doc", "docx", "odt", "rtf", "epub", "pdf", "ppt", "pptx", "xls", "xlsx", "csv",
+          "png", "jpg", "jpeg",
+        ],
       },
     ],
   });
@@ -242,7 +342,10 @@ export async function chooseFiles(): Promise<string[]> {
     filters: [
       {
         name: "支持的文件",
-        extensions: ["doc", "docx", "odt", "rtf", "epub", "pdf", "ppt", "pptx", "xls", "xlsx", "csv"],
+        extensions: [
+          "doc", "docx", "odt", "rtf", "epub", "pdf", "ppt", "pptx", "xls", "xlsx", "csv",
+          "png", "jpg", "jpeg",
+        ],
       },
     ],
   });
@@ -255,7 +358,11 @@ export async function chooseDirectory(): Promise<string | null> {
   return typeof selected === "string" ? selected : null;
 }
 
-export async function convertFile(inputPath: string, taskId: string): Promise<ConversionResult> {
+export async function convertFile(
+  inputPath: string,
+  taskId: string,
+  engineChoice: string = "auto",
+): Promise<ConversionResult> {
   if (!isTauri()) {
     await new Promise((resolve) => setTimeout(resolve, 900));
     const stats = { chars: 53210, headings: 49, tableRows: 15 };
@@ -277,12 +384,24 @@ export async function convertFile(inputPath: string, taskId: string): Promise<Co
       inputPaths: [inputPath],
       outputDir: null,
       counts: null,
-      params: null,
+      params: { engineChoice, engineUsed: "anydoc" },
     };
     writeMockHistory([task, ...readMockHistory()]);
-    return { taskId, outputPath, outputName: "GB-T-28448.md", stats, durationMs: 920 };
+    return {
+      taskId,
+      outputPath,
+      outputName: "GB-T-28448.md",
+      stats,
+      durationMs: 920,
+      engineUsed: "anydoc",
+      engineChoice,
+      fallbackReason: null,
+      ocrPages: [],
+      ocrEngine: null,
+      warnings: [],
+    };
   }
-  return invoke<ConversionResult>("convert_file", { inputPath, taskId });
+  return invoke<ConversionResult>("convert_file", { inputPath, taskId, engineChoice });
 }
 
 export async function cancelConversion(taskId: string): Promise<void> {

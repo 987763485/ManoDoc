@@ -5,6 +5,7 @@ import {
   chooseFile,
   convertFile,
   errorToAppError,
+  getEngineInfo,
   inspectFile,
   onFileDrop,
   onProgress,
@@ -57,6 +58,8 @@ export function ConvertPage({
   const [error, setError] = useState<AppError | null>(null);
   const [matrixOpen, setMatrixOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [engine, setEngine] = useState<"auto" | "anydoc" | "xberg">("auto");
+  const [ocrReady, setOcrReady] = useState(true);
   const taskRef = useRef<string | null>(null);
   const dropRef = useRef<(path: string) => void>(() => {});
 
@@ -69,6 +72,18 @@ export function ConvertPage({
     return () => {
       void unsubscribe.then((fn) => fn());
     };
+  }, []);
+
+  useEffect(() => {
+    void getEngineInfo()
+      .then((info) => {
+        setOcrReady(info.ocrReady);
+        // 模型被卸载后不应继续保留不可用的显式 xberg 选择。
+        if (!info.ocrReady) {
+          setEngine((current) => (current === "xberg" ? "auto" : current));
+        }
+      })
+      .catch(() => setOcrReady(false));
   }, []);
 
   // Tauri 默认接管原生拖放，浏览器预览仍使用 HTML5 drop。
@@ -135,7 +150,7 @@ export function ConvertPage({
     setResult(null);
     setProgress({ stage: "reading", percent: 4 });
     try {
-      const converted = await convertFile(file.path, taskId);
+      const converted = await convertFile(file.path, taskId, engine);
       setResult(converted);
       setStatus("success");
       showToast(t("toast.converted"));
@@ -146,6 +161,11 @@ export function ConvertPage({
       if (appError.code === "E_CANCELLED") {
         setStatus(file ? "idle" : "empty");
         return;
+      }
+      if (appError.code === "E_NEEDS_OCR") {
+        // 模型可能在本次会话期间被移动或删除，错误详情比启动时的状态更权威。
+        const detail = appError.detail as { ocrAvailable?: boolean } | undefined;
+        if (detail?.ocrAvailable === false) setOcrReady(false);
       }
       setError(appError);
       setStatus("error");
@@ -162,6 +182,7 @@ export function ConvertPage({
 
   const stageText = useMemo(() => {
     if (progress.stage === "reading") return t("convert.reading");
+    if (progress.stage === "ocr") return t("convert.ocr");
     if (progress.stage === "writing") return t("convert.writing");
     if (progress.stage === "done") return t("convert.done");
     return t("convert.converting");
@@ -185,7 +206,9 @@ export function ConvertPage({
   })();
   const errorMessage =
     error?.code === "E_NEEDS_OCR"
-      ? t("error.ocrDesc", { n: ocrPages })
+      ? file?.isImage
+        ? t("error.ocrImage")
+        : t("error.ocrDesc", { n: ocrPages })
       : error?.code === "E_UNSUPPORTED_FORMAT"
         ? t("error.unsupportedDesc")
         : error?.code === "E_OUTPUT_PERMISSION"
@@ -193,7 +216,9 @@ export function ConvertPage({
           : (error?.message ?? "");
   const errorNext =
     error?.code === "E_NEEDS_OCR"
-      ? t("error.nextOcr")
+      ? ocrReady
+        ? t("error.nextOcrReady")
+        : t("error.nextOcr")
       : error?.code === "E_UNSUPPORTED_FORMAT"
         ? t("error.nextUnsupported")
         : error?.code === "E_OUTPUT_PERMISSION"
@@ -275,12 +300,18 @@ export function ConvertPage({
                 </div>
                 <div className="field">
                   <label>{t("convert.engine")}</label>
-                  <select defaultValue="auto">
+                  <select
+                    value={engine}
+                    onChange={(event) => setEngine(event.target.value as "auto" | "anydoc" | "xberg")}
+                  >
                     <option value="auto">{t("convert.engineAuto")}</option>
                     <option value="anydoc">anydoc</option>
-                    <option disabled>xberg · {t("convert.engineLater")}</option>
+                    <option value="xberg" disabled={!ocrReady}>
+                      xberg{t("convert.engineOcrSuffix")}
+                    </option>
                     <option disabled>pandoc · {t("convert.engineLater")}</option>
                   </select>
+                  {!ocrReady ? <span className="hint">{t("convert.ocrModelMissing")}</span> : null}
                 </div>
               </div>
               <div className="field">
@@ -322,6 +353,14 @@ export function ConvertPage({
               <p>
                 <b>{result.outputName}</b> · {t("convert.resultHint", { chars: stats.chars, headings: stats.headings, tables: stats.tableRows })}
               </p>
+              <p className="hint" id="convert-engine-info">
+                {t("convert.engineUsed")}: <b>{result.engineUsed}</b>
+                {result.ocrPages.length > 0
+                  ? ` · ${t("convert.ocrPages", { n: result.ocrPages.length })}`
+                  : ""}
+                {result.fallbackReason ? ` · ${t("convert.fallback", { reason: result.fallbackReason })}` : ""}
+              </p>
+              {result.warnings.length > 0 ? <p className="hint">{result.warnings.join(" · ")}</p> : null}
               <div className="actions">
                 <button className="btn primary small" onClick={() => openPath(result.outputPath, true)}>{t("action.openOutput")}</button>
                 <button className="btn secondary small" onClick={() => openPath(settings.outputDir)}>{t("action.openFolder")}</button>
@@ -338,6 +377,11 @@ export function ConvertPage({
                 <button className="btn secondary small" onClick={() => void choose()}>{t("action.chooseFile")}</button>
                 {error.code === "E_OUTPUT_PERMISSION" ? (
                   <button className="btn ghost small" onClick={onOpenSettings}>{t("action.openSettings")}</button>
+                ) : null}
+                {error.code === "E_NEEDS_OCR" && !ocrReady ? (
+                  <button className="btn secondary small" id="install-ocr-link" onClick={onOpenSettings}>
+                    {t("convert.installOcr")}
+                  </button>
                 ) : null}
                 <button className="btn ghost small" onClick={() => setStatus(file ? "idle" : "empty")}>{t("action.close")}</button>
               </div>
