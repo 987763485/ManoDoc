@@ -181,6 +181,7 @@
 | 2026-11-19 | S7 Verify → Archive | CHG-005 通过 Comet Verify（A1–A8）；用户按既有授权接受并归档至 `docs/comet/archive/2026-11-18-packaging-signing/`。公证因缺少 Developer ID 记录为发布前阻塞。 |
 | 2026-11-19 | 维护 | OCR 模型下载改用 hf-hub 1.0：模型根目录调整为 `~/.dull_doc/models`，固定官方 endpoint，保留 SHA-256 与进度；实测从 huggingface.co 下载 31MB/14.2s 成功，本地镜像测试通过；`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 13 ignored）通过。 |
 | 2026-11-19 | 维护 | 明确前端资源策略：保持 Tauri 内嵌，打包脚本新增 `Resources` 不含前端产物与 >10MB 未声明文件的断言；`打包与签名.md` 与 `CHANGE.md` 同步验收口径。 |
+| 2026-11-19 | 维护 | 顶部改为 macOS 风格整宽标题栏：系统红绿灯 + 侧栏折叠 + 命令面板搜索 + 居中 DullDoc + 语言/主题；同步 `UI.html` 与 `UI设计规范` v1.5；实机验证中英文、深浅色、1280×800 与侧栏折叠；`pnpm build`、`pnpm test`（13 项）通过，UI 迭代期间未提交。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->

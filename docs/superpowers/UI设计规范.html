@@ -159,7 +159,7 @@
   <h1>UI 设计规范</h1>
   <p class="tagline">Proofing Desk · 为文档转换而做的校样台</p>
   <div class="meta">
-    <span class="pill"><strong>版本</strong> v1.4</span>
+    <span class="pill"><strong>版本</strong> v1.5</span>
     <span class="pill"><strong>日期</strong> 2026-11-18</span>
     <span class="pill"><strong>模式</strong> Operate · 桌面</span>
     <span class="pill status">状态：已确认</span>
@@ -181,6 +181,19 @@
       <li><strong>双语与双主题是一等公民</strong>：中英文、浅色/深色都在 token 层解决，不做事后补丁。</li>
       <li><strong>键盘优先</strong>：Cmd+K 命令面板覆盖页面、操作与最近文件。</li>
     </ol>
+    <h3>macOS 标题栏</h3>
+    <p>窗口使用 Tauri <code>titleBarStyle: Overlay</code>，系统红绿灯浮在 48px 高的整宽标题栏上；左侧固定留出 84px，避免控件与红绿灯重叠。标题栏同时承接全局操作，页面内不再重复放语言、主题与搜索入口。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>区域</th><th>内容</th><th>行为</th></tr></thead>
+        <tbody>
+          <tr><td>左</td><td>侧栏折叠、搜索</td><td>折叠后侧栏宽度归零，状态写入本地存储；搜索打开 Cmd+K 命令面板</td></tr>
+          <tr><td>中</td><td>DullDoc</td><td>只读文本，可拖动窗口</td></tr>
+          <tr><td>右</td><td>中文 / EN、主题</td><td>即时生效并写回设置；原型中的状态选择器不进入产品</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><b>样式约束</b>：背景 <code>surface-2</code>、下边框 <code>line</code>；图标按钮 30×30、圆角 6px，图标 17px；焦点环使用 <code>focus</code> token；关闭侧栏后主区自动占满，1280 与 1440 宽度下都不得出现横向滚动。</div>
   </section>
 
   <section id="color" class="card">

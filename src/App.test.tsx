@@ -63,7 +63,7 @@ describe("应用壳与导航", () => {
 
     expect(await screen.findByRole("heading", { name: "系统设置" })).toBeInTheDocument();
 
-    const trigger = screen.getByTitle("命令面板 (⌘K)");
+    const trigger = screen.getByTitle("搜索与命令（⌘K）");
     fireEvent.click(trigger);
     const reopened = screen.getByPlaceholderText("搜索命令、页面或最近文件…");
     fireEvent.keyDown(reopened, { key: "Escape" });

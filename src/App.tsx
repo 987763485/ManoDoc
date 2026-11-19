@@ -24,13 +24,6 @@ const DEFAULT_SETTINGS: Settings = {
   outputDir: "~/Documents/DullDoc Output",
 };
 
-const CRUMB_KEYS = {
-  convert: "crumb.convert",
-  batch: "crumb.batch",
-  history: "crumb.history",
-  settings: "crumb.settings",
-} as const;
-
 export default function App() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [page, setPage] = useState<PageId>("convert");
@@ -229,7 +222,21 @@ function AppShell({
   onRequestedConsumed: () => void;
 }) {
   const { t } = useI18n();
-  const crumbDetail = page === "convert" && history[0] ? history[0].inputName : t("app.name");
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    try {
+      return window.localStorage.getItem("dulldoc.sidebar") !== "0";
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("dulldoc.sidebar", sidebarOpen ? "1" : "0");
+    } catch {
+      // 隐私模式下 localStorage 不可写；折叠状态只影响本次会话。
+    }
+  }, [sidebarOpen]);
 
   async function openOutput() {
     try {
@@ -240,9 +247,47 @@ function AppShell({
   }
 
   return (
-    <div className="app">
+    <div className={sidebarOpen ? "app" : "app sidebar-collapsed"}>
+      <header className="titlebar" data-tauri-drag-region>
+        <div className="tb-left">
+          <button
+            className="tb-icon"
+            title={t("titlebar.sidebar")}
+            aria-label={t("titlebar.sidebar")}
+            aria-pressed={!sidebarOpen}
+            onClick={() => setSidebarOpen((open) => !open)}
+          >
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></svg>
+          </button>
+          <button
+            className="tb-icon"
+            title={t("titlebar.search")}
+            aria-label={t("palette.open")}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              onPalette(true);
+            }}
+          >
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
+          </button>
+        </div>
+        <div className="tb-title">{t("app.name")}</div>
+        <div className="tb-right">
+          <div className="seg" aria-label={t("settings.lang")}>
+            <button className={settings.language === "zh" ? "on" : ""} onClick={() => settings.language !== "zh" && onToggleLanguage()}>中文</button>
+            <button className={settings.language === "en" ? "on" : ""} onClick={() => settings.language !== "en" && onToggleLanguage()}>EN</button>
+          </div>
+          <button className="icon-btn" title={t("palette.theme")} aria-label={t("palette.theme")} onClick={onToggleTheme}>
+            <svg className="sun" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+            </svg>
+            <svg className="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z" /></svg>
+          </button>
+        </div>
+      </header>
+
       <aside className="sidebar">
-        <div className="brand"><span className="seal">D</span>DullDoc</div>
         <nav className="nav" aria-label={t("nav.convert")}>
           <button className={page === "convert" ? "active" : ""} onClick={() => onPage("convert")}>
             <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4" /><path d="M10 12h5M10 16h5" /></svg>
@@ -278,38 +323,6 @@ function AppShell({
       </aside>
 
       <div className="main">
-        <header className="topbar">
-          <div className="crumb">
-            <span>{t(CRUMB_KEYS[page])}</span>
-            <span className="sep">/</span>
-            <b>{crumbDetail}</b>
-          </div>
-          <div className="top-right">
-            <div className="seg" aria-label={t("settings.lang")}>
-              <button className={settings.language === "zh" ? "on" : ""} onClick={() => settings.language !== "zh" && onToggleLanguage()}>中文</button>
-              <button className={settings.language === "en" ? "on" : ""} onClick={() => settings.language !== "en" && onToggleLanguage()}>EN</button>
-            </div>
-            <button className="icon-btn" title={t("palette.theme")} aria-label={t("palette.theme")} onClick={onToggleTheme}>
-              <svg className="sun" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-              </svg>
-              <svg className="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z" /></svg>
-            </button>
-            <button
-              className="icon-btn"
-              title={`${t("palette.title")} (⌘K)`}
-              aria-label={t("palette.open")}
-              onClick={(event) => {
-                event.currentTarget.focus();
-                onPalette(true);
-              }}
-            >
-              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
-            </button>
-          </div>
-        </header>
-
         <main className="content">
           <ConvertPage
             active={page === "convert"}
