@@ -198,6 +198,7 @@
 | 2026-11-19 | 发布 | 完成正式发布材料：`README.md`（介绍/安装/使用/注意事项/协议）、`LICENSE`（MIT）与产品文档站 `docs/index.html`（产品介绍、截图、下载安装、使用、注意事项、版权、协议、版本日志）；截图使用中性演示文件，未包含 `example/` 内容。`pnpm package:mac` 产出 `ManoDoc_0.1.0_aarch64.dmg`（119.7MB），ad-hoc 签名通过，公证因缺 Developer ID 仍以退出码 20 阻塞。 |
 | 2026-11-19 | 维护 | 补充 Windows / Linux 自行编译入口：README 与产品文档站新增平台分发表、Windows（MSVC + WebView2 + PowerShell 暂存 sidecar）与 Linux（WebKitGTK 4.1 + sidecar）构建步骤、target triple 命名与产物路径；Tauri 配置移除 macOS 专用 `bundle.targets` 并加入 `icon.ico`，sidecar 解析按平台补 `.exe` 后缀、错误提示改为平台中立；`cargo test`（29 项）、`pnpm build`、`pnpm test`（17 项）通过。Windows / Linux 构建尚未实机验证。 |
 | 2026-11-19 | 维护 | 修复 macOS 图标：原 PNG/ICNS 圆角外为不透明白色且铺满画布；重制为 824×824 居中、四周 100px 透明的 macOS 图标网格，重新导出 PNG / `icon.icns` / `icon.ico`，品牌 Logo 两份 PNG 同步去白底；重新打包 `.app` 与 `.dmg` 验证嵌入 icns 角像素透明、卷图标一致，ad-hoc 签名通过（公证仍缺 Developer ID）。 |
+| 2026-11-19 | 维护 | PDF 转换新增「全文强制 OCR」与乱码自动回退：`force_ocr` 贯通 xberg 适配器、导出、路由与 `convert_file`；路由按控制字符/私用区/替换符占比（≥1%）检测文字层乱码，OCR 可用时自动改用全文 OCR 并记录 `garbled-text` 回退原因，不可用时返回 `E_NEEDS_OCR`；转换页新增开关，预检弹窗新增「全文 OCR」。测试：3 项单元测试（乱码判定、正常中文、短文本不误报）与 2 项 ignored 集成测试（example 乱码 PDF 的全文 OCR 与自动检测）通过；`pnpm build`、`pnpm test`（19 项）、`cargo test`（32 项 + 15 ignored）通过。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->

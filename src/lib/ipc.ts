@@ -31,6 +31,7 @@ export interface HistoryParams extends Partial<BatchConfig> {
   fallbackReason?: string | null;
   ocrPages?: number[];
   ocrEngine?: string | null;
+  forceOcr?: boolean;
   method?: string;
   pages?: number | null;
   target?: string;
@@ -422,6 +423,7 @@ export async function convertFile(
   engineChoice: string = "auto",
   targetFormat: string = "markdown",
   noTextPolicy: string = "ask",
+  forceOcr: boolean = false,
 ): Promise<ConversionResult> {
   if (!isTauri()) {
     await new Promise((resolve) => setTimeout(resolve, 900));
@@ -444,7 +446,7 @@ export async function convertFile(
       inputPaths: [inputPath],
       outputDir: null,
       counts: null,
-      params: { engineChoice, engineUsed: "anydoc" },
+      params: { engineChoice, engineUsed: "anydoc", forceOcr },
     };
     writeMockHistory([task, ...readMockHistory()]);
     return {
@@ -469,6 +471,7 @@ export async function convertFile(
     engineChoice,
     targetFormat,
     noTextPolicy,
+    forceOcr,
   });
 }
 

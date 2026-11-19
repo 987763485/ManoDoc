@@ -63,15 +63,17 @@ fn ocr_config() -> OcrConfig {
 /// `ocr_ready=false` 时仍允许文本型文档走 xberg 原生抽取；需要 OCR 的文件由
 /// routing 在调用前拦截。
 pub fn extract(input: &Path, ocr_ready: bool) -> Result<XbergExtracted, AppError> {
-    extract_with_options(input, ocr_ready, false)
+    extract_with_options(input, ocr_ready, false, false)
 }
 
 /// `want_images=true` 时要求 xberg 提取图片并注入 `embedded:` 占位；导出层负责
 /// 把占位改写为实际 assets 相对路径。
+/// `force_ocr=true` 时忽略源文字层，逐页重新 OCR；用于文字层编码异常的 PDF。
 pub fn extract_with_options(
     input: &Path,
     ocr_ready: bool,
     want_images: bool,
+    force_ocr: bool,
 ) -> Result<XbergExtracted, AppError> {
     enforce_offline();
 
@@ -81,6 +83,7 @@ pub fn extract_with_options(
     config.use_cache = false;
     config.ocr = if ocr_ready { Some(ocr_config()) } else { None };
     config.ocr_strategy = OcrStrategy::Auto;
+    config.force_ocr = force_ocr && ocr_ready;
     config.pages = Some(PageConfig {
         extract_pages: true,
         ..Default::default()

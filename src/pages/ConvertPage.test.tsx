@@ -1,6 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import App from "../App";
+import { convertFile } from "../lib/ipc";
+
+vi.mock("../lib/ipc", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../lib/ipc")>();
+  return { ...actual, convertFile: vi.fn(actual.convertFile) };
+});
 
 function setup() {
   render(<App />);
@@ -60,5 +66,43 @@ describe("文档转换的引擎选择", () => {
       await screen.findByRole("heading", { name: "转换完成" }, { timeout: 3000 }),
     ).toBeInTheDocument();
     expect(screen.getByText(/实际引擎/)).toHaveTextContent("anydoc");
+  });
+
+  it("PDF 预检可直接选择全文 OCR", async () => {
+    setup();
+    const drop = document.getElementById("file-empty") as HTMLElement;
+    const file = new File(["%PDF-1.7"], "guide.pdf", { type: "application/pdf" });
+    Object.defineProperty(file, "path", { value: "/tmp/guide.pdf" });
+    fireEvent.drop(drop, { dataTransfer: { files: [file] } });
+
+    await screen.findByRole("heading", { name: "无文本页预检" });
+    vi.mocked(convertFile).mockClear();
+    fireEvent.click(screen.getByRole("button", { name: "全文 OCR" }));
+
+    await waitFor(() => expect(convertFile).toHaveBeenCalled());
+    const args = vi.mocked(convertFile).mock.calls.at(-1)!;
+    expect(args[4]).toBe("ocr");
+    expect(args[5]).toBe(true);
+  });
+
+  it("PDF 转换页可勾选全文强制 OCR", async () => {
+    setup();
+    const drop = document.getElementById("file-empty") as HTMLElement;
+    const file = new File(["%PDF-1.7"], "guide.pdf", { type: "application/pdf" });
+    Object.defineProperty(file, "path", { value: "/tmp/guide.pdf" });
+    fireEvent.drop(drop, { dataTransfer: { files: [file] } });
+
+    await screen.findByRole("heading", { name: "无文本页预检" });
+    fireEvent.click(screen.getByRole("button", { name: "取消转换" }));
+
+    const toggle = await screen.findByRole("switch", { name: "全文强制 OCR" });
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-checked", "true");
+
+    vi.mocked(convertFile).mockClear();
+    fireEvent.click(screen.getByRole("button", { name: "开始转换" }));
+
+    await waitFor(() => expect(convertFile).toHaveBeenCalled());
+    expect(vi.mocked(convertFile).mock.calls.at(-1)![5]).toBe(true);
   });
 });

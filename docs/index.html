@@ -343,6 +343,7 @@ chmod +x src-tauri/binaries/*</code></pre>
         <div class="note"><span class="dot"></span><p><b>扫描件需要 OCR 模型。</b>在「系统设置 → 引擎」安装 PP-OCRv6 small（约 31 MB）；安装前显示来源与哈希，转换期间强制离线。</p></div>
         <div class="note"><span class="dot"></span><p><b>PDF → Word 保真有限。</b>由 PDF → Markdown → DOCX 生成，目录与图片可能被简化；结果会附带质量提示，不内置 pdf2docx。</p></div>
         <div class="note"><span class="dot"></span><p><b>跳过页不写入输出。</b>预检选择「跳过并继续」后，无文本页会从输出与语料包中移除，并在警告和批量报告中记录页码。</p></div>
+        <div class="note"><span class="dot"></span><p><b>文字层乱码可自动修复。</b>部分排版软件（如 DocGen / 方正书版）生成的 PDF 文字层编码错位，抽取后会出现乱码。ManoDoc 会自动检测并改用全文 OCR；也可在转换页开启「全文强制 OCR」，或在预检弹窗选择「全文 OCR」。</p></div>
         <div class="note"><span class="dot"></span><p><b>pandoc 为 GPL-2.0 程序。</b>以独立 sidecar 进程调用，不静态链接；源码获取方式见应用「关于」页与 pandoc.org。</p></div>
       </div>
     </section>

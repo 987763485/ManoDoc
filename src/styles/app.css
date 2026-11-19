@@ -18,6 +18,10 @@
 .side-foot .kbd { cursor: pointer; }
 .config-panel button.switch { border: 0; padding: 0; cursor: pointer; }
 .config-panel button.switch:disabled { opacity: .45; cursor: not-allowed; }
+.force-ocr-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.force-ocr-row .switch { border: 0; padding: 0; cursor: pointer; flex: 0 0 34px; }
+.force-ocr-row .switch:disabled { opacity: .45; cursor: not-allowed; }
+.force-ocr-row .hint { margin: 0; }
 .batch-warnings { margin: 14px 0 0; padding-left: 20px; color: var(--ink-3); font-size: 12px; line-height: 1.7; }
 .history-empty .hint { margin-top: 6px; font-size: 12px; }
 .history-empty { padding: 40px; text-align: center; color: var(--ink-3); }

@@ -196,6 +196,7 @@ pub fn convert<F: FnMut(&str)>(
     kind: &InputKind,
     target: TargetFormat,
     choice: EngineChoice,
+    force_ocr: bool,
     output_root: &Path,
     output_name: Option<&str>,
     mut on_stage: F,
@@ -231,7 +232,13 @@ pub fn convert<F: FnMut(&str)>(
             }
             _ => {
                 on_stage("converting");
-                let extracted = routing::extract(input, choice, want_images, &mut on_stage)?;
+                let extracted = routing::extract_with_options(
+                    input,
+                    choice,
+                    want_images,
+                    force_ocr,
+                    &mut on_stage,
+                )?;
                 warnings.extend(extracted.warnings.clone());
                 source_engine = Some(extracted.engine.clone());
                 fallback_reason = extracted.fallback_reason.clone();
@@ -264,7 +271,13 @@ pub fn convert<F: FnMut(&str)>(
             }
             InputKind::Document(anydoc::Format::Pdf) => {
                 on_stage("converting");
-                let extracted = routing::extract(input, choice, want_images, &mut on_stage)?;
+                let extracted = routing::extract_with_options(
+                    input,
+                    choice,
+                    want_images,
+                    force_ocr,
+                    &mut on_stage,
+                )?;
                 source_engine = Some(extracted.engine.clone());
                 fallback_reason = extracted.fallback_reason.clone();
                 ocr_pages = extracted.ocr_pages.clone();
@@ -438,7 +451,7 @@ mod tests {
         fs::create_dir_all(&out).unwrap();
         let kind = InputKind::Markdown;
         for target in [TargetFormat::Docx, TargetFormat::Html, TargetFormat::Epub, TargetFormat::Pdf] {
-            let result = convert(&input, &kind, target, EngineChoice::Auto, &out, None, |_| {})
+            let result = convert(&input, &kind, target, EngineChoice::Auto, false, &out, None, |_| {})
                 .unwrap_or_else(|error| panic!("{target:?}: {}", error.message));
             let bytes = fs::read(&result.output_path).unwrap();
             assert!(!bytes.is_empty(), "{target:?} 输出为空");
@@ -464,6 +477,7 @@ mod tests {
             &InputKind::Markdown,
             TargetFormat::Pdf,
             EngineChoice::Auto,
+            false,
             &out,
             None,
             |_| {},
@@ -487,6 +501,7 @@ mod tests {
             &InputKind::Document(anydoc::Format::Pdf),
             TargetFormat::Docx,
             EngineChoice::Auto,
+            false,
             &out,
             None,
             |_| {},

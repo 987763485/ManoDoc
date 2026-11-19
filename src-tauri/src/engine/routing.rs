@@ -103,6 +103,32 @@ fn is_jpeg(bytes: &[u8]) -> bool {
     bytes.starts_with(&[0xFF, 0xD8, 0xFF])
 }
 
+// 乱码判定阈值：文字层编码错位时会出现大量控制字符、私用区或替换符。
+// 阈值按非空白字符占比计算，并用最小绝对数量避免短文本误报。
+const GARBLED_MIN_TOTAL: usize = 200;
+const GARBLED_MIN_BAD: usize = 5;
+const GARBLED_PERCENT: usize = 1;
+
+fn is_suspicious_char(ch: char) -> bool {
+    matches!(
+        ch as u32,
+        0x00..=0x1F | 0x7F..=0x9F | 0xE000..=0xF8FF | 0xFFFD
+    )
+}
+
+/// 源文字层疑似乱码：控制字符、私用区与替换符占比超过 1%。
+pub fn looks_garbled(text: &str) -> bool {
+    let mut total = 0usize;
+    let mut bad = 0usize;
+    for ch in text.chars().filter(|ch| !ch.is_whitespace()) {
+        total += 1;
+        if is_suspicious_char(ch) {
+            bad += 1;
+        }
+    }
+    total >= GARBLED_MIN_TOTAL && bad >= GARBLED_MIN_BAD && bad * 100 >= total * GARBLED_PERCENT
+}
+
 fn needs_ocr_error(message: &str, next_step: &str, pages: Vec<u32>, page_count: usize) -> AppError {
     AppError::new("E_NEEDS_OCR", message, next_step).with_detail(serde_json::json!({
         "pages": pages,
@@ -172,11 +198,69 @@ fn ocr_pages_from(error: &AppError) -> (Vec<u32>, usize) {
     (pages, count)
 }
 
+/// 检测到文字层乱码时改用全文 OCR；修复失败则保留原结果并给出警告。
+fn recover_garbled<F: FnMut(&str)>(
+    input: &Path,
+    prior: Extracted,
+    choice: EngineChoice,
+    is_pdf: bool,
+    ocr_ready: bool,
+    want_images: bool,
+    on_stage: &mut F,
+) -> Result<Extracted, AppError> {
+    if !is_pdf || !looks_garbled(&prior.markdown) {
+        return Ok(prior);
+    }
+    if !ocr_ready {
+        return Err(needs_ocr_error(
+            "检测到源 PDF 文字层疑似乱码",
+            "安装 OCR 模型后可用全文 OCR 重新识别",
+            Vec::new(),
+            0,
+        ));
+    }
+    on_stage("ocr");
+    match xberg_engine::extract_with_options(input, true, want_images, true) {
+        Ok(retried) => {
+            let reason = format!("{}:garbled-text", prior.engine);
+            let mut recovered = from_xberg(retried, choice, Some(reason));
+            if looks_garbled(&recovered.markdown) {
+                recovered
+                    .warnings
+                    .push("全文 OCR 后仍检测到异常字符，请人工复核".into());
+            } else {
+                recovered
+                    .warnings
+                    .push("检测到源文字层疑似乱码，已自动改用全文 OCR".into());
+            }
+            Ok(recovered)
+        }
+        Err(_) => {
+            let mut prior = prior;
+            prior
+                .warnings
+                .push("检测到疑似乱码，但全文 OCR 修复失败".into());
+            Ok(prior)
+        }
+    }
+}
+
 /// `on_stage` 用于把 OCR 阶段反馈给前端；路由本身不依赖 UI。
 pub fn extract<F: FnMut(&str)>(
     input: &Path,
     choice: EngineChoice,
     want_images: bool,
+    on_stage: F,
+) -> Result<Extracted, AppError> {
+    extract_with_options(input, choice, want_images, false, on_stage)
+}
+
+/// 与 [`extract`] 相同，额外接受「全文强制 OCR」开关。
+pub fn extract_with_options<F: FnMut(&str)>(
+    input: &Path,
+    choice: EngineChoice,
+    want_images: bool,
+    force_ocr: bool,
     mut on_stage: F,
 ) -> Result<Extracted, AppError> {
     let bytes = fs::read(input).map_err(|error| {
@@ -193,6 +277,7 @@ pub fn extract<F: FnMut(&str)>(
             "请选择 docx、xlsx、pptx、rtf、epub、csv、文本型 PDF、PNG 或 JPEG",
         )
     })?;
+    let is_pdf = matches!(kind, InputKind::Document(anydoc::Format::Pdf));
     let ocr_ready = ocr::status().ready;
 
     if matches!(kind, InputKind::Markdown | InputKind::Html) {
@@ -203,11 +288,34 @@ pub fn extract<F: FnMut(&str)>(
         ));
     }
 
+    // 用户显式要求全文 OCR：跳过文字层，逐页重新识别。
+    if force_ocr && matches!(kind, InputKind::Document(anydoc::Format::Pdf)) {
+        if !ocr_ready {
+            return Err(needs_ocr_error(
+                "全文 OCR 需要先安装 OCR 模型",
+                "在系统设置的引擎页安装 OCR 模型后重试",
+                Vec::new(),
+                0,
+            ));
+        }
+        on_stage("ocr");
+        let extracted = xberg_engine::extract_with_options(input, true, want_images, true)?;
+        return Ok(from_xberg(extracted, choice, Some("user:force-ocr".into())));
+    }
+
     // 需要图片资产时 auto 先走 xberg；失败再回退 anydoc，并在警告里说明图片未提取。
     if want_images && matches!(kind, InputKind::Document(_)) && choice == EngineChoice::Auto {
         on_stage(if ocr_ready { "ocr" } else { "converting" });
-        if let Ok(extracted) = xberg_engine::extract_with_options(input, ocr_ready, true) {
-            return Ok(from_xberg(extracted, choice, None));
+        if let Ok(extracted) = xberg_engine::extract_with_options(input, ocr_ready, true, false) {
+            return recover_garbled(
+                input,
+                from_xberg(extracted, choice, None),
+                choice,
+                is_pdf,
+                ocr_ready,
+                true,
+                &mut on_stage,
+            );
         }
     }
 
@@ -227,7 +335,7 @@ pub fn extract<F: FnMut(&str)>(
                 ));
             }
             on_stage("ocr");
-            let extracted = xberg_engine::extract_with_options(input, true, want_images)?;
+            let extracted = xberg_engine::extract_with_options(input, true, want_images, false)?;
             Ok(from_xberg(extracted, choice, None))
         }
         (InputKind::Document(_), EngineChoice::Anydoc) => {
@@ -248,12 +356,28 @@ pub fn extract<F: FnMut(&str)>(
                     error
                 }
             })?;
-            Ok(from_anydoc(extracted, choice, None, Vec::new()))
+            recover_garbled(
+                input,
+                from_anydoc(extracted, choice, None, Vec::new()),
+                choice,
+                is_pdf,
+                ocr_ready,
+                want_images,
+                &mut on_stage,
+            )
         }
         (InputKind::Document(_), EngineChoice::Xberg) => {
             on_stage(if ocr_ready { "ocr" } else { "converting" });
-            match xberg_engine::extract_with_options(input, ocr_ready, want_images) {
-                Ok(extracted) => Ok(from_xberg(extracted, choice, None)),
+            match xberg_engine::extract_with_options(input, ocr_ready, want_images, false) {
+                Ok(extracted) => recover_garbled(
+                    input,
+                    from_xberg(extracted, choice, None),
+                    choice,
+                    is_pdf,
+                    ocr_ready,
+                    want_images,
+                    &mut on_stage,
+                ),
                 Err(error) if error.code == "E_NEEDS_OCR" => Err(needs_ocr_error(
                     &error.message,
                     &error.next_step,
@@ -263,16 +387,25 @@ pub fn extract<F: FnMut(&str)>(
                 Err(error) => Err(error),
             }
         }
-        (InputKind::Document(_), EngineChoice::Auto) => {            let anydoc_result = anydoc_engine::extract(input);
+        (InputKind::Document(_), EngineChoice::Auto) => {
+            let anydoc_result = anydoc_engine::extract(input);
             match anydoc_result {
                 Ok(extracted) => {
                     // 表格 C 级说明 anydoc 的结构还原不可靠，交给 xberg 再试一次。
                     let grade = clean::table_grade(&extracted.markdown);
                     if grade == "C" && ocr_ready {
                         on_stage("ocr");
-                        if let Ok(retried) = xberg_engine::extract_with_options(input, true, want_images) {
+                        if let Ok(retried) = xberg_engine::extract_with_options(input, true, want_images, false) {
                             let reason = Some("anydoc:table-grade-c".to_string());
-                            return Ok(from_xberg(retried, choice, reason));
+                            return recover_garbled(
+                                input,
+                                from_xberg(retried, choice, reason),
+                                choice,
+                                is_pdf,
+                                ocr_ready,
+                                want_images,
+                                &mut on_stage,
+                            );
                         }
                     }
                     let warnings = if grade == "C" {
@@ -280,7 +413,15 @@ pub fn extract<F: FnMut(&str)>(
                     } else {
                         Vec::new()
                     };
-                    Ok(from_anydoc(extracted, choice, None, warnings))
+                    recover_garbled(
+                        input,
+                        from_anydoc(extracted, choice, None, warnings),
+                        choice,
+                        is_pdf,
+                        ocr_ready,
+                        want_images,
+                        &mut on_stage,
+                    )
                 }
                 Err(error) if error.code == "E_NEEDS_OCR" => {
                     let (pages, count) = ocr_pages_from(&error);
@@ -293,7 +434,7 @@ pub fn extract<F: FnMut(&str)>(
                         ));
                     }
                     on_stage("ocr");
-                    let retried = xberg_engine::extract_with_options(input, true, want_images).map_err(|error| {
+                    let retried = xberg_engine::extract_with_options(input, true, want_images, false).map_err(|error| {
                         if error.code == "E_NEEDS_OCR" {
                             needs_ocr_error(
                                 &error.message,
@@ -305,21 +446,29 @@ pub fn extract<F: FnMut(&str)>(
                             error
                         }
                     })?;
-                    Ok(from_xberg(
-                        retried,
+                    recover_garbled(
+                        input,
+                        from_xberg(retried, choice, Some("anydoc:needs-ocr".into())),
                         choice,
-                        Some("anydoc:needs-ocr".into()),
-                    ))
+                        is_pdf,
+                        ocr_ready,
+                        want_images,
+                        &mut on_stage,
+                    )
                 }
                 Err(error) => {
                     // 解析失败时 xberg 原生抽取仍可能成功；OCR 模型只在需要时加载。
                     on_stage(if ocr_ready { "ocr" } else { "converting" });
-                    match xberg_engine::extract_with_options(input, ocr_ready, want_images) {
-                        Ok(retried) => Ok(from_xberg(
-                            retried,
+                    match xberg_engine::extract_with_options(input, ocr_ready, want_images, false) {
+                        Ok(retried) => recover_garbled(
+                            input,
+                            from_xberg(retried, choice, Some(format!("anydoc:{}", error.code))),
                             choice,
-                            Some(format!("anydoc:{}", error.code)),
-                        )),
+                            is_pdf,
+                            ocr_ready,
+                            want_images,
+                            &mut on_stage,
+                        ),
                         Err(xberg_error) if xberg_error.code == "E_NEEDS_OCR" => {
                             Err(needs_ocr_error(
                                 &xberg_error.message,
@@ -384,6 +533,54 @@ mod tests {
             detect(&bytes, Path::new("sample.jpg")),
             Some(InputKind::Image)
         ));
+    }
+
+    #[test]
+    fn garbled_text_is_detected_by_control_characters() {
+        let mut text = "正文内容".repeat(100);
+        for _ in 0..10 {
+            text.push('\u{86}');
+        }
+        assert!(looks_garbled(&text));
+    }
+
+    #[test]
+    fn normal_chinese_text_is_not_garbled() {
+        let text = "个人信息安全影响评估指南，评估责任主体与实施要素。".repeat(50);
+        assert!(!looks_garbled(&text));
+    }
+
+    #[test]
+    fn short_text_is_not_garbled() {
+        assert!(!looks_garbled("犐犆犛３５．０４０\u{86}"));
+    }
+
+    #[test]
+    #[ignore = "依赖本地 example 的乱码 PDF 与已安装的 OCR 模型"]
+    fn force_ocr_recovers_garbled_text_layer() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../example/GBT+39335个人信息安全影响评估指南-2020.pdf");
+        let output = extract_with_options(&path, EngineChoice::Auto, false, true, |_| {})
+            .expect("全文 OCR 应完成");
+        assert_eq!(output.engine, "xberg");
+        assert_eq!(output.fallback_reason.as_deref(), Some("user:force-ocr"));
+        assert!(output.markdown.contains("个人信息安全影响评估指南"));
+        assert!(!looks_garbled(&output.markdown));
+    }
+
+    #[test]
+    #[ignore = "依赖本地 example 的乱码 PDF 与已安装的 OCR 模型"]
+    fn auto_detects_garbled_text_and_switches_to_full_ocr() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../example/GBT+39335个人信息安全影响评估指南-2020.pdf");
+        let output = extract(&path, EngineChoice::Auto, false, |_| {}).expect("自动路由应完成");
+        assert!(output
+            .fallback_reason
+            .as_deref()
+            .unwrap_or_default()
+            .ends_with("garbled-text"));
+        assert!(output.markdown.contains("个人信息安全影响评估指南"));
+        assert!(!looks_garbled(&output.markdown));
     }
 
     #[test]

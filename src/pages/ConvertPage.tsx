@@ -78,6 +78,7 @@ export function ConvertPage({
     (settings.engine as "auto" | "anydoc" | "xberg" | "pandoc") || "auto",
   );
   const [noTextPolicy, setNoTextPolicy] = useState<"skip" | "fail" | "ocr">("skip");
+  const [forceOcr, setForceOcr] = useState(false);
   const [preflight, setPreflight] = useState<PreflightResult | null>(null);
   const [preflightOpen, setPreflightOpen] = useState(false);
   const [ocrReady, setOcrReady] = useState(true);
@@ -141,6 +142,7 @@ export function ConvertPage({
       setResult(null);
       setError(null);
       setStatus("idle");
+      setForceOcr(false);
       showToast(t("toast.loaded"));
       if (info.format === "PDF") {
         void preflightPdf(info.path)
@@ -184,9 +186,10 @@ export function ConvertPage({
     await loadPath(dropped.path);
   }
 
-  async function start(policyOverride?: "skip" | "fail" | "ocr") {
+  async function start(policyOverride?: "skip" | "fail" | "ocr", forceOverride?: boolean) {
     if (!file) return;
     const policy = policyOverride ?? noTextPolicy;
+    const force = forceOverride ?? forceOcr;
     const taskId = crypto.randomUUID();
     taskRef.current = taskId;
     setStatus("converting");
@@ -200,7 +203,7 @@ export function ConvertPage({
       onCancel: () => void cancelConversion(taskId),
     });
     try {
-      const converted = await convertFile(file.path, taskId, engine, target, policy);
+      const converted = await convertFile(file.path, taskId, engine, target, policy, force);
       setResult(converted);
       setActiveTask(null);
       setStatus("success");
@@ -414,6 +417,26 @@ export function ConvertPage({
                   ) : null}
                 </div>
               </div>
+              {file.format === "PDF" ? (
+                <div className="field force-ocr">
+                  <label htmlFor="force-ocr">{t("convert.forceOcr")}</label>
+                  <div className="force-ocr-row">
+                    <button
+                      id="force-ocr"
+                      type="button"
+                      role="switch"
+                      aria-checked={forceOcr}
+                      aria-label={t("convert.forceOcr")}
+                      className={`switch${forceOcr ? "" : " off"}`}
+                      disabled={!ocrReady}
+                      onClick={() => setForceOcr((value) => !value)}
+                    />
+                    <span className="hint">
+                      {ocrReady ? t("convert.forceOcrHint") : t("convert.forceOcrNoModel")}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
               <div className="field">
                 <label>{t("convert.preset")}</label>
                 <Select defaultValue="standard">
@@ -559,6 +582,19 @@ export function ConvertPage({
                 }}
               >
                 {t("preflight.useOcr")}
+              </button>
+            ) : null}
+            {preflight?.ocrAvailable ? (
+              <button
+                className="btn secondary small"
+                id="preflight-force-ocr"
+                onClick={() => {
+                  setForceOcr(true);
+                  setPreflightOpen(false);
+                  void start("ocr", true);
+                }}
+              >
+                {t("preflight.forceOcr")}
               </button>
             ) : null}
             <button

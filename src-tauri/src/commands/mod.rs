@@ -157,6 +157,7 @@ pub async fn convert_file(
     engine_choice: Option<String>,
     target_format: Option<String>,
     no_text_policy: Option<String>,
+    force_ocr: Option<bool>,
 ) -> Result<ConversionResult, AppError> {
     let started = Instant::now();
     let input = canonical_input(&input_path)?;
@@ -168,6 +169,7 @@ pub async fn convert_file(
     let target_dir = output_dir.unwrap_or(settings.output_dir);
     let output_root = prepare_output_dir(&target_dir)?;
     let choice = EngineChoice::parse(engine_choice.as_deref().unwrap_or("auto"));
+    let force_ocr = force_ocr.unwrap_or(false);
 
     let bytes = fs::read(&input).map_err(|error| {
         AppError::new(
@@ -251,6 +253,7 @@ pub async fn convert_file(
             &kind,
             target,
             choice,
+            force_ocr,
             &output_root_for_task,
             output_name.as_deref(),
             |stage| {
@@ -300,7 +303,8 @@ pub async fn convert_file(
         "sourceEngine": exported.source_engine,
         "fallbackReason": exported.fallback_reason,
         "ocrPages": exported.ocr_pages,
-        "ocrEngine": exported.ocr_engine
+        "ocrEngine": exported.ocr_engine,
+        "forceOcr": force_ocr
     });
     let task = HistoryTask {
         id: task_id.clone(),
