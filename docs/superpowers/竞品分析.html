@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DullDoc 竞品分析</title>
+<title>ManoDoc 竞品分析</title>
 <style>
   :root {
     --ink: #14201c;
@@ -258,7 +258,7 @@
     <span>项目文档</span><span class="sep">/</span><span>竞品分析</span><span class="sep">/</span><span class="current">S2</span>
   </nav>
   <h1>竞品分析</h1>
-  <p class="tagline">文档互转与 Markdown 工作台：功能面、实现原理与 DullDoc 的机会</p>
+  <p class="tagline">文档互转与 Markdown 工作台：功能面、实现原理与 ManoDoc 的机会</p>
   <div class="meta">
     <span class="pill"><strong>版本</strong> v0.7</span>
     <span class="pill"><strong>变更</strong> S6 选型：Typst PDF · 许可收敛</span>
@@ -294,11 +294,11 @@
       <div class="finding">
         <span class="k">FINDING 05</span>
         <b>xberg（原 Kreuzberg）是最接近的潜在竞品，并已被选为第二内核</b>
-        <p>Rust、MIT、107 种格式、Markdown/OCR/表格/切块/CLI/API/MCP。它证明「Rust 文档智能 + 语料化」这条路成立；2026-11-18 用户决定将其纳入 DullDoc 内核，作为 P0 第二引擎，S6 负责落地验证。</p>
+        <p>Rust、MIT、107 种格式、Markdown/OCR/表格/切块/CLI/API/MCP。它证明「Rust 文档智能 + 语料化」这条路成立；2026-11-18 用户决定将其纳入 ManoDoc 内核，作为 P0 第二引擎，S6 负责落地验证。</p>
       </div>
       <div class="finding">
         <span class="k">FINDING 06</span>
-        <b>DullDoc 的机会在「最后一公里」</b>
+        <b>ManoDoc 的机会在「最后一公里」</b>
         <p>不是再造一个解析引擎，而是把引擎路由、PDF 预检、中文清洗、质量诊断、批量队列与语料包组合成一个离线桌面工作台。</p>
       </div>
     </div>
@@ -307,7 +307,7 @@
   <!-- ======================== 01 方法 ======================== -->
   <section id="scope" class="card">
     <h2><span class="num">01</span>方法与范围</h2>
-    <p class="lead">S2 的目标不是罗列所有软件，而是建立一张足够完整的功能面地图，找出 DullDoc 必须做、可以做和不该做的位置。</p>
+    <p class="lead">S2 的目标不是罗列所有软件，而是建立一张足够完整的功能面地图，找出 ManoDoc 必须做、可以做和不该做的位置。</p>
 
     <div class="two-col">
       <div>
@@ -344,7 +344,7 @@
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>层级</th><th>代表产品</th><th>核心能力</th><th>对 DullDoc 的意义</th></tr></thead>
+        <thead><tr><th>层级</th><th>代表产品</th><th>核心能力</th><th>对 ManoDoc 的意义</th></tr></thead>
         <tbody>
           <tr>
             <td>商业 PDF 套件</td>
@@ -368,7 +368,7 @@
             <td>开源解析引擎</td>
             <td>Pandoc、anydoc、Marker、MinerU、Docling、MarkItDown、xberg、Unstructured</td>
             <td>格式覆盖、OCR、表格、公式、Markdown、切块</td>
-            <td>DullDoc 的引擎池；需要封装、路由、清洗与 UI，才能变成产品。</td>
+            <td>ManoDoc 的引擎池；需要封装、路由、清洗与 UI，才能变成产品。</td>
           </tr>
           <tr>
             <td>相邻平台</td>
@@ -381,54 +381,54 @@
     </div>
 
     <div class="callout" style="margin-top:18px">
-      <b>竞争空白：</b>「离线可用的中文文档 → 干净 Markdown → 可入库语料包」这一段，商业产品不做，开源引擎不封装，在线服务不敢离线。DullDoc 不需要赢过 Marker 的 OCR，只需要把 80% 的常见文档稳定地送到「可直接使用」的状态。
+      <b>竞争空白：</b>「离线可用的中文文档 → 干净 Markdown → 可入库语料包」这一段，商业产品不做，开源引擎不封装，在线服务不敢离线。ManoDoc 不需要赢过 Marker 的 OCR，只需要把 80% 的常见文档稳定地送到「可直接使用」的状态。
     </div>
   </section>
 
   <!-- ======================== 03 产品明细 ======================== -->
   <section id="products" class="card">
     <h2><span class="num">03</span>商业与在线产品明细</h2>
-    <p class="lead">以下产品覆盖了用户最可能拿来对比的三类选择：桌面 PDF 套件、在线转换站、专业解析/SDK。每行都标出它是否能产出 Markdown，以及它真正值得 DullDoc 学习的地方。</p>
+    <p class="lead">以下产品覆盖了用户最可能拿来对比的三类选择：桌面 PDF 套件、在线转换站、专业解析/SDK。每行都标出它是否能产出 Markdown，以及它真正值得 ManoDoc 学习的地方。</p>
 
     <h3>3.1 商业桌面 PDF 套件</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 DullDoc 的启示</th></tr></thead>
+        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 ManoDoc 的启示</th></tr></thead>
         <tbody>
           <tr>
             <td><a href="https://www.adobe.com/acrobat/acrobat-pro.html" target="_blank" rel="noopener">Adobe Acrobat Pro</a></td>
             <td>Windows / macOS / 移动端；订阅制</td>
             <td>PDF 创建与编辑、导出 Word/Excel/PPT/HTML/图片、OCR、比较、合并/拆分、压缩、表单、电子签名、Action Wizard 批处理</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>「导出 Office」是用户心智中的默认答案；但 Markdown 缺席，且批处理仍偏 PDF 编辑。DullDoc 应把「导出 Markdown」做成第一公民。</td>
+            <td>「导出 Office」是用户心智中的默认答案；但 Markdown 缺席，且批处理仍偏 PDF 编辑。ManoDoc 应把「导出 Markdown」做成第一公民。</td>
           </tr>
           <tr>
             <td><a href="https://www.abbyy.com/finereader/" target="_blank" rel="noopener">ABBYY FineReader PDF</a></td>
             <td>Windows 为主，macOS / iOS 有版本；商业授权（Standard / Corporate）</td>
             <td>高精度 OCR（约 190+ 语言）、PDF/扫描件 → Word/Excel/PPT/HTML/RTF/TXT/CSV/ODT/EPUB、版面保留、PDF 编辑、比较、脱敏、Hot Folder 监听、CLI、批量</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>OCR 与企业自动化的标杆。Hot Folder + CLI 说明「把转换放进工作流」有真实付费需求，正是 DullDoc P1 自动化的参考。</td>
+            <td>OCR 与企业自动化的标杆。Hot Folder + CLI 说明「把转换放进工作流」有真实付费需求，正是 ManoDoc P1 自动化的参考。</td>
           </tr>
           <tr>
             <td><a href="https://pdf.wondershare.com/" target="_blank" rel="noopener">Wondershare PDFelement</a></td>
             <td>Windows / macOS / iOS / Android；订阅或买断</td>
             <td>PDF 编辑、OCR（20+ 语言）、PDF ↔ Office/图片/HTML、批量转换/OCR/压缩、表单、AI 助手、云文档</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>以「性价比 + 批量」取胜。DullDoc 的批量队列与预设应做到同样顺手，但不做 PDF 编辑。</td>
+            <td>以「性价比 + 批量」取胜。ManoDoc 的批量队列与预设应做到同样顺手，但不做 PDF 编辑。</td>
           </tr>
           <tr>
             <td><a href="https://www.gonitro.com/pdf-pro" target="_blank" rel="noopener">Nitro PDF Pro</a></td>
             <td>Windows / macOS；订阅制</td>
             <td>PDF 编辑、OCR（30+ 语言）、批量转换、Smart Redact、Office 集成、电子签名</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>「批量转换速度」是它的卖点。DullDoc 需要把批量进度、失败重试与吞吐做成可感知的体验。</td>
+            <td>「批量转换速度」是它的卖点。ManoDoc 需要把批量进度、失败重试与吞吐做成可感知的体验。</td>
           </tr>
           <tr>
             <td><a href="https://www.foxit.com/pdf-editor/" target="_blank" rel="noopener">Foxit PDF Editor</a></td>
             <td>Windows / macOS / Linux；订阅或买断</td>
             <td>PDF 编辑、OCR（40+ 语言）、PDF ↔ Office/HTML、批量、CLI/SDK、大文件性能、电子签名</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>OCR 语言覆盖与 CLI/SDK 是优势；说明专业用户需要「可脚本化」。DullDoc 的 CLI 应作为 P1，而不是永远只做 GUI。</td>
+            <td>OCR 语言覆盖与 CLI/SDK 是优势；说明专业用户需要「可脚本化」。ManoDoc 的 CLI 应作为 P1，而不是永远只做 GUI。</td>
           </tr>
         </tbody>
       </table>
@@ -437,7 +437,7 @@
     <h3>3.2 在线转换服务</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 DullDoc 的启示</th></tr></thead>
+        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 ManoDoc 的启示</th></tr></thead>
         <tbody>
           <tr>
             <td><a href="https://smallpdf.com/" target="_blank" rel="noopener">Smallpdf</a></td>
@@ -451,28 +451,28 @@
             <td>Web / 移动；免费额度 + 订阅</td>
             <td>PDF 工具全集、PDF ↔ Office/图片、OCR、批量（Premium）、云盘导入、电子签名</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>免费 OCR 与批量是获客点；DullDoc 的「免费、离线、无限批量」本身就是差异化。</td>
+            <td>免费 OCR 与批量是获客点；ManoDoc 的「免费、离线、无限批量」本身就是差异化。</td>
           </tr>
           <tr>
             <td><a href="https://cloudconvert.com/" target="_blank" rel="noopener">CloudConvert</a></td>
             <td>Web / API；按分钟或订阅</td>
             <td>200+ 格式、文档/图片/音视频/电子书/压缩包、OCR、页面范围、Job 链式操作、云存储、REST API、Webhook</td>
             <td>Markdown：✓（LibreOffice / PyMuPDF4LLM / Pandoc 引擎）<br>OCR：✓</td>
-            <td>最接近「全能转换 API」的在线产品，且已支持 docx/pdf → md。它证明 Markdown 是真实需求，也提醒 DullDoc 必须离线。</td>
+            <td>最接近「全能转换 API」的在线产品，且已支持 docx/pdf → md。它证明 Markdown 是真实需求，也提醒 ManoDoc 必须离线。</td>
           </tr>
           <tr>
             <td><a href="https://convertio.co/" target="_blank" rel="noopener">Convertio</a></td>
             <td>Web / 浏览器扩展；免费额度 + 订阅</td>
             <td>300+ 格式、文档/图片/音视频/电子书、云盘导入、基础批处理</td>
             <td>Markdown：△（以格式列表为准）<br>OCR：△</td>
-            <td>格式数量是护城河；但「多而浅」无法解决中文表格与标题层级。DullDoc 应在常见格式上做深。</td>
+            <td>格式数量是护城河；但「多而浅」无法解决中文表格与标题层级。ManoDoc 应在常见格式上做深。</td>
           </tr>
           <tr>
             <td><a href="https://www.zamzar.com/" target="_blank" rel="noopener">Zamzar</a></td>
             <td>Web / API；免费额度 + 订阅</td>
             <td>1100+ 格式、批处理、API、云存储、邮件通知</td>
             <td>Markdown：△<br>OCR：△</td>
-            <td>长尾格式覆盖广；对 DullDoc 的启示是「格式清单」要透明可查，但不值得为长尾牺牲主流质量。</td>
+            <td>长尾格式覆盖广；对 ManoDoc 的启示是「格式清单」要透明可查，但不值得为长尾牺牲主流质量。</td>
           </tr>
         </tbody>
       </table>
@@ -481,7 +481,7 @@
     <h3>3.3 专业解析与 SDK</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 DullDoc 的启示</th></tr></thead>
+        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 ManoDoc 的启示</th></tr></thead>
         <tbody>
           <tr>
             <td><a href="https://mathpix.com/pdf-conversion" target="_blank" rel="noopener">Mathpix</a></td>
@@ -495,28 +495,28 @@
             <td>开源 + 托管 API；开源代码 Apache-2.0，模型权重有商用门槛</td>
             <td>PDF/图片/Office → Markdown/JSON/HTML、OCR、表格、公式、图片、阅读顺序、批处理、GPU/CPU/MPS、LLM 增强</td>
             <td>Markdown：✓<br>OCR：✓</td>
-            <td>DullDoc 的 P1 候选引擎；质量高但依赖重（Python + 模型），适合「检测环境 + 引导安装」。</td>
+            <td>ManoDoc 的 P1 候选引擎；质量高但依赖重（Python + 模型），适合「检测环境 + 引导安装」。</td>
           </tr>
           <tr>
             <td><a href="https://products.groupdocs.com/conversion/" target="_blank" rel="noopener">Aspose / GroupDocs</a></td>
             <td>SDK（.NET / Java / Python / Node.js）；商业授权</td>
             <td>100+ 格式转换、PDF/Word/Excel/PPT/HTML/图片、OCR（Aspose.OCR 另购）、批量大小配置、文档比较、水印、元数据</td>
             <td>Markdown：△（以目标格式列表为准）<br>OCR：△（需组合 Aspose.OCR）</td>
-            <td>企业级「格式矩阵」的代表；DullDoc 不做 SDK，但应学习它的格式兼容与批处理参数。</td>
+            <td>企业级「格式矩阵」的代表；ManoDoc 不做 SDK，但应学习它的格式兼容与批处理参数。</td>
           </tr>
           <tr>
             <td><a href="https://apryse.com/" target="_blank" rel="noopener">Apryse / Nutrient</a></td>
             <td>SDK / 私有化；商业授权</td>
             <td>高保真 PDF 渲染、转换、OCR、脱敏、签署、注释、表单、文档比较</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>面向嵌入式文档体验；DullDoc 不提供预览，仅借鉴其文档处理的稳定与速度。</td>
+            <td>面向嵌入式文档体验；ManoDoc 不提供预览，仅借鉴其文档处理的稳定与速度。</td>
           </tr>
           <tr>
             <td><a href="https://docparser.com/" target="_blank" rel="noopener">Docparser</a></td>
             <td>SaaS；按文档量订阅</td>
             <td>模板化抽取发票/订单/表单字段、OCR、表格、Webhook、API、云盘集成</td>
             <td>Markdown：—<br>OCR：✓</td>
-            <td>不是 Markdown 工具，但证明「结构化抽取 + 自动化」有付费市场；DullDoc 的语料包可视为轻量版结构化输出。</td>
+            <td>不是 Markdown 工具，但证明「结构化抽取 + 自动化」有付费市场；ManoDoc 的语料包可视为轻量版结构化输出。</td>
           </tr>
         </tbody>
       </table>
@@ -526,7 +526,7 @@
   <!-- ======================== 04 开源 ======================== -->
   <section id="oss" class="card">
     <h2><span class="num">04</span>开源项目与 GitHub</h2>
-    <p class="lead">开源生态已经覆盖「解析、OCR、表格、公式、切块」的每一块拼图。DullDoc 的关键不是再写一个解析器，而是选对引擎、补齐工程层。以下星标为 2026-11-18 快照，仅用于判断社区体量，不代表质量。</p>
+    <p class="lead">开源生态已经覆盖「解析、OCR、表格、公式、切块」的每一块拼图。ManoDoc 的关键不是再写一个解析器，而是选对引擎、补齐工程层。以下星标为 2026-11-18 快照，仅用于判断社区体量，不代表质量。</p>
 
     <h3>4.1 核心转换引擎</h3>
     <div class="table-wrap">
@@ -596,7 +596,7 @@
     <h3>4.2 解析与后处理组件</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>项目</th><th>语言 / 许可</th><th>作用</th><th>与 DullDoc 的关系</th></tr></thead>
+        <thead><tr><th>项目</th><th>语言 / 许可</th><th>作用</th><th>与 ManoDoc 的关系</th></tr></thead>
         <tbody>
           <tr><td><a href="https://github.com/mwilliamson/mammoth.js" target="_blank" rel="noopener">Mammoth</a></td><td>JS / Python · BSD-2-Clause</td><td>DOCX → 语义 HTML，基于样式映射</td><td>轻量 docx 解析参考；不处理版面与表格合并。</td></tr>
           <tr><td><a href="https://github.com/matthewwithanm/python-markdownify" target="_blank" rel="noopener">markdownify</a></td><td>Python · MIT</td><td>HTML → Markdown</td><td>清洗/转换层的候选组件。</td></tr>
@@ -618,7 +618,7 @@
     <h3>4.3 相邻平台与工具</h3>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>项目</th><th>语言 / 许可</th><th>核心能力</th><th>对 DullDoc 的启示</th></tr></thead>
+        <thead><tr><th>项目</th><th>语言 / 许可</th><th>核心能力</th><th>对 ManoDoc 的启示</th></tr></thead>
         <tbody>
           <tr><td><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank" rel="noopener">Stirling PDF</a><br><span class="small">96.9k ★</span></td><td>Java / TypeScript · 开源（MIT 为主）</td><td>50+ PDF 工具、OCR、PDF ↔ Word/Text/HTML/XML/CSV/PPT、文件转 PDF、自动化管线、REST API、自托管</td><td>「本地/自托管 PDF 工具全集」的最佳参考；但不产 Markdown、偏 PDF。</td></tr>
           <tr><td><a href="https://github.com/paperless-ngx/paperless-ngx" target="_blank" rel="noopener">Paperless-ngx</a><br><span class="small">48.3k ★</span></td><td>Python · GPL-3.0</td><td>扫描件归档、OCR、全文检索、标签、通信方、自动匹配</td><td>文档入口与元数据管理的参考；不做 Markdown 转换。</td></tr>
@@ -627,7 +627,7 @@
           <tr><td><a href="https://www.libreoffice.org/" target="_blank" rel="noopener">LibreOffice</a></td><td>C++ · MPL-2.0</td><td>Headless 转换、Office 格式兼容</td><td>格式兜底与 PDF 输出的重型方案；体积大，不适合作为核心。</td></tr>
           <tr><td><a href="https://calibre-ebook.com/" target="_blank" rel="noopener">Calibre</a></td><td>Python · GPL-3.0</td><td>电子书格式互转（EPUB/MOBI/AZW3/PDF）</td><td>电子书方向的参考；不是 Markdown 工作台。</td></tr>
           <tr><td><a href="https://github.com/mb21/panwriter" target="_blank" rel="noopener">PanWriter</a><br><span class="small">1.3k ★</span></td><td>TypeScript · GPL-3.0</td><td>Markdown 编辑器 + Pandoc 导出 + 分页预览</td><td>「Markdown 编辑 + 导出」的桌面交互参考。</td></tr>
-          <tr><td><a href="https://github.com/obsidianmd/obsidian-importer" target="_blank" rel="noopener">Obsidian Importer</a><br><span class="small">1.8k ★</span></td><td>TypeScript · MIT</td><td>Apple Notes / OneNote / Evernote / Notion / HTML → Markdown</td><td>「导入即 Markdown」的用户预期；DullDoc 可做系统分享/拖拽入口。</td></tr>
+          <tr><td><a href="https://github.com/obsidianmd/obsidian-importer" target="_blank" rel="noopener">Obsidian Importer</a><br><span class="small">1.8k ★</span></td><td>TypeScript · MIT</td><td>Apple Notes / OneNote / Evernote / Notion / HTML → Markdown</td><td>「导入即 Markdown」的用户预期；ManoDoc 可做系统分享/拖拽入口。</td></tr>
         </tbody>
       </table>
     </div>
@@ -636,7 +636,7 @@
   <!-- ======================== 05 功能矩阵 ======================== -->
   <section id="matrix" class="card">
     <h2><span class="num">05</span>结构化功能面矩阵</h2>
-    <p class="lead">5.1 是功能面总表，用来保证「不漏功能」；5.2 / 5.3 选 24 个核心功能面对代表产品做覆盖对照；5.4 给出 DullDoc 的组合机会。</p>
+    <p class="lead">5.1 是功能面总表，用来保证「不漏功能」；5.2 / 5.3 选 24 个核心功能面对代表产品做覆盖对照；5.4 给出 ManoDoc 的组合机会。</p>
 
     <h3>5.1 功能面总表（61 项）</h3>
     <p class="small">优先级为 S2 初步判断：P0 = MVP 必须，P1 = 紧随其后，P2 = 后续，不做 = 明确排除。最终以 S4 功能设计与 S3 需求编号为准。</p>
@@ -707,7 +707,7 @@
           <tr><td>F-51</td><td>平台导入</td><td>Dify/RAGFlow/向量库；厂商中立 JSONL 优先</td><td><span class="tag p2">P2</span></td></tr>
 
           <tr class="group-row"><td colspan="4">F. 体验与平台</td></tr>
-          <tr><td>F-52</td><td>预览 / 差异</td><td>原计划渲染 + 源码；2026-11-18 按用户决定取消，DullDoc 不提供预览</td><td><span class="tag p2">已取消</span></td></tr>
+          <tr><td>F-52</td><td>预览 / 差异</td><td>原计划渲染 + 源码；2026-11-18 按用户决定取消，ManoDoc 不提供预览</td><td><span class="tag p2">已取消</span></td></tr>
           <tr><td>F-53</td><td>错误诊断</td><td>文件、页、引擎、原因、下一步；可导出报告</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-54</td><td>中文界面 / 深色</td><td>中文优先；深色模式 P1</td><td><span class="tag p0">P0</span></td></tr>
           <tr><td>F-55</td><td>macOS / Apple Silicon</td><td>原生 arm64；MPS 加速可用</td><td><span class="tag p0">P0</span></td></tr>
@@ -800,14 +800,14 @@
       </table>
     </div>
 
-    <h3>5.4 结论：DullDoc 的组合机会</h3>
+    <h3>5.4 结论：ManoDoc 的组合机会</h3>
     <div class="callout">
-      <b>单个维度上，DullDoc 都很难赢：</b>OCR 赢不过 ABBYY/Marker，格式数量赢不过 CloudConvert/xberg，RAG 切块赢不过 RAGFlow/Unstructured。<br>
+      <b>单个维度上，ManoDoc 都很难赢：</b>OCR 赢不过 ABBYY/Marker，格式数量赢不过 CloudConvert/xberg，RAG 切块赢不过 RAGFlow/Unstructured。<br>
       <b>但组合起来，空白非常明确：</b>macOS 原生、完全离线、中文优先、anydoc 快速解析 + xberg OCR/表格增强 + pandoc 导出、PDF 页级预检、清洗/切块/语料包、批量队列与可解释诊断——目前没有产品同时做到。
     </div>
     <div class="callout warn" style="margin-top:14px">
-      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 DullDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。同日增补中英文切换、跟随系统/浅色/深色主题与 Cmd+K 命令面板。
-      <br><br><b>范围再扩展（2026-11-18 优化请求）：</b>保留基础一对一互转（Word ↔ Markdown、PDF → Markdown / Word、Markdown → Word / PDF / HTML / EPUB、PNG/JPEG → Markdown 等），同一方向多引擎时提供引擎选择；Python 引擎由内置 uv 在应用数据目录创建隔离 `.venv`；文件类型统一使用图标。竞品中「格式互转」已是基础能力，DullDoc 的差异仍在离线、可解释的多引擎编排与语料化；实施要求见 PRD REQ-106 ~ REQ-110。
+      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 ManoDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。同日增补中英文切换、跟随系统/浅色/深色主题与 Cmd+K 命令面板。
+      <br><br><b>范围再扩展（2026-11-18 优化请求）：</b>保留基础一对一互转（Word ↔ Markdown、PDF → Markdown / Word、Markdown → Word / PDF / HTML / EPUB、PNG/JPEG → Markdown 等），同一方向多引擎时提供引擎选择；Python 引擎由内置 uv 在应用数据目录创建隔离 `.venv`；文件类型统一使用图标。竞品中「格式互转」已是基础能力，ManoDoc 的差异仍在离线、可解释的多引擎编排与语料化；实施要求见 PRD REQ-106 ~ REQ-110。
     </div>
   </section>
 
@@ -846,7 +846,7 @@
       </table>
     </div>
 
-    <h3>6.2 DullDoc 的引擎路由</h3>
+    <h3>6.2 ManoDoc 的引擎路由</h3>
     <div class="pipeline">
       <div class="step"><span class="n">STEP 01</span><b>格式识别</b><span>读字节 + 扩展名；识别加密、损坏、扫描件</span></div>
       <div class="arrow">→</div>
@@ -972,12 +972,12 @@
       <div class="finding">
         <span class="k">04</span>
         <b>清洗层决定「可用」与「能看」</b>
-        <p>字间空格、标题编号、目录点线、页眉页脚，都是规则可解的。它们不性感，但正是 DullDoc 相对原始引擎的核心价值。</p>
+        <p>字间空格、标题编号、目录点线、页眉页脚，都是规则可解的。它们不性感，但正是 ManoDoc 相对原始引擎的核心价值。</p>
       </div>
       <div class="finding">
         <span class="k">05</span>
         <b>xlsx 是意外的高分项</b>
-        <p>1048 行表格直接可用，说明「表格型标准/清单」是 DullDoc 可以立刻交付价值的场景，甚至可以先于 PDF 做深。</p>
+        <p>1048 行表格直接可用，说明「表格型标准/清单」是 ManoDoc 可以立刻交付价值的场景，甚至可以先于 PDF 做深。</p>
       </div>
       <div class="finding">
         <span class="k">06</span>
@@ -1003,7 +1003,7 @@ pandoc notes.md -o notes.epub
 pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败</span></pre>
 
     <div class="callout warn">
-      <b>厂商基准提醒：</b>anydoc 官方 benchmark 宣称 14/14 格式、4.4ms 中位耗时、81 分质量，但这些数据来自厂商自建语料与 LLM 评判，不是独立评测。上面的真实样本结果，才是 DullDoc 做决策时更可靠的依据。
+      <b>厂商基准提醒：</b>anydoc 官方 benchmark 宣称 14/14 格式、4.4ms 中位耗时、81 分质量，但这些数据来自厂商自建语料与 LLM 评判，不是独立评测。上面的真实样本结果，才是 ManoDoc 做决策时更可靠的依据。
     </div>
   </section>
 
@@ -1027,7 +1027,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
           <tr><td>09</td><td>引擎插件化</td><td>今天是 anydoc，明天可能是 xberg/MinerU</td><td>没有产品把多引擎做成可解释的路由层</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>10</td><td>监听文件夹 + CLI + Finder 快捷操作</td><td>固定投递目录与自动化</td><td>商业套件有但重；开源引擎只有 CLI</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>11</td><td>中文标准文档专项</td><td>红头文件、印章、条款编号、竖排</td><td>通用工具不处理中国公文/标准格式</td><td><span class="tag p1">P1</span></td></tr>
-          <tr><td>12</td><td>集成导出（Obsidian / Dify / RAGFlow / Webhook）</td><td>转完还要手工搬运</td><td>平台各自为政；DullDoc 可做中立出口</td><td><span class="tag p2">P2</span></td></tr>
+          <tr><td>12</td><td>集成导出（Obsidian / Dify / RAGFlow / Webhook）</td><td>转完还要手工搬运</td><td>平台各自为政；ManoDoc 可做中立出口</td><td><span class="tag p2">P2</span></td></tr>
           <tr><td>13</td><td>PaddleOCR 中文 OCR 增强</td><td>中文扫描件、低置信度 OCR</td><td>xberg 内置 OCR 可选 PaddleOCR 后端；独立组件更可控</td><td><span class="tag p1">P1</span></td></tr>
           <tr><td>14</td><td>中英文切换 / 主题 / 命令面板</td><td>双语用户、长时间使用、键盘操作</td><td>商业套件有中英文与主题，但命令面板通常只有开发者工具具备</td><td><span class="tag p0">P0</span></td></tr>
         </tbody>
@@ -1038,7 +1038,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
     <ul class="crosses" style="list-style:none;padding:0">
       <li>PDF 编辑、注释、表单、电子签名——这是 Acrobat/ABBYY 的战场。</li>
       <li>在线转换站、云账号、团队协作——与「本地、离线、隐私」定位冲突。</li>
-      <li>向量库管理、检索问答 UI——DullDoc 只负责把语料做好，不负责消费语料。</li>
+      <li>向量库管理、检索问答 UI——ManoDoc 只负责把语料做好，不负责消费语料。</li>
       <li>追求 1100+ 长尾格式——主流 8 类格式做深，比格式数量更有价值。</li>
       <li>自研 OCR / 版面模型——接入成熟引擎，专注清洗、路由与体验。</li>
     </ul>
@@ -1184,7 +1184,7 @@ pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败<
   </section>
 
   <footer>
-    <span>DullDoc · S2 竞品分析 · 2026-11-18</span>
+    <span>ManoDoc · S2 竞品分析 · 2026-11-18</span>
     <span>S2 已确认 · 进入 S3 需求文档</span>
   </footer>
 

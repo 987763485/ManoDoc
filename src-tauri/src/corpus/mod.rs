@@ -69,7 +69,7 @@ pub fn write_package(
         &serde_json::to_vec_pretty(&manifest).unwrap(),
     )?;
     let report = json!({
-        "schema": "dulldoc.corpus-report.v1",
+        "schema": "manodoc.corpus-report.v1",
         "batchId": meta.batch_id,
         "createdAt": meta.created_at,
         "status": status(&summary),
@@ -269,8 +269,8 @@ fn manifest(
     chunk_count: usize,
 ) -> Value {
     json!({
-        "schema": "dulldoc.corpus.v1",
-        "tool": { "name": "DullDoc", "version": env!("CARGO_PKG_VERSION") },
+        "schema": "manodoc.corpus.v1",
+        "tool": { "name": "ManoDoc", "version": env!("CARGO_PKG_VERSION") },
         "engine": { "name": meta.engine.clone(), "version": "anydoc 0.2.4; xberg 1.4.0" },
         "batchId": meta.batch_id,
         "batchName": meta.batch_name,
@@ -367,7 +367,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn sample() -> (PathBuf, CorpusMeta, Vec<CorpusFile>, Vec<Chunk>) {
-        let root = std::env::temp_dir().join(format!("dulldoc-corpus-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!("manodoc-corpus-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(root.join("mirror")).unwrap();
         fs::write(root.join("mirror/a.md"), "# A\n\n正文\n").unwrap();
         let meta = CorpusMeta {

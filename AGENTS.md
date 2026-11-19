@@ -1,4 +1,4 @@
-# AGENTS.md — DullDoc 项目运营手册
+# AGENTS.md — ManoDoc 项目运营手册
 
 > 本文件由 S0【生成 AGENTS.md】产出，是全项目的运营手册与索引，需随阶段持续更新。
 > 项目流程规范见根目录 `SIMPLE.md`，两者冲突时以用户最新确认为准。
@@ -17,10 +17,10 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 产品名 | **DullDoc**（暂定，S1 确认） |
+| 产品名 | **ManoDoc**（2026-11-19 由 DullDoc 更名） |
 | 当前阶段 | **S7 CHG-001~006 全部归档，等待用户人工验收** |
 | 下一阶段 | 用户人工验收；取得 Developer ID 后执行公证与 staple |
-| 当前事项 | CHG-006 已关闭 71 条 P0 缺口：新增 `logging`（JSONL 分级日志、保留天数、脱敏诊断 zip）、`preflight`（页级预检与删页）、`presets`（内置/自定义预设 CRUD 与导入导出）、`assets`（图片落盘与相对路径/base64/alt）；设置页补齐输出（图片模式/覆盖/历史条数）、预设、日志与关于（MIT 协议名称、第三方许可、pandoc 源码）；转换页支持 PDF 预检弹窗、页数与预计引擎、错误诊断复制、引擎选择持久化；标题栏显示任务、进度与取消，任意页拖入按单/多文件与文件夹路由。实机：50 页 PDF 跳过封面后 26s 完成（66145 字符/203 表格行），Markdown 130 处图片引用全部写入 `assets/chg006/` 相对路径；诊断 zip 含 diagnostics.json 与最近日志；预设复制/编辑/删除与日志设置生效。修复 async 命令内 `block_on` 死锁（预检放到 spawn_blocking）与跳过页临时文件名泄漏到输出名。`pnpm build`、`pnpm test`（17 项）、`cargo test` 通过；详见 `docs/superpowers/P0自检.md`。CHG-005 已接入 `scripts/package-macos.sh`：暂存并预签名 pandoc/Typst/uv 后由 Tauri 打包 `.app` 与 `.dmg`；产物 380MB/128MB，`codesign --verify --deep --strict` 通过（ad-hoc），DMG 可挂载且复制出的应用可启动；隐藏 `tools/macos` 后包内 sidecar 仍完成 Markdown→Word（25071 字符/212 标题/121 表格行）与 Markdown→PDF（21 页/672KB）；移除包内 pandoc 返回 `E_PANDOC_MISSING`；无 Developer ID 时脚本以退出码 20 标注公证阻塞。CHG-004 已接入 pandoc 3.14 + Typst 0.15.1：Markdown→DOCX/HTML/EPUB/PDF、PDF→DOCX、HTML→Markdown；转换页支持目标格式、引擎与质量提示，历史记录目标格式并支持重跑恢复。实机：Markdown→Word（25071 字符、212 标题、121 表格行）、Markdown→PDF（21 页、672KB，中文表格正常）、PDF→Word（64154 字符、203 表格行，OCR 2 页 + 保真提示）；重跑生成 `-1.docx`。`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 12 ignored）通过。CHG-003 已接入 xberg 1.4.0 与 PaddleOCR ONNX（PP-OCRv6 small）：`engine/routing.rs` 实现 auto/anydoc/xberg 路由与可见回退；`ocr/mod.rs` 管理 `~/.dull_doc/models` 的模型状态与显式安装（hf-hub 1.0 下载、约 31MB、SHA-256、离线不下载）；单文件、PNG/JPEG 与批量语料均写入实际引擎、OCR 页与回退原因。实机验证：封面无文本 50 页 PDF 以 xberg OCR 完成（64154 字符、9 标题、203 表格行，OCR 2 页，回退 anydoc:needs-ocr）；docx 保持 anydoc；无模型时图片返回 `E_NEEDS_OCR` 并给出安装入口；批量 4 文件（docx/xlsx/jpg/pdf）全部成功，356 chunks，manifest 记录 `engineUsed/ocrPages/ocrEngine/fallbackReason`。`pnpm build`、`pnpm test`（12 项）、`cargo test`（23 项 + 9 个 ignored）通过。模型下载已改用 hf-hub 1.0 并实测从 huggingface.co 完成（31MB，14.2s，SHA-256 通过）；本地镜像测试覆盖进度、校验与重复安装跳过。 |
+| 当前事项 | CHG-006 已关闭 71 条 P0 缺口：新增 `logging`（JSONL 分级日志、保留天数、脱敏诊断 zip）、`preflight`（页级预检与删页）、`presets`（内置/自定义预设 CRUD 与导入导出）、`assets`（图片落盘与相对路径/base64/alt）；设置页补齐输出（图片模式/覆盖/历史条数）、预设、日志与关于（MIT 协议名称、第三方许可、pandoc 源码）；转换页支持 PDF 预检弹窗、页数与预计引擎、错误诊断复制、引擎选择持久化；标题栏显示任务、进度与取消，任意页拖入按单/多文件与文件夹路由。实机：50 页 PDF 跳过封面后 26s 完成（66145 字符/203 表格行），Markdown 130 处图片引用全部写入 `assets/chg006/` 相对路径；诊断 zip 含 diagnostics.json 与最近日志；预设复制/编辑/删除与日志设置生效。修复 async 命令内 `block_on` 死锁（预检放到 spawn_blocking）与跳过页临时文件名泄漏到输出名。`pnpm build`、`pnpm test`（17 项）、`cargo test` 通过；详见 `docs/superpowers/P0自检.md`。CHG-005 已接入 `scripts/package-macos.sh`：暂存并预签名 pandoc/Typst/uv 后由 Tauri 打包 `.app` 与 `.dmg`；产物 380MB/128MB，`codesign --verify --deep --strict` 通过（ad-hoc），DMG 可挂载且复制出的应用可启动；隐藏 `tools/macos` 后包内 sidecar 仍完成 Markdown→Word（25071 字符/212 标题/121 表格行）与 Markdown→PDF（21 页/672KB）；移除包内 pandoc 返回 `E_PANDOC_MISSING`；无 Developer ID 时脚本以退出码 20 标注公证阻塞。CHG-004 已接入 pandoc 3.14 + Typst 0.15.1：Markdown→DOCX/HTML/EPUB/PDF、PDF→DOCX、HTML→Markdown；转换页支持目标格式、引擎与质量提示，历史记录目标格式并支持重跑恢复。实机：Markdown→Word（25071 字符、212 标题、121 表格行）、Markdown→PDF（21 页、672KB，中文表格正常）、PDF→Word（64154 字符、203 表格行，OCR 2 页 + 保真提示）；重跑生成 `-1.docx`。`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 12 ignored）通过。CHG-003 已接入 xberg 1.4.0 与 PaddleOCR ONNX（PP-OCRv6 small）：`engine/routing.rs` 实现 auto/anydoc/xberg 路由与可见回退；`ocr/mod.rs` 管理 `~/.manodoc/models` 的模型状态与显式安装（hf-hub 1.0 下载、约 31MB、SHA-256、离线不下载）；单文件、PNG/JPEG 与批量语料均写入实际引擎、OCR 页与回退原因。实机验证：封面无文本 50 页 PDF 以 xberg OCR 完成（64154 字符、9 标题、203 表格行，OCR 2 页，回退 anydoc:needs-ocr）；docx 保持 anydoc；无模型时图片返回 `E_NEEDS_OCR` 并给出安装入口；批量 4 文件（docx/xlsx/jpg/pdf）全部成功，356 chunks，manifest 记录 `engineUsed/ocrPages/ocrEngine/fallbackReason`。`pnpm build`、`pnpm test`（12 项）、`cargo test`（23 项 + 9 个 ignored）通过。模型下载已改用 hf-hub 1.0 并实测从 huggingface.co 完成（31MB，14.2s，SHA-256 通过）；本地镜像测试覆盖进度、校验与重复安装跳过。 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -29,11 +29,11 @@
 - **引擎路由**：按文件内容判定格式；文本型 PDF 先由 anydoc 处理，失败或质量不足时回退 xberg；扫描件优先 xberg OCR，中文低置信度或用户选择时可用 PaddleOCR（P1）；xberg/PaddleOCR 均不可用时才进入「跳过无文本页 / 提示需要 OCR」的降级路径，不得静默失败。
 - **批量知识库产物**：厂商中立的「镜像 `.md` + `chunks.jsonl` + `manifest.json`」语料包；清洗、切块、元数据均为可勾选项；不绑定 Dify / RAGFlow 等具体平台。
 - **测试样本**：`example/` 下为测试文件——`.docx`（GB/T 28448-2019 等保测评要求，表格密集）、50 页 PDF（有完整文本层，约 6.1 万字）、`.xlsx`（等保指标清单）、`.md`（1074 行，用于验证 Markdown 再导出）。
-- **名称与协议**：产品名保留 DullDoc；开源协议 MIT；pandoc 以独立 sidecar 按 GPL 合规分发。
+- **名称与协议**：产品名保留 ManoDoc；开源协议 MIT；pandoc 以独立 sidecar 按 GPL 合规分发。
 - **图片策略**：默认输出到同目录 `assets/` 并使用相对路径；单文件导出可选内嵌 base64。
 - **历史记录**：保留最近 50 条任务元数据（可配置），只存路径、参数、方向、引擎、哈希与结果摘要，不复制文件。
 - **多方向转换（2026-11-18 已确认）**：保留 Word ↔ Markdown、PDF → Markdown/Word、Markdown → Word/PDF/HTML/EPUB、PNG/JPEG → Markdown、Excel/CSV 与 PowerPoint → Markdown 等基础一对一方向；同一方向多引擎时提供「自动 + 显式引擎」选择；不支持的组合禁用并说明原因。
-- **Python 运行时（2026-11-18，P1）**：内置 uv 0.13.9 sidecar；在 `~/.dull_doc/runtimes/<engine>/.venv` 为每个 Python 引擎创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积、来源与哈希，用户确认后才联网；不依赖系统 Python，不静默下载；安装时使用 `--no-bin`，不向 `~/.local/bin` 写可执行文件；按需安装 PaddleOCR / Marker 等包并记录版本。pdf2docx 不默认安装、不随包分发。
+- **Python 运行时（2026-11-18，P1）**：内置 uv 0.13.9 sidecar；在 `~/.manodoc/runtimes/<engine>/.venv` 为每个 Python 引擎创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积、来源与哈希，用户确认后才联网；不依赖系统 Python，不静默下载；安装时使用 `--no-bin`，不向 `~/.local/bin` 写可执行文件；按需安装 PaddleOCR / Marker 等包并记录版本。pdf2docx 不默认安装、不随包分发。
 - **文件图标（2026-11-18，P0）**：转换页、批量、历史与方向矩阵统一使用 `icons/` 下的文件类型图标；缺失时回退综合文档；本次补齐 Markdown、HTML、EPUB、RTF、ODT、ODS、ODP、TXT。
 - **取消预览（2026-11-18）**：按用户决定，文档转换页不提供文档预览（部分格式无法可靠预览），语料制作完成行也不提供 Markdown 预览；完成行只保留「打开」。进度、成功、错误与无权限改为配置卡内联显示；PRD 中 REQ-020~022、REQ-048、REQ-111 标记为已取消，编号保留不复用。
 - **单文件与语料配置分工（2026-11-18）**：文档转换页只保留方向、引擎与预设，PDF 无文本页策略在预检弹窗选择；页眉页脚、中文标题、表格分级、图片资产、切块、元数据与语料包开关集中在「语料制作」的每任务配置。系统设置 → 输出保留语料包全局默认，批次内可覆盖。语料制作的输出格式固定 Markdown，其他格式禁用；其他格式走单文件转换。
@@ -50,7 +50,7 @@
   - **pandoc**（3.14，项目内 `tools/macos/pandoc/bin/pandoc`，arm64）：通用标记语言转换器，负责 Markdown → HTML / DOCX / ODT / EPUB / Typst 等导出，以及部分格式兜底。以 sidecar 方式随应用分发。
   - **Typst**（0.15.1，Apache-2.0）：pandoc 先输出 `.typ`，再由 Typst sidecar 编译 PDF；中文字体优先使用 macOS 系统字体，必要时 bundle Noto CJK。
   - **Marker**（`marker-pdf`，Datalab，Python + ML 模型）：扫描 PDF / 图片 / 复杂版式 → Markdown / HTML / JSON，含版面分析、OCR、表格与公式识别。代码 Apache-2.0，模型权重为 OpenRAIL-M（含营收/竞品限制）；资源占用高，仅 P1 用户显式安装。
-- **数据处理原则**：本地优先、默认不上传；应用数据统一存放 `~/.dull_doc/`（settings/presets/history/logs/tmp/runtimes），用户输出目录独立；转换任务异步化、可取消、可查看进度与日志；失败可重试并保留中间产物。
+- **数据处理原则**：本地优先、默认不上传；应用数据统一存放 `~/.manodoc/`（settings/presets/history/logs/tmp/runtimes），用户输出目录独立；转换任务异步化、可取消、可查看进度与日志；失败可重试并保留中间产物。
 - **日志与错误**：全局日志、全局错误处理、任务级错误归因；敏感信息（API Key、token）不得落盘或写日志，本地敏感信息存系统钥匙串。
 
 ## 四、文档索引
@@ -130,7 +130,7 @@
 | 2026-11-18 | S0 | 阅读 `SIMPLE.md`；确认环境：pandoc 3.8.3、Node 22.23.3、pnpm 12.14.0、cargo 1.99.1；`marker`/`anydoc` CLI 未安装；创建本文件。 |
 | 2026-11-18 | S0 → S1 | 用户确认：`maker` = Marker；场景覆盖通用互转 + 批量知识库；macOS Apple Silicon 首发；MVP 仅 anydoc + pandoc。清点测试样本（`example/` 四份文档）。进入 S1 头脑风暴。 |
 | 2026-11-18 | S1 | 确认核心场景为「常见可读文档 → 排版清晰的 Markdown」，痛点为工具离散与强制联网；语料包定为厂商中立 Markdown + JSONL。生成 `docs/superpowers/产品简报.html`（含 MVP 范围、成功标准、风险与 4 项待确认）。等待用户确认。 |
-| 2026-11-18 | S1 → S2 | 用户确认 S1 简报及四项决策（DullDoc / assets / 50 条历史 / MIT）。S1 状态改为「已确认」；开始 S2 竞品分析。 |
+| 2026-11-18 | S1 → S2 | 用户确认 S1 简报及四项决策（ManoDoc / assets / 50 条历史 / MIT）。S1 状态改为「已确认」；开始 S2 竞品分析。 |
 | 2026-11-18 | Git | 初始化仓库：`main` 仅保留基线空提交，开发在 `dev`；提交 `.gitignore`、`AGENTS.md` 与 S1 产品简报；`example/` 因第三方资料仅本地保留，不纳入版本库；未配置远程、未推送。 |
 | 2026-11-18 | Git | 按用户要求：`SIMPLE.md` 属于个人知识产权，从全部提交历史中移除并加入 `.gitignore`；已重写本地 `dev` 历史、清理 reflog 与不可达对象，文件仅保留在本地工作区，未推送远程。 |
 | 2026-11-18 | S2 | 完成竞品分析与功能面矩阵：商业/在线 15 个、开源核心 8 个、组件 13 个、相邻平台 8 个；61 项功能面。真实样本验证：docx anydoc 49 标题 vs pandoc 0；xlsx 1048 表格行；PDF 因封面页无文本层 anydoc 失败，去封面后 12 标题/204 行；pandoc md→docx/html/epub 成功、md→pdf 缺 pdflatex。生成 `docs/superpowers/竞品分析.html`。 |
@@ -141,7 +141,7 @@
 | 2026-11-18 | S3 → S4 | 用户确认 S3；本次 `/grill-me` 由用户明确跳过并在 PRD 中记录。PRD 版本升至 v1.0，状态「已确认」；开始 S4 功能拆解与软件功能设计。 |
 | 2026-11-18 | S4 | 生成 `docs/superpowers/软件功能设计说明.md`：模块/菜单拆解（每行含 REQ）、6 个功能流程、5 个页面流程、5 个业务流程、数据流转、组件/SDK、状态/错误/日志、82 条 REQ + 12 条 NFR 追溯、里程碑。等待用户确认。 |
 | 2026-11-18 | S4 → S5 | 用户确认 S4，状态改为「已确认」；进入 S5，先写 UI 设计规范，再做高保真原型。UI 迭代期间只改文件，不提交 Git，待用户确认 UI 阶段后统一提交。 |
-| 2026-11-18 | S5 变更 | 用户指定应用数据统一存放在 `~/.dull_doc/`；已同步 PRODUCT.md、PRD 6.4、S4 6.2/6.4 与 AGENTS。用户输出目录仍独立，不放入该目录。 |
+| 2026-11-18 | S5 变更 | 用户指定应用数据统一存放在 `~/.manodoc/`；已同步 PRODUCT.md、PRD 6.4、S4 6.2/6.4 与 AGENTS。用户输出目录仍独立，不放入该目录。 |
 | 2026-11-18 | S5 变更 | 用户增补中英文切换、主题切换、Cmd+K 命令面板（P0）。已同步 PRODUCT.md、S1（v0.4）、S2（v0.4）、PRD（v1.1，REQ-103~105）、S4（v1.1）与 AGENTS；S5 设计规范与原型必须覆盖。 |
 | 2026-11-18 | S5 | 视觉方向经决策页选定 **Proofing Desk**（校样台）。生成 `UI设计规范.html`（Proofing Desk token、浅/深色、双语、命令面板、组件与验收）与 `UI.html` 高保真原型（转换/批量/历史/设置、空/加载/失败、PDF 预检、Cmd+K、主题/语言切换）。finish review 判定 fix，8 项 material fixes 已全部修复：空白校样纸空状态与单一拖放目标、开关/历史键盘可操作、英文补全、OCR 跳过恢复、深色纸张层级、SVG 校对记号、选择态改蓝、1280 适配；新增转换中状态条与 toast。Playwright 交互/视觉回归 60+ 项全部通过，无控制台错误；detector 0 反模式（仅 em-dash 建议项）。截图在 `.impeccable/review/`。等待用户确认 S5；UI 迭代期间未提交 Git。 |
 | 2026-11-18 | S5 → Git | 用户指示提交 Git；S5 状态改为「已确认」；提交 UI 设计规范、高保真原型与 AGENTS 更新；未推送远程。 |
@@ -168,7 +168,7 @@
 | 2026-11-19 | S6-6 | 用户接受 PDF→Word 质量 C：保留 PDF→MD→DOCX 管线，UI 方向矩阵标注目录/图片保真有限；S6-5 公证延后到发布前；技术选型升至 v1.1。 |
 | 2026-11-19 | S6-6 → Git | 用户指示提交 Git；提交 PDF→Word 质量 C 接受结论、方向矩阵提示、技术选型 v1.1 与 AGENTS 同步；未推送远程。 |
 | 2026-11-19 | S7 | 建立 `CHANGE.md` 总索引：CHG-001 `mvp-implementation`（Build）与后续 CHG-002 批量语料、CHG-003 xberg OCR、CHG-004 pandoc/Typst、CHG-005 打包公证。 |
-| 2026-11-19 | S7 Build | 完成 CHG-001 纵向切片：React 19 + Vite + Tailwind 前端，Tauri 2 + anydoc 0.2.4 后端；四页导航、设置/主题/中英文、Cmd+K、单文件转换、历史与详情弹窗。真实 docx → Markdown 315,999 字符/49 标题/15 表格行；封面无文本 PDF 返回 `E_NEEDS_OCR`；不支持格式返回 `E_UNSUPPORTED_FORMAT`；语言/主题写入 `~/.dull_doc/settings.json`，历史写入 `history.json`。`pnpm build`、`pnpm test`（7 项）、`cargo check`、`cargo test`（5 项 + 3 个样例测试）通过；未提交 Git。 |
+| 2026-11-19 | S7 Build | 完成 CHG-001 纵向切片：React 19 + Vite + Tailwind 前端，Tauri 2 + anydoc 0.2.4 后端；四页导航、设置/主题/中英文、Cmd+K、单文件转换、历史与详情弹窗。真实 docx → Markdown 315,999 字符/49 标题/15 表格行；封面无文本 PDF 返回 `E_NEEDS_OCR`；不支持格式返回 `E_UNSUPPORTED_FORMAT`；语言/主题写入 `~/.manodoc/settings.json`，历史写入 `history.json`。`pnpm build`、`pnpm test`（7 项）、`cargo check`、`cargo test`（5 项 + 3 个样例测试）通过；未提交 Git。 |
 | 2026-11-19 | S7 Verify → Archive | CHG-001 通过 Comet Verify：A1–A8 全部通过；用户接受结果并归档至 `docs/comet/archive/2026-11-18-mvp-implementation/`。补充实机验证：1440×900 与 1280×800 无横向溢出；文本型 PDF → Markdown 不触发 OCR；CSV/RTF/EPUB 由 anydoc 0.2.4 独立 harness 验证；不可写输出目录显示 `E_OUTPUT_PERMISSION`。代码仍未提交 Git。 |
 | 2026-11-19 | S7 → Git | 用户指示提交 Git；提交 CHG-001 实现、`CHANGE.md`、AGENTS 更新与 Comet 归档材料到 `dev`（`ba220d2`）；未推送远程。 |
 | 2026-11-19 | S7 Build | CHG-002 完成批量语料候选实现：新增 `batch`/`clean`/`chunk`/`corpus` Rust 模块、批量 Tauri commands、历史批量字段；前端语料制作页接入扫描/队列/配置/取消/重试/报告，历史支持批量详情与重跑。实机 example 批次 3 文件（2 成功、1 个封面 PDF `E_NEEDS_OCR`）、293 chunks、2 warnings；输出包含 mirror、chunks.jsonl、manifest.json、report.json/csv，JSONL 与 manifest 校验通过。`pnpm build`、`pnpm test`（10 项）、`cargo test`（18 项 + 4 个样例测试）通过；未提交 Git。 |
@@ -180,14 +180,16 @@
 | 2026-11-19 | S7 Verify → Archive | CHG-004 通过 Comet Verify（A1–A8）；用户按既有授权接受并归档至 `docs/comet/archive/2026-11-18-pandoc-typst/`。Runtime 检查 `pnpm build`、`pnpm test`、`cargo check`、`cargo test` 均通过。 |
 | 2026-11-19 | S7 Build | CHG-005 完成打包与签名候选实现：新增 `scripts/package-macos.sh` 与 `docs/superpowers/打包与签名.md`；配置 `externalBin` 与 dmg、生成 macOS 图标集；修复 Tauri 无签名身份时不生成 `_CodeSignature` 的问题，并用 `TESSERACT_RS_CACHE_DIR` 复用离线缓存。 |
 | 2026-11-19 | S7 Verify → Archive | CHG-005 通过 Comet Verify（A1–A8）；用户按既有授权接受并归档至 `docs/comet/archive/2026-11-18-packaging-signing/`。公证因缺少 Developer ID 记录为发布前阻塞。 |
-| 2026-11-19 | 维护 | OCR 模型下载改用 hf-hub 1.0：模型根目录调整为 `~/.dull_doc/models`，固定官方 endpoint，保留 SHA-256 与进度；实测从 huggingface.co 下载 31MB/14.2s 成功，本地镜像测试通过；`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 13 ignored）通过。 |
+| 2026-11-19 | 维护 | OCR 模型下载改用 hf-hub 1.0：模型根目录调整为 `~/.manodoc/models`，固定官方 endpoint，保留 SHA-256 与进度；实测从 huggingface.co 下载 31MB/14.2s 成功，本地镜像测试通过；`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 13 ignored）通过。 |
 | 2026-11-19 | 维护 | 明确前端资源策略：保持 Tauri 内嵌，打包脚本新增 `Resources` 不含前端产物与 >10MB 未声明文件的断言；`打包与签名.md` 与 `CHANGE.md` 同步验收口径。 |
-| 2026-11-19 | 维护 | 顶部改为 macOS 风格整宽标题栏：系统红绿灯 + 侧栏折叠 + 命令面板搜索 + 居中 DullDoc + 语言/主题；同步 `UI.html` 与 `UI设计规范` v1.5；实机验证中英文、深浅色、1280×800 与侧栏折叠；`pnpm build`、`pnpm test`（13 项）通过，UI 迭代期间未提交。 |
+| 2026-11-19 | 维护 | 顶部改为 macOS 风格整宽标题栏：系统红绿灯 + 侧栏折叠 + 命令面板搜索 + 居中 ManoDoc + 语言/主题；同步 `UI.html` 与 `UI设计规范` v1.5；实机验证中英文、深浅色、1280×800 与侧栏折叠；`pnpm build`、`pnpm test`（13 项）通过，UI 迭代期间未提交。 |
 | 2026-11-19 | 维护 | 语料制作配置将并发、清洗与语料、切块上限/重叠折叠为「高级设置」，折叠时显示并发与切块摘要；实机展开/收起验证，`pnpm build`、`pnpm test`（14 项）通过；同步 UI 原型与设计规范。 |
 | 2026-11-19 | 维护 | 全部原生 select 替换为 shadcn/ui Select（Radix Select 2.4.1）：新增 `components/ui/select.tsx`、`lib/utils.ts`、`@` 别名与 `components.json`；覆盖转换、语料、设置共 13 处；补充 Radix 测试替身，`pnpm build`、`pnpm test`（14 项）通过；实机校验菜单、禁用态与方向行内选择器。 |
 | 2026-11-19 | 维护 | 弹窗迁移到 shadcn/ui Dialog（Radix Dialog 1.3.1）：统一 Modal 封装改为固定屏幕居中，遮罩、Esc、焦点返回由 Radix 处理；方向矩阵、历史详情、批量详情与清空确认四处已覆盖；测试改为 role=dialog，`pnpm build`、`pnpm test`（14 项）通过。 |
 | 2026-11-19 | S7 Build | CHG-006 P0 收口候选实现：新增日志/预检/预设/图片资产模块与设置页输出、预设、日志、关于；标题栏任务状态、全局拖入路由、预检弹窗与跳过策略、诊断复制、引擎持久化；修复 async 命令内 `block_on` 死锁与跳过页临时名泄漏。实机 PDF 26s 完成、130 处资产引用有效、诊断 zip 与预设编辑通过；`pnpm build`、`pnpm test`（17 项）、`cargo test` 通过；生成 `docs/superpowers/P0自检.md`。 |
 | 2026-11-19 | S7 Verify → Archive | CHG-006 通过 Comet Verify（A1–A8）；用户接受结果并归档至 `docs/comet/archive/2026-11-19-p0-completion/`；71 条 P0 关闭 |
+
+| 2026-11-19 | 维护 | 项目与产品更名为 ManoDoc：应用标识 `dev.manodoc.app`、crate/包名、数据目录 `~/.manodoc`、环境变量 `MANODOC_*`、界面文案与文档同步；按新项目处理，不保留 `.dull_doc` 目录兼容。`pnpm build`、`pnpm test`（17 项）、`cargo test`（29 项）通过。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->

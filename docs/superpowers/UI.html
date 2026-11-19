@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DullDoc · UI 高保真原型</title>
+  <title>ManoDoc · UI 高保真原型</title>
   <style>
     :root {
       --bg: #F2EFE6;
@@ -1896,7 +1896,7 @@
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
         </button>
       </div>
-      <div class="tb-title" data-tauri-drag-region>DullDoc</div>
+      <div class="tb-title" data-tauri-drag-region>ManoDoc</div>
       <div class="tb-right" data-tauri-drag-region>
         <div class="seg" aria-label="Language" data-i18n-aria="aria.language">
           <button class="on" data-lang-btn="zh">中文</button>
@@ -2365,7 +2365,7 @@
             <div class="panel settings-panel">
               <section class="settings-section on" id="set-general">
                 <h2 data-i18n="settings.general">通用</h2>
-                <p class="intro" data-i18n="settings.generalIntro">语言与主题即时生效；应用数据统一存放在 ~/.dull_doc。</p>
+                <p class="intro" data-i18n="settings.generalIntro">语言与主题即时生效；应用数据统一存放在 ~/.manodoc。</p>
                 <div class="setting-row">
                   <div class="info"><b data-i18n="settings.lang">界面语言</b><span
                       data-i18n="settings.langDesc">中文默认；英文完整；切换无需重启。</span></div>
@@ -2384,13 +2384,13 @@
                     </select></div>
                 </div>
                 <div class="setting-row">
-                  <div class="info"><b data-i18n="settings.output">默认输出目录</b><span>~/Documents/DullDoc Output</span>
+                  <div class="info"><b data-i18n="settings.output">默认输出目录</b><span>~/Documents/ManoDoc Output</span>
                   </div>
                   <div class="control"><button class="btn secondary small" data-i18n="settings.change">更改</button></div>
                 </div>
                 <div class="setting-row">
                   <div class="info"><b
-                      data-i18n="settings.data">应用数据目录</b><span>~/.dull_doc/settings/presets/history/logs/tmp/runtimes</span>
+                      data-i18n="settings.data">应用数据目录</b><span>~/.manodoc/settings/presets/history/logs/tmp/runtimes</span>
                   </div>
                   <div class="control"><button class="btn secondary small" data-i18n="settings.openData">打开</button>
                   </div>
@@ -2440,7 +2440,7 @@
                   </div>
                   <div class="spacer"><span class="badge green" data-i18n="engine.ready">就绪</span></div>
                 </div>
-                <p class="hint" data-i18n="engine.runtimeHint">Python 引擎由内置 uv 在 ~/.dull_doc/runtimes/&lt;engine&gt;/.venv 中按需安装，不依赖系统 Python；安装前提示包体积。</p>
+                <p class="hint" data-i18n="engine.runtimeHint">Python 引擎由内置 uv 在 ~/.manodoc/runtimes/&lt;engine&gt;/.venv 中按需安装，不依赖系统 Python；安装前提示包体积。</p>
               </section>
               <section class="settings-section" id="set-output">
                 <h2 data-i18n="settings.output">输出</h2>
@@ -2470,7 +2470,7 @@
               </section>
               <section class="settings-section" id="set-presets">
                 <h2 data-i18n="settings.presets">预设</h2>
-                <p class="intro" data-i18n="settings.presetsIntro">内置预设可直接使用；自定义预设保存在 ~/.dull_doc/presets，可复制或导入导出。</p>
+                <p class="intro" data-i18n="settings.presetsIntro">内置预设可直接使用；自定义预设保存在 ~/.manodoc/presets，可复制或导入导出。</p>
                 <div class="engine-card">
                   <div>
                     <div class="name" data-i18n="preset.standard">标准文档</div>
@@ -2517,7 +2517,7 @@
                     </select></div>
                 </div>
                 <div class="setting-row">
-                  <div class="info"><b data-i18n="settings.logDir">日志目录</b><span>~/.dull_doc/logs</span></div>
+                  <div class="info"><b data-i18n="settings.logDir">日志目录</b><span>~/.manodoc/logs</span></div>
                   <div class="control"><button class="btn secondary small" data-i18n="settings.open">打开</button></div>
                 </div>
                 <div class="setting-row">
@@ -2529,7 +2529,7 @@
               </section>
               <section class="settings-section" id="set-about">
                 <h2 data-i18n="settings.about">关于</h2>
-                <p class="intro">DullDoc 0.1.0 · MIT · Tauri 2</p>
+                <p class="intro">ManoDoc 0.1.0 · MIT · Tauri 2</p>
                 <div class="kv"><b>anydoc</b><span>MIT · Firecrawl</span><b>xberg</b><span>MIT · Rust document
                     intelligence</span><b>PaddleOCR</b><span>Apache-2.0 · P1</span><b>pandoc</b><span>GPL-2.0 ·
                     sidecar</span></div>
@@ -2563,7 +2563,7 @@
         <b data-i18n="detail.direction">方向</b><span id="detail-direction">Word → Markdown</span>
         <b data-i18n="detail.target">输出格式</b><span id="detail-target">Markdown</span>
         <b data-i18n="detail.engine">引擎</b><span id="detail-engine">anydoc 0.2.4 · 1.2s</span>
-        <b data-i18n="detail.output">输出</b><span id="detail-output">~/Documents/DullDoc Output/GB-T-28448.md</span>
+        <b data-i18n="detail.output">输出</b><span id="detail-output">~/Documents/ManoDoc Output/GB-T-28448.md</span>
         <b data-i18n="detail.stats">统计</b><span id="detail-stats">53,210 字符 · 49 标题 · 2 表格</span>
         <b data-i18n="detail.warnings">警告</b><span id="detail-warn">1 个表格提示（B 级）</span>
       </div>
@@ -2619,7 +2619,7 @@
       <div class="palette-list" id="palette-list"></div>
       <div class="palette-foot"><span><b>↑↓</b> <span data-i18n="palette.select">选择</span></span><span><b>Enter</b>
           <span data-i18n="palette.run">执行</span></span><span><b>Esc</b> <span
-            data-i18n="palette.close">关闭</span></span><span style="margin-left:auto">DullDoc</span></div>
+            data-i18n="palette.close">关闭</span></span><span style="margin-left:auto">ManoDoc</span></div>
     </div>
   </div>
 
@@ -2665,8 +2665,8 @@
         "batch.config": "配置", "batch.configDesc": "应用到本批次所有文件；单个文件可在队列中覆盖。", "batch.preset": "预设", "batch.outputFormat": "输出格式", "batch.engine": "引擎", "batch.addFolder": "添加文件夹", "batch.report": "导出报告", "batch.concurrency": "并发", "batch.advanced": "高级设置", "batch.advancedMeta": "并发 4 · 切块 1200/50", "batch.concurrencyDefault": "4（默认）", "batch.overlap": "切块重叠", "batch.outputLocked": "批量输出固定为 Markdown；其他格式请在单文件转换中选择。", "batch.cleaning": "清洗与语料", "opt.clean": "清洗与规范化", "opt.chunk": "切块", "opt.meta": "元数据", "batch.chunkSize": "切块上限", "batch.openCorpus": "打开语料包目录",
         "history.title": "转换历史", "history.sub": "最近 50 条任务，点击查看详情、重跑或打开输出", "history.clear": "清空历史", "history.srTitle": "历史任务", "history.item1sub": "单文件 · 标准文档预设", "history.item2sub": "批量 · 12 文件 · 知识库预设", "history.item3sub": "单文件 · xberg OCR", "history.item4sub": "批量 · 失败 · E_ENGINE_FAILED", "history.item1count": "49 标题", "history.item2count": "248 块", "history.item3count": "12 标题",
         "detail.preset": "预设", "detail.target": "输出格式", "detail.engine": "引擎", "detail.output": "输出", "detail.stats": "统计", "detail.warnings": "警告", "detail.direction": "方向", "detail.rerun": "重跑", "detail.open": "打开输出", "detail.copy": "复制参数",
-        "settings.title": "系统设置", "settings.sub": "输出、引擎、语言与主题", "settings.general": "通用", "settings.engines": "引擎", "settings.output": "输出", "settings.presets": "预设", "settings.presetsIntro": "内置预设可直接使用；自定义预设保存在 ~/.dull_doc/presets，可复制或导入导出。", "settings.presetNew": "新建预设", "settings.presetImport": "导入", "settings.presetExport": "导出", "settings.logs": "日志", "settings.about": "关于",
-        "settings.generalIntro": "语言与主题即时生效；应用数据统一存放在 ~/.dull_doc。", "settings.lang": "界面语言", "settings.langDesc": "中文默认；英文完整；切换无需重启。",
+        "settings.title": "系统设置", "settings.sub": "输出、引擎、语言与主题", "settings.general": "通用", "settings.engines": "引擎", "settings.output": "输出", "settings.presets": "预设", "settings.presetsIntro": "内置预设可直接使用；自定义预设保存在 ~/.manodoc/presets，可复制或导入导出。", "settings.presetNew": "新建预设", "settings.presetImport": "导入", "settings.presetExport": "导出", "settings.logs": "日志", "settings.about": "关于",
+        "settings.generalIntro": "语言与主题即时生效；应用数据统一存放在 ~/.manodoc。", "settings.lang": "界面语言", "settings.langDesc": "中文默认；英文完整；切换无需重启。",
         "settings.theme": "主题", "settings.themeDesc": "跟随系统、浅色或深色；所有颜色来自 token。", "theme.system": "跟随系统", "theme.light": "浅色", "theme.dark": "深色",
         "settings.change": "更改", "settings.data": "应用数据目录", "settings.permissions": "文件夹访问", "settings.permissionsDesc": "输出目录与批量输入需要系统授权；失败时给出系统设置引导。", "settings.granted": "已授权", "settings.openData": "打开", "settings.enginesIntro": "默认完全本地；缺失组件会给出安装说明，不静默下载。",
         "settings.outputIntro": "Markdown、图片与语料包的默认行为。", "settings.imageMode": "图片模式", "settings.imageModeDesc": "默认落 assets/；单文件可切换 base64。", "settings.assets": "assets/ 相对路径",
@@ -2678,7 +2678,7 @@
         "status.converting": "转换中", "status.ocr": "OCR", "status.done": "完成", "status.waiting": "等待", "status.cleaning": "清洗中", "status.skipped": "已跳过", "status.failed": "失败", "status.warn3": "3 警告",
         "action.cancel": "取消", "action.open": "打开", "action.remove": "移除", "action.retry": "重试", "action.detail": "详情", "action.close": "关闭", "action.edit": "编辑", "action.duplicate": "复制", "action.delete": "删除",
         "chunk.1200": "1200 字符", "chunk.800": "800 字符", "chunk.2000": "2000 字符",
-        "engine.ready": "就绪", "engine.missing": "未安装", "engine.anydocMeta": "0.2.4 · Office / 文本型 PDF 快速路径", "engine.xbergMeta": "1.4.0 · OCR / 复杂表格 / 回退", "engine.paddleMeta": "P1 · 中文 OCR 增强 · uv 按需安装", "engine.pandocMeta": "3.14 · HTML / DOCX / EPUB 导出", "engine.pythonTitle": "Python 运行时", "engine.pythonMeta": "uv · 按引擎隔离 .venv", "engine.onDemand": "按需安装", "engine.runtimeHint": "Python 引擎由内置 uv 在 ~/.dull_doc/runtimes/<engine>/.venv 中按需安装，不依赖系统 Python；安装前提示包体积。", "aria.nav": "主导航", "aria.language": "语言", "aria.theme": "切换主题", "aria.palette": "命令面板", "aria.commandPalette": "命令面板", "aria.remove": "移除",
+        "engine.ready": "就绪", "engine.missing": "未安装", "engine.anydocMeta": "0.2.4 · Office / 文本型 PDF 快速路径", "engine.xbergMeta": "1.4.0 · OCR / 复杂表格 / 回退", "engine.paddleMeta": "P1 · 中文 OCR 增强 · uv 按需安装", "engine.pandocMeta": "3.14 · HTML / DOCX / EPUB 导出", "engine.pythonTitle": "Python 运行时", "engine.pythonMeta": "uv · 按引擎隔离 .venv", "engine.onDemand": "按需安装", "engine.runtimeHint": "Python 引擎由内置 uv 在 ~/.manodoc/runtimes/<engine>/.venv 中按需安装，不依赖系统 Python；安装前提示包体积。", "aria.nav": "主导航", "aria.language": "语言", "aria.theme": "切换主题", "aria.palette": "命令面板", "aria.commandPalette": "命令面板", "aria.remove": "移除",
         "palette.select": "选择", "palette.run": "执行", "palette.close": "关闭", "palette.placeholder": "搜索命令、页面或最近文件…", "palette.empty": "没有找到匹配的命令", "palette.group.goto": "前往", "palette.group.action": "动作", "palette.group.pref": "偏好", "palette.group.recent": "最近",
         "pdf.title": "PDF 预检", "pdf.desc": "第 1 页没有文本层，可能是扫描封面。选择如何处理。", "pdf.page1": "1 · 无文本",
         "pdf.skipTitle": "跳过无文本页并继续", "pdf.skipDesc": "保留其余 49 页；在 manifest 记录 skipped_pages。",
@@ -2698,8 +2698,8 @@
         "batch.config": "Configuration", "batch.configDesc": "Applied to every file; override per file in the queue.", "batch.preset": "Preset", "batch.outputFormat": "Output format", "batch.engine": "Engine", "batch.addFolder": "Add folder", "batch.report": "Export report", "batch.concurrency": "Concurrency", "batch.advanced": "Advanced settings", "batch.advancedMeta": "Concurrency 4 · Chunks 1200/50", "batch.concurrencyDefault": "4 (default)", "batch.overlap": "Chunk overlap", "batch.outputLocked": "Batch output is fixed to Markdown; use single-file conversion for other formats.", "batch.cleaning": "Cleaning & corpus", "opt.clean": "Clean & normalize", "opt.chunk": "Chunk", "opt.meta": "Metadata", "batch.chunkSize": "Chunk limit", "batch.openCorpus": "Open corpus folder",
         "history.title": "History", "history.sub": "Last 50 tasks. Open one for details, rerun, or open output.", "history.clear": "Clear history", "history.srTitle": "History tasks", "history.item1sub": "Single file · Standard preset", "history.item2sub": "Batch · 12 files · Knowledge base preset", "history.item3sub": "Single file · xberg OCR", "history.item4sub": "Batch · failed · E_ENGINE_FAILED", "history.item1count": "49 headings", "history.item2count": "248 chunks", "history.item3count": "12 headings",
         "detail.preset": "Preset", "detail.target": "Output format", "detail.engine": "Engine", "detail.output": "Output", "detail.stats": "Stats", "detail.warnings": "Warnings", "detail.direction": "Direction", "detail.rerun": "Rerun", "detail.open": "Open output", "detail.copy": "Copy settings",
-        "settings.title": "Settings", "settings.sub": "Output, engines, language and theme", "settings.general": "General", "settings.engines": "Engines", "settings.output": "Output", "settings.presets": "Presets", "settings.presetsIntro": "Built-in presets are ready to use; custom presets live in ~/.dull_doc/presets and can be duplicated or exported.", "settings.presetNew": "New preset", "settings.presetImport": "Import", "settings.presetExport": "Export", "settings.logs": "Logs", "settings.about": "About",
-        "settings.generalIntro": "Language and theme apply instantly; app data lives in ~/.dull_doc.", "settings.lang": "Language", "settings.langDesc": "Chinese by default; complete English; no restart.",
+        "settings.title": "Settings", "settings.sub": "Output, engines, language and theme", "settings.general": "General", "settings.engines": "Engines", "settings.output": "Output", "settings.presets": "Presets", "settings.presetsIntro": "Built-in presets are ready to use; custom presets live in ~/.manodoc/presets and can be duplicated or exported.", "settings.presetNew": "New preset", "settings.presetImport": "Import", "settings.presetExport": "Export", "settings.logs": "Logs", "settings.about": "About",
+        "settings.generalIntro": "Language and theme apply instantly; app data lives in ~/.manodoc.", "settings.lang": "Language", "settings.langDesc": "Chinese by default; complete English; no restart.",
         "settings.theme": "Theme", "settings.themeDesc": "Follow system, light or dark; all colors come from tokens.", "theme.system": "Follow system", "theme.light": "Light", "theme.dark": "Dark",
         "settings.change": "Change", "settings.data": "App data folder", "settings.permissions": "Folder access", "settings.permissionsDesc": "Output and batch input need system authorization; failures link back to Settings.", "settings.granted": "Granted", "settings.openData": "Open", "settings.enginesIntro": "Fully local by default; missing components get install guidance, never silent downloads.",
         "settings.outputIntro": "Defaults for Markdown, images and corpus packages.", "settings.imageMode": "Image mode", "settings.imageModeDesc": "assets/ by default; base64 for single files.", "settings.assets": "assets/ relative path",
@@ -2711,7 +2711,7 @@
         "status.converting": "Converting", "status.ocr": "OCR", "status.done": "Done", "status.waiting": "Waiting", "status.cleaning": "Cleaning", "status.skipped": "Skipped", "status.failed": "Failed", "status.warn3": "3 warnings",
         "action.cancel": "Cancel", "action.open": "Open", "action.remove": "Remove", "action.retry": "Retry", "action.detail": "Details", "action.close": "Close", "action.edit": "Edit", "action.duplicate": "Duplicate", "action.delete": "Delete",
         "chunk.1200": "1200 chars", "chunk.800": "800 chars", "chunk.2000": "2000 chars",
-        "engine.ready": "Ready", "engine.missing": "Not installed", "engine.anydocMeta": "0.2.4 · Office / text PDF fast path", "engine.xbergMeta": "1.4.0 · OCR / complex tables / fallback", "engine.paddleMeta": "P1 · Chinese OCR enhancement · uv on demand", "engine.pandocMeta": "3.14 · HTML / DOCX / EPUB export", "engine.pythonTitle": "Python runtime", "engine.pythonMeta": "uv · isolated .venv per engine", "engine.onDemand": "Install on demand", "engine.runtimeHint": "Python engines are installed on demand by the bundled uv into ~/.dull_doc/runtimes/<engine>/.venv; system Python is not required. Size is shown before install.", "aria.nav": "Main navigation", "aria.language": "Language", "aria.theme": "Toggle theme", "aria.palette": "Command palette", "aria.commandPalette": "Command palette", "aria.remove": "Remove",
+        "engine.ready": "Ready", "engine.missing": "Not installed", "engine.anydocMeta": "0.2.4 · Office / text PDF fast path", "engine.xbergMeta": "1.4.0 · OCR / complex tables / fallback", "engine.paddleMeta": "P1 · Chinese OCR enhancement · uv on demand", "engine.pandocMeta": "3.14 · HTML / DOCX / EPUB export", "engine.pythonTitle": "Python runtime", "engine.pythonMeta": "uv · isolated .venv per engine", "engine.onDemand": "Install on demand", "engine.runtimeHint": "Python engines are installed on demand by the bundled uv into ~/.manodoc/runtimes/<engine>/.venv; system Python is not required. Size is shown before install.", "aria.nav": "Main navigation", "aria.language": "Language", "aria.theme": "Toggle theme", "aria.palette": "Command palette", "aria.commandPalette": "Command palette", "aria.remove": "Remove",
         "palette.select": "select", "palette.run": "run", "palette.close": "close", "palette.placeholder": "Search commands, pages or recent files…", "palette.empty": "No matching commands", "palette.group.goto": "Go to", "palette.group.action": "Actions", "palette.group.pref": "Preferences", "palette.group.recent": "Recent",
         "pdf.title": "PDF preflight", "pdf.desc": "Page 1 has no text layer. It may be a scanned cover. Choose how to proceed.", "pdf.page1": "1 · no text",
         "pdf.skipTitle": "Skip pages with no text and continue", "pdf.skipDesc": "Keep the other 49 pages; record skipped_pages in the manifest.",
@@ -2745,7 +2745,7 @@
       if (historyData[selectedTask]) renderDetail(selectedTask);
       const pal = document.getElementById("palette");
       if (pal && pal.classList.contains("open")) renderPalette(document.getElementById("palette-input").value);
-      try { localStorage.setItem("dulldoc.lang", lang); } catch (e) { }
+      try { localStorage.setItem("manodoc.lang", lang); } catch (e) { }
     }
 
     // ---------- 主题 ----------
@@ -2757,7 +2757,7 @@
       document.documentElement.dataset.theme = effective;
       const sel = document.getElementById("theme-select");
       if (sel) sel.value = choice;
-      try { localStorage.setItem("dulldoc.theme", choice); } catch (e) { }
+      try { localStorage.setItem("manodoc.theme", choice); } catch (e) { }
     }
     mq.addEventListener("change", () => { if (themeChoice === "system") applyTheme("system"); });
     document.getElementById("theme-toggle").addEventListener("click", () => {
@@ -2898,7 +2898,7 @@
         sub: { zh: "单文件转换 · 2026-11-18 14:32", en: "Single file · 2026-11-18 14:32" },
         preset: { zh: "标准文档", en: "Standard" },
         engine: "anydoc 0.2.4 · 1.2s",
-        output: "~/Documents/DullDoc Output/GB-T-28448.md",
+        output: "~/Documents/ManoDoc Output/GB-T-28448.md",
         stats: { zh: "53,210 字符 · 49 标题 · 2 表格", en: "53,210 chars · 49 headings · 2 tables" },
         warn: { zh: "1 个表格提示（B 级）", en: "1 table warning (Grade B)" }
       },
@@ -2910,7 +2910,7 @@
         sub: { zh: "批量 · 12 文件 · 2026-11-18 14:18", en: "Batch · 12 files · 2026-11-18 14:18" },
         preset: { zh: "知识库", en: "Knowledge base" },
         engine: "anydoc + xberg",
-        output: "~/Documents/DullDoc Output/等保资料/",
+        output: "~/Documents/ManoDoc Output/等保资料/",
         stats: { zh: "248 语料块 · 12 文件", en: "248 chunks · 12 files" },
         warn: { zh: "3 个警告", en: "3 warnings" }
       },
@@ -2922,7 +2922,7 @@
         sub: { zh: "单文件转换 · 2026-11-18 13:56", en: "Single file · 2026-11-18 13:56" },
         preset: { zh: "标准文档", en: "Standard" },
         engine: "xberg 1.4.0 · OCR",
-        output: "~/Documents/DullDoc Output/高风险判定.md",
+        output: "~/Documents/ManoDoc Output/高风险判定.md",
         stats: { zh: "12 标题 · 204 表格行", en: "12 headings · 204 table rows" },
         warn: { zh: "1 个 B 级表格", en: "1 Grade B table" }
       },
@@ -3163,9 +3163,9 @@
 
     // ---------- 初始化 ----------
     try {
-      const savedLang = localStorage.getItem("dulldoc.lang");
+      const savedLang = localStorage.getItem("manodoc.lang");
       if (savedLang === "zh" || savedLang === "en") lang = savedLang;
-      const savedTheme = localStorage.getItem("dulldoc.theme");
+      const savedTheme = localStorage.getItem("manodoc.theme");
       if (savedTheme === "system" || savedTheme === "light" || savedTheme === "dark") themeChoice = savedTheme;
     } catch (e) { }
     applyTheme(themeChoice);

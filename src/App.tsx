@@ -23,7 +23,7 @@ const DEFAULT_SETTINGS: Settings = {
   version: 1,
   language: "zh",
   theme: "system",
-  outputDir: "~/Documents/DullDoc Output",
+  outputDir: "~/Documents/ManoDoc Output",
   logLevel: "info",
   logRetentionDays: 7,
   imageMode: "assets",
@@ -295,7 +295,7 @@ function AppShell({
   const activeTask = useActiveTask();
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     try {
-      return window.localStorage.getItem("dulldoc.sidebar") !== "0";
+      return window.localStorage.getItem("manodoc.sidebar") !== "0";
     } catch {
       return true;
     }
@@ -303,7 +303,7 @@ function AppShell({
 
   useEffect(() => {
     try {
-      window.localStorage.setItem("dulldoc.sidebar", sidebarOpen ? "1" : "0");
+      window.localStorage.setItem("manodoc.sidebar", sidebarOpen ? "1" : "0");
     } catch {
       // 隐私模式下 localStorage 不可写；折叠状态只影响本次会话。
     }

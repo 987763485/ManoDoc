@@ -119,7 +119,7 @@ export function SettingsPage({
                 <div className="control"><button className="btn secondary small" onClick={() => void changeOutputDir()}>{t("action.change")}</button></div>
               </div>
               <div className="setting-row">
-                <div className="info"><b>{t("settings.data")}</b><span>~/.dull_doc/settings/presets/history/logs/tmp/runtimes</span></div>
+                <div className="info"><b>{t("settings.data")}</b><span>~/.manodoc/settings/presets/history/logs/tmp/runtimes</span></div>
                 <div className="control"><span className="badge green">{t("settings.granted")}</span></div>
               </div>
               <div className="setting-row">
@@ -266,7 +266,7 @@ export function SettingsPage({
                 <button
                   className="btn ghost small"
                   onClick={async () => {
-                    const target = await save({ defaultPath: "dulldoc-presets.json" });
+                    const target = await save({ defaultPath: "manodoc-presets.json" });
                     if (target) await exportPresets(target);
                   }}
                 >
@@ -356,7 +356,7 @@ export function SettingsPage({
                 </div>
               </div>
               <div className="setting-row">
-                <div className="info"><b>{t("settings.logDir")}</b><span>~/.dull_doc/logs</span></div>
+                <div className="info"><b>{t("settings.logDir")}</b><span>~/.manodoc/logs</span></div>
                 <div className="control actions">
                   <button
                     className="btn secondary small"
@@ -370,7 +370,7 @@ export function SettingsPage({
                   <button
                     className="btn secondary small"
                     onClick={async () => {
-                      const target = await save({ defaultPath: "dulldoc-diagnostics.zip" });
+                      const target = await save({ defaultPath: "manodoc-diagnostics.zip" });
                       if (!target) return;
                       await exportDiagnostics(target);
                       showToast(t("toast.diagnosticsSaved"));

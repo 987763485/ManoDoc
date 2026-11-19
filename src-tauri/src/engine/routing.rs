@@ -400,9 +400,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "依赖 DULLDOC_TEST_IMAGE 指向的本地图片与已安装的 OCR 模型"]
+    #[ignore = "依赖 MANODOC_TEST_IMAGE 指向的本地图片与已安装的 OCR 模型"]
     fn real_image_routes_to_ocr() {
-        let path = std::env::var("DULLDOC_TEST_IMAGE").expect("需要 DULLDOC_TEST_IMAGE");
+        let path = std::env::var("MANODOC_TEST_IMAGE").expect("需要 MANODOC_TEST_IMAGE");
         let output = extract(Path::new(&path), EngineChoice::Auto, false, |_| {}).expect("图片应完成 OCR");
         assert_eq!(output.engine, "xberg");
         assert_eq!(output.ocr_engine.as_deref(), Some("paddleocr"));
@@ -423,12 +423,12 @@ mod tests {
     #[test]
     #[ignore = "临时把模型目录指向空目录，验证无模型时的降级"]
     fn missing_models_return_needs_ocr() {
-        let empty = std::env::temp_dir().join(format!("dulldoc-empty-models-{}", uuid::Uuid::new_v4()));
-        std::env::set_var("DULLDOC_MODEL_DIR", &empty);
+        let empty = std::env::temp_dir().join(format!("manodoc-empty-models-{}", uuid::Uuid::new_v4()));
+        std::env::set_var("MANODOC_MODEL_DIR", &empty);
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../example/关于印发《网络安全等级保护测评高风险判定实施指引(试行 )》的通知).pdf");
         let error = extract(&path, EngineChoice::Auto, false, |_| {}).expect_err("无模型时扫描 PDF 应失败");
-        std::env::remove_var("DULLDOC_MODEL_DIR");
+        std::env::remove_var("MANODOC_MODEL_DIR");
         assert_eq!(error.code, "E_NEEDS_OCR");
         assert!(error.next_step.contains("OCR"));
         let _ = fs::remove_dir_all(empty);

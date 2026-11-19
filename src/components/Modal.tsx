@@ -23,7 +23,7 @@ export function Modal({
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className={className} aria-labelledby={labelledBy}>
         {/* Radix 需要 Title 才算可访问；可见标题由调用方的 h2 提供。 */}
-        <DialogTitle className="sr-only">DullDoc</DialogTitle>
+        <DialogTitle className="sr-only">ManoDoc</DialogTitle>
         {children}
       </DialogContent>
     </Dialog>

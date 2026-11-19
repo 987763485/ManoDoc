@@ -185,7 +185,7 @@ export function CommandPalette({
           <span><b>↑↓</b> {t("palette.select")}</span>
           <span><b>Enter</b> {t("palette.run")}</span>
           <span><b>Esc</b> {t("palette.close")}</span>
-          <span style={{ marginLeft: "auto" }}>DullDoc</span>
+          <span style={{ marginLeft: "auto" }}>ManoDoc</span>
         </div>
       </div>
     </div>

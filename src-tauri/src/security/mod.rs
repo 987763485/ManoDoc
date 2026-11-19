@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn prepares_writable_output_dir() {
-        let dir = std::env::temp_dir().join(format!("dulldoc-test-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("manodoc-test-{}", uuid::Uuid::new_v4()));
         let prepared = prepare_output_dir(&dir.to_string_lossy()).expect("临时目录应可写");
         assert!(prepared.is_dir());
         let _ = fs::remove_dir_all(&dir);
@@ -67,7 +67,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn reports_permission_error_for_read_only_system_path() {
-        let target = format!("/System/DullDocTest-{}", std::process::id());
+        let target = format!("/System/ManoDocTest-{}", std::process::id());
         let error = prepare_output_dir(&target).expect_err("/System 应不可写");
         assert_eq!(error.code, "E_OUTPUT_PERMISSION");
     }

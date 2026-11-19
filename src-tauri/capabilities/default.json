@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "DullDoc 主窗口的最小权限",
+  "description": "ManoDoc 主窗口的最小权限",
   "windows": ["main"],
   "permissions": ["core:default", "core:window:allow-start-dragging", "dialog:default"]
 }

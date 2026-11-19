@@ -39,8 +39,8 @@ pub enum Tool {
 impl Tool {
     fn env_name(self) -> &'static str {
         match self {
-            Self::Pandoc => "DULLDOC_PANDOC",
-            Self::Typst => "DULLDOC_TYPST",
+            Self::Pandoc => "MANODOC_PANDOC",
+            Self::Typst => "MANODOC_TYPST",
         }
     }
 

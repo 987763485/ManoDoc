@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "DullDoc",
+  "productName": "ManoDoc",
   "version": "0.1.0",
-  "identifier": "dev.dulldoc.app",
+  "identifier": "dev.manodoc.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "DullDoc",
+        "title": "ManoDoc",
         "width": 1440,
         "height": 900,
         "minWidth": 1280,

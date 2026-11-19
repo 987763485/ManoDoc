@@ -35,7 +35,7 @@ pub fn get_settings() -> Settings {
 #[tauri::command(rename_all = "camelCase")]
 pub fn save_settings(settings: Settings) -> Result<Settings, AppError> {
     let saved = storage::save_settings(&settings)
-        .map_err(|e| AppError::new("E_SETTINGS_WRITE", e, "检查 ~/.dull_doc 是否可写后重试"))?;
+        .map_err(|e| AppError::new("E_SETTINGS_WRITE", e, "检查 ~/.manodoc 是否可写后重试"))?;
     logging::set_level(&saved.log_level);
     logging::cleanup(saved.log_retention_days);
     logging::log(
@@ -377,7 +377,7 @@ pub fn list_history() -> Vec<HistoryTask> {
 #[tauri::command(rename_all = "camelCase")]
 pub fn clear_history() -> Result<(), AppError> {
     storage::clear_history()
-        .map_err(|e| AppError::new("E_HISTORY_WRITE", e, "检查 ~/.dull_doc 是否可写"))
+        .map_err(|e| AppError::new("E_HISTORY_WRITE", e, "检查 ~/.manodoc 是否可写"))
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -497,7 +497,7 @@ pub async fn preflight_pdf(path: String) -> Result<preflight::PreflightResult, A
 pub fn get_logs_dir() -> Result<String, AppError> {
     logging::logs_dir()
         .map(|path| path.to_string_lossy().into_owned())
-        .map_err(|error| AppError::new("E_LOG", error, "检查 ~/.dull_doc 是否可写"))
+        .map_err(|error| AppError::new("E_LOG", error, "检查 ~/.manodoc 是否可写"))
 }
 
 #[tauri::command(rename_all = "camelCase")]

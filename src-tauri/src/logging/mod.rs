@@ -122,7 +122,7 @@ fn diagnostics_json() -> Value {
         })
         .collect::<Vec<_>>();
     json!({
-        "schema": "dulldoc.diagnostics.v1",
+        "schema": "manodoc.diagnostics.v1",
         "version": env!("CARGO_PKG_VERSION"),
         "platform": std::env::consts::OS,
         "settings": {

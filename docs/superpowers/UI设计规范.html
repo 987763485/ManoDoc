@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DullDoc UI 设计规范</title>
+<title>ManoDoc UI 设计规范</title>
 <style>
   :root {
     --bg: #F2EFE6;
@@ -188,7 +188,7 @@
         <thead><tr><th>区域</th><th>内容</th><th>行为</th></tr></thead>
         <tbody>
           <tr><td>左</td><td>侧栏折叠、搜索</td><td>折叠后侧栏宽度归零，状态写入本地存储；搜索打开 Cmd+K 命令面板</td></tr>
-          <tr><td>中</td><td>DullDoc</td><td>只读文本，可拖动窗口</td></tr>
+          <tr><td>中</td><td>ManoDoc</td><td>只读文本，可拖动窗口</td></tr>
           <tr><td>右</td><td>中文 / EN、主题</td><td>即时生效并写回设置；原型中的状态选择器不进入产品</td></tr>
         </tbody>
       </table>
@@ -294,9 +294,9 @@
     <h2><span class="num">05</span>布局</h2>
     <p>桌面应用外壳：顶部 48px 整宽标题栏（系统红绿灯、侧栏折叠、命令面板、语言/主题），左侧 216px 导航，主内容 8pt 网格。文档转换页为居中 760px 配置卡（文件、方向/引擎、预设），转换进度与错误内联在卡内，不提供文档预览；语料制作页为「筛选 + 队列 + 右侧配置（清洗、切块、语料）」；转换历史页为「全宽任务列表 + 详情弹窗」；系统设置页为「分组导航 + 表单」，包含通用、引擎、输出、预设、日志与关于。</p>
     <div class="shell">
-      <div class="bar"><i></i><i></i><i></i><span>DullDoc · 1440×900</span></div>
+      <div class="bar"><i></i><i></i><i></i><span>ManoDoc · 1440×900</span></div>
       <div class="body">
-        <div class="side"><b>DullDoc</b><div class="on">文档转换</div><div>语料制作</div><div>转换历史</div><div>系统设置</div></div>
+        <div class="side"><b>ManoDoc</b><div class="on">文档转换</div><div>语料制作</div><div>转换历史</div><div>系统设置</div></div>
         <div class="main">
           <div class="panel">
             <h3>网络安全等级保护测评要求.docx</h3>
@@ -326,7 +326,7 @@
     <div class="demo"><div class="row"><button class="btn primary">开始转换</button><button class="btn secondary">打开输出目录</button><button class="btn ghost">取消</button><button class="btn danger">清空历史</button><button class="btn primary" disabled>转换中</button><button class="btn primary small">紧凑按钮</button></div></div>
     <p class="small">主按钮使用墨色，红色只用于危险操作；不使用渐变、发光或玻璃。</p>
     <h3>表单</h3>
-    <div class="demo"><div class="row"><div class="field"><label>输出目录</label><input value="~/Documents/DullDoc Output" readonly></div><div class="field"><label>转换预设</label><select><option>标准文档</option><option>表格清单</option><option>知识库</option></select></div><div class="field"><label>并发</label><select><option>4</option><option>1</option><option>8</option></select></div></div></div>
+    <div class="demo"><div class="row"><div class="field"><label>输出目录</label><input value="~/Documents/ManoDoc Output" readonly></div><div class="field"><label>转换预设</label><select><option>标准文档</option><option>表格清单</option><option>知识库</option></select></div><div class="field"><label>并发</label><select><option>4</option><option>1</option><option>8</option></select></div></div></div>
     <p class="small"><b>选择器</b>：全部使用 shadcn/ui Select（Radix Select），不使用浏览器原生 select。触发器沿用 7px 圆角、1px <code>line-strong</code> 边框与 13px 字号；浮层使用 <code>surface</code>、<code>shadow</code> 与 <code>surface-2</code> 高亮，选中项左侧显示修正蓝对勾。方向行内的选择器去边框，与源格式文字同行。</p>
     <p class="small"><b>弹窗</b>：全部使用 shadcn/ui Dialog（Radix Dialog），遮罩覆盖窗口，面板固定屏幕正中；Esc 与遮罩点击可关闭，关闭后焦点回到触发元素。内容面板继续使用 <code>history-modal</code> 的纸张、圆角与阴影。</p>
     <h3>转换方向与引擎</h3>
@@ -393,7 +393,7 @@
           <b>预设</b><span>标准文档</span>
           <b>方向</b><span>Word → Markdown</span>
           <b>引擎</b><span>anydoc 0.2.4 · 1.2s</span>
-          <b>输出</b><span>~/Documents/DullDoc Output/GB-T-28448.md</span>
+          <b>输出</b><span>~/Documents/ManoDoc Output/GB-T-28448.md</span>
           <b>统计</b><span>53,210 字符 · 49 标题 · 2 表格</span>
           <b>警告</b><span>1 个表格提示（B 级）</span>
         </div>
@@ -420,12 +420,12 @@
       </table>
     </div>
     <h3>Python 运行时</h3>
-    <div class="callout"><b>uv + 隔离 .venv</b><br>Python 引擎（PaddleOCR / Marker）不依赖系统 Python。应用在 <code>~/.dull_doc/runtimes/&lt;engine&gt;/.venv</code> 创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积与来源并等待确认。</div>
+    <div class="callout"><b>uv + 隔离 .venv</b><br>Python 引擎（PaddleOCR / Marker）不依赖系统 Python。应用在 <code>~/.manodoc/runtimes/&lt;engine&gt;/.venv</code> 创建隔离环境；Python 由 uv 按需下载，下载前显示版本、体积与来源并等待确认。</div>
   </section>
 
   <section id="theme" class="card">
     <h2><span class="num">07</span>主题</h2>
-    <p>默认跟随系统；用户可切换浅色 / 深色。所有颜色来自语义 token；组件不得写死 hex。切换即时生效，保存到 <code>~/.dull_doc/settings.json</code>。两种主题都必须满足对比度 AA。</p>
+    <p>默认跟随系统；用户可切换浅色 / 深色。所有颜色来自语义 token；组件不得写死 hex。切换即时生效，保存到 <code>~/.manodoc/settings.json</code>。两种主题都必须满足对比度 AA。</p>
     <div class="grid-2">
       <div class="callout"><b>浅色场景</b><br>白天办公室、纸质文档对照；校样纸接近 #FFFDF8，减少屏幕与纸张的色差。</div>
       <div class="callout warn"><b>深色场景</b><br>夜间/低光；不是把浅色反相，而是保持纸张层次与红蓝校对记号的可读性。</div>
@@ -491,14 +491,14 @@
       <li>语料制作页：配置默认只显示预设、输出格式与引擎；页眉页脚、中文标题、表格分级、图片资产、切块（含上限与重叠）、元数据、语料包开关与并发折叠在「高级设置」中，折叠时显示当前摘要；输出格式固定 Markdown，其他格式禁用。</li>
             <li>所有支持格式显示文件类型图标；缺失资源回退综合文档；浅色/深色可辨识。</li>
       <li>设置页显示 Python 运行时（uv + 隔离 .venv）状态与路径；不依赖系统 Python。</li>
-      <li>设置页「预设」可查看、编辑、复制、删除预设并导入导出 JSON；路径指向 ~/.dull_doc/presets。</li>
+      <li>设置页「预设」可查看、编辑、复制、删除预设并导入导出 JSON；路径指向 ~/.manodoc/presets。</li>
       <li>批量页：等待/转换/清洗/完成/跳过/失败六种状态齐全。</li>
       <li>错误与警告均给出原因与可执行下一步；颜色 + 文字双重编码。</li>
       <li>表格、输入、按钮、开关、对话框的焦点与禁用态可见。</li>
     </ul>
   </section>
 
-  <div class="footer"><span>DullDoc · S5 UI 设计规范 · 2026-11-18</span><span>S5 已确认 · 下一步 S6 技术选型</span></div>
+  <div class="footer"><span>ManoDoc · S5 UI 设计规范 · 2026-11-18</span><span>S5 已确认 · 下一步 S6 技术选型</span></div>
 </div>
 </body>
 </html>

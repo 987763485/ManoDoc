@@ -6,10 +6,10 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::models::{HistoryFile, Settings};
 
-/// 所有应用数据都收敛到 ~/.dull_doc，用户输出目录独立。
+/// 所有应用数据都收敛到 ~/.manodoc，用户输出目录独立。
 pub fn data_dir() -> Result<PathBuf, String> {
     let home = dirs::home_dir().ok_or_else(|| "无法定位用户主目录".to_string())?;
-    Ok(home.join(".dull_doc"))
+    Ok(home.join(".manodoc"))
 }
 
 pub fn ensure_data_dirs() -> Result<PathBuf, String> {

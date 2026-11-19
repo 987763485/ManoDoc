@@ -353,7 +353,7 @@ pub fn run(app: AppHandle, request: BatchRequest) -> Result<BatchResult, AppErro
     let output_root = crate::security::prepare_output_dir(&request.output_dir)?;
     let batch_name = sanitize_name(request.name.unwrap_or_else(|| "corpus".into()));
     let package_dir = unique_package(&output_root, &batch_name);
-    let temp = output_root.join(format!(".dulldoc-tmp-{}", uuid::Uuid::new_v4()));
+    let temp = output_root.join(format!(".manodoc-tmp-{}", uuid::Uuid::new_v4()));
     let mirror_root = temp.join("mirror");
     fs::create_dir_all(&mirror_root).map_err(|error| {
         AppError::new(
@@ -1186,12 +1186,12 @@ mod tests {
         let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("../example");
         let scan = scan_inputs(
             &[example.to_string_lossy().into_owned()],
-            "/tmp/dulldoc-batch-output",
+            "/tmp/manodoc-batch-output",
         )
         .expect("扫描应成功");
         assert!(scan.files.len() >= 3, "files={}", scan.files.len());
 
-        let temp = std::env::temp_dir().join(format!("dulldoc-batch-{}", uuid::Uuid::new_v4()));
+        let temp = std::env::temp_dir().join(format!("manodoc-batch-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(temp.join("mirror")).unwrap();
         let cancel = AtomicBool::new(false);
         let config = BatchConfig::default();
@@ -1228,7 +1228,7 @@ mod scan_tests {
 
     #[test]
     fn scan_filters_hidden_and_output_directory() {
-        let root = std::env::temp_dir().join(format!("dulldoc-scan-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!("manodoc-scan-{}", uuid::Uuid::new_v4()));
         let output = root.join("out");
         fs::create_dir_all(root.join("sub")).unwrap();
         fs::create_dir_all(&output).unwrap();

@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Language } from "../lib/ipc";
 
 const zh = {
-  "app.name": "DullDoc",
+  "app.name": "ManoDoc",
   "nav.convert": "文档转换",
   "nav.batch": "语料制作",
   "nav.history": "转换历史",
@@ -223,7 +223,7 @@ const zh = {
   "settings.logsIntro": "本地日志，不含文件正文与密钥。",
   "settings.logLevel": "日志级别",
   "settings.logDir": "日志目录",
-  "settings.aboutText": "DullDoc 0.1.0 · MIT · Tauri 2",
+  "settings.aboutText": "ManoDoc 0.1.0 · MIT · Tauri 2",
   "theme.system": "跟随系统",
   "theme.light": "浅色",
   "theme.dark": "深色",
@@ -249,7 +249,7 @@ const zh = {
   "toast.copied": "已复制参数",
   "toast.openFailed": "无法打开路径",
   "toast.chooseFile": "请选择文件",
-  "toast.realOnly": "请在 DullDoc 桌面应用中选择文件",
+  "toast.realOnly": "请在 ManoDoc 桌面应用中选择文件",
   "unit.kb": "KB",
   "unit.chars": "字符",
   "unit.headings": "标题",
@@ -311,7 +311,7 @@ const zh = {
 };
 
 const en: Record<keyof typeof zh, string> = {
-  "app.name": "DullDoc",
+  "app.name": "ManoDoc",
   "nav.convert": "Convert",
   "nav.batch": "Corpus",
   "nav.history": "History",
@@ -532,7 +532,7 @@ const en: Record<keyof typeof zh, string> = {
   "settings.logsIntro": "Local logs without document text or secrets.",
   "settings.logLevel": "Log level",
   "settings.logDir": "Log folder",
-  "settings.aboutText": "DullDoc 0.1.0 · MIT · Tauri 2",
+  "settings.aboutText": "ManoDoc 0.1.0 · MIT · Tauri 2",
   "theme.system": "Follow system",
   "theme.light": "Light",
   "theme.dark": "Dark",
@@ -558,7 +558,7 @@ const en: Record<keyof typeof zh, string> = {
   "toast.copied": "Settings copied",
   "toast.openFailed": "Could not open path",
   "toast.chooseFile": "Choose a file",
-  "toast.realOnly": "Choose files in the DullDoc desktop app",
+  "toast.realOnly": "Choose files in the ManoDoc desktop app",
   "unit.kb": "KB",
   "unit.chars": "chars",
   "unit.headings": "headings",

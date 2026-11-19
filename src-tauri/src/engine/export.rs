@@ -110,7 +110,7 @@ impl TempDir {
             AppError::new(
                 "E_OUTPUT_PERMISSION",
                 format!("无法创建临时目录: {error}"),
-                "检查 ~/.dull_doc 是否可写",
+                "检查 ~/.manodoc 是否可写",
             )
         })?;
         Ok(Self(root))
@@ -188,7 +188,7 @@ fn title_for(input: &Path) -> String {
     input
         .file_stem()
         .map(|stem| stem.to_string_lossy().into_owned())
-        .unwrap_or_else(|| "DullDoc".into())
+        .unwrap_or_else(|| "ManoDoc".into())
 }
 
 pub fn convert<F: FnMut(&str)>(
@@ -290,7 +290,7 @@ pub fn convert<F: FnMut(&str)>(
                     AppError::new(
                         "E_OUTPUT_PERMISSION",
                         format!("写入临时 Markdown 失败: {error}"),
-                        "检查 ~/.dull_doc 是否可写",
+                        "检查 ~/.manodoc 是否可写",
                     )
                 })?;
                 let generated = temp.path().join("output.docx");
@@ -434,7 +434,7 @@ mod tests {
     #[ignore = "依赖项目内 pandoc/Typst 与 example Markdown"]
     fn real_markdown_exports_all_targets() {
         let input = Path::new(env!("CARGO_MANIFEST_DIR")).join("../example/等保测评skill.md");
-        let out = std::env::temp_dir().join(format!("dulldoc-export-{}", uuid::Uuid::new_v4()));
+        let out = std::env::temp_dir().join(format!("manodoc-export-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&out).unwrap();
         let kind = InputKind::Markdown;
         for target in [TargetFormat::Docx, TargetFormat::Html, TargetFormat::Epub, TargetFormat::Pdf] {
@@ -456,9 +456,9 @@ mod tests {
     #[ignore = "依赖项目内 pandoc；用 /usr/bin/false 模拟 Typst 编译失败"]
     fn typst_failure_returns_compile_error() {
         let input = Path::new(env!("CARGO_MANIFEST_DIR")).join("../example/等保测评skill.md");
-        let out = std::env::temp_dir().join(format!("dulldoc-typstfail-{}", uuid::Uuid::new_v4()));
+        let out = std::env::temp_dir().join(format!("manodoc-typstfail-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&out).unwrap();
-        std::env::set_var("DULLDOC_TYPST", "/usr/bin/false");
+        std::env::set_var("MANODOC_TYPST", "/usr/bin/false");
         let error = convert(
             &input,
             &InputKind::Markdown,
@@ -469,7 +469,7 @@ mod tests {
             |_| {},
         )
         .expect_err("Typst 失败应返回错误");
-        std::env::remove_var("DULLDOC_TYPST");
+        std::env::remove_var("MANODOC_TYPST");
         assert_eq!(error.code, "E_PDF_COMPILE_FAILED");
         assert_eq!(fs::read_dir(&out).unwrap().count(), 0, "失败不应产生输出");
         let _ = fs::remove_dir_all(out);
@@ -480,7 +480,7 @@ mod tests {
     fn real_pdf_to_docx_reports_quality_limit() {
         let input = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../example/关于印发《网络安全等级保护测评高风险判定实施指引(试行 )》的通知).pdf");
-        let out = std::env::temp_dir().join(format!("dulldoc-pdfdocx-{}", uuid::Uuid::new_v4()));
+        let out = std::env::temp_dir().join(format!("manodoc-pdfdocx-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&out).unwrap();
         let result = convert(
             &input,

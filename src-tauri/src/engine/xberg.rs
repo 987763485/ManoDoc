@@ -1,6 +1,6 @@
 //! xberg 第二内核适配器。
 //!
-//! 只负责把 xberg 的抽取结果翻译成 DullDoc 的统一结构；引擎选择与回退由
+//! 只负责把 xberg 的抽取结果翻译成 ManoDoc 的统一结构；引擎选择与回退由
 //! `engine::routing` 决定。OCR 模型路径显式传入，避免 xberg 使用默认 HF 缓存。
 
 use std::path::Path;
@@ -77,7 +77,7 @@ pub fn extract_with_options(
 
     let mut config = ExtractionConfig::default();
     config.output_format = OutputFormat::Markdown;
-    // 不启用 xberg 自己的结果缓存，避免在 ~/.dull_doc 之外产生额外文件。
+    // 不启用 xberg 自己的结果缓存，避免在 ~/.manodoc 之外产生额外文件。
     config.use_cache = false;
     config.ocr = if ocr_ready { Some(ocr_config()) } else { None };
     config.ocr_strategy = OcrStrategy::Auto;

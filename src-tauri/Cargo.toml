@@ -1,13 +1,13 @@
 [package]
-name = "dulldoc"
+name = "manodoc"
 version = "0.1.0"
-description = "DullDoc macOS document conversion workbench"
-authors = ["DullDoc"]
+description = "ManoDoc macOS document conversion workbench"
+authors = ["ManoDoc"]
 edition = "2021"
 rust-version = "1.99"
 
 [lib]
-name = "dulldoc_lib"
+name = "manodoc_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

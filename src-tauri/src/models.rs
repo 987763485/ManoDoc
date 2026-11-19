@@ -63,7 +63,7 @@ impl Default for Settings {
             version: 1,
             language: "zh".into(),
             theme: "system".into(),
-            output_dir: "~/Documents/DullDoc Output".into(),
+            output_dir: "~/Documents/ManoDoc Output".into(),
             log_level: default_log_level(),
             log_retention_days: default_log_retention(),
             image_mode: default_image_mode(),

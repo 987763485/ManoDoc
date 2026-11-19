@@ -244,14 +244,14 @@ export interface AppError {
 
 const isTauri = () => "__TAURI_INTERNALS__" in window;
 
-const SETTINGS_KEY = "dulldoc.settings";
-const HISTORY_KEY = "dulldoc.history";
+const SETTINGS_KEY = "manodoc.settings";
+const HISTORY_KEY = "manodoc.history";
 
 const defaultSettings: Settings = {
   version: 1,
   language: "zh",
   theme: "system",
-  outputDir: "~/Documents/DullDoc Output",
+  outputDir: "~/Documents/ManoDoc Output",
   logLevel: "info",
   logRetentionDays: 7,
   imageMode: "assets",
@@ -304,7 +304,7 @@ export async function getEngineInfo(): Promise<EngineInfo> {
       xbergVersion: "1.4.0",
       ready: true,
       ocrReady: true,
-      ocrModelDir: "~/.dull_doc/models",
+      ocrModelDir: "~/.manodoc/models",
       pandocReady: true,
       pandocVersion: "pandoc 3.14",
       typstReady: true,
@@ -323,7 +323,7 @@ export async function getOcrStatus(): Promise<OcrStatus> {
       partial: false,
       installedBytes: 31_186_579,
       requiredBytes: 31_186_579,
-      modelDir: "~/.dull_doc/models",
+      modelDir: "~/.manodoc/models",
       source: "https://huggingface.co/xberg-io/paddleocr-onnx-models",
       files: [],
     };
@@ -411,7 +411,7 @@ export async function chooseFiles(): Promise<string[]> {
 }
 
 export async function chooseDirectory(): Promise<string | null> {
-  if (!isTauri()) return "~/Documents/DullDoc Output";
+  if (!isTauri()) return "~/Documents/ManoDoc Output";
   const selected = await open({ multiple: false, directory: true });
   return typeof selected === "string" ? selected : null;
 }
@@ -426,7 +426,7 @@ export async function convertFile(
   if (!isTauri()) {
     await new Promise((resolve) => setTimeout(resolve, 900));
     const stats = { chars: 53210, headings: 49, tableRows: 15 };
-    const outputPath = "~/Documents/DullDoc Output/GB-T-28448.md";
+    const outputPath = "~/Documents/ManoDoc Output/GB-T-28448.md";
     const task: HistoryTask = {
       id: taskId,
       createdAt: new Date().toISOString(),
@@ -547,7 +547,7 @@ export async function scanBatchInputs(paths: string[], outputDir: string): Promi
 export async function startBatch(request: BatchRequest): Promise<BatchResult> {
   if (!isTauri()) {
     await new Promise((resolve) => setTimeout(resolve, 650));
-    const packageDir = `~/Documents/DullDoc Output/${request.name ?? "corpus"}-20261119-010000`;
+    const packageDir = `~/Documents/ManoDoc Output/${request.name ?? "corpus"}-20261119-010000`;
     const files: BatchFileResult[] = request.files.map((input, index) => ({
       ...input,
       hash: "mock-hash",
@@ -660,7 +660,7 @@ export async function pathKind(path: string): Promise<"file" | "directory"> {
 }
 
 export async function getLogsDir(): Promise<string> {
-  if (!isTauri()) return "~/.dull_doc/logs";
+  if (!isTauri()) return "~/.manodoc/logs";
   return invoke<string>("get_logs_dir");
 }
 

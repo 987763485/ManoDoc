@@ -55,5 +55,5 @@ pub fn run() {
             commands::open_path
         ])
         .run(tauri::generate_context!())
-        .expect("error while running DullDoc");
+        .expect("error while running ManoDoc");
 }

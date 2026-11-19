@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# DullDoc macOS Apple Silicon 打包入口。
+# ManoDoc macOS Apple Silicon 打包入口。
 #
 # 顺序自内向外：先暂存并签名 sidecar，再由 Tauri 打包 .app/.dmg。
 # 本机没有 Developer ID 时使用 ad-hoc 签名，公证阶段只输出剩余步骤，
@@ -11,10 +11,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TRIPLE="aarch64-apple-darwin"
 STAGE="$ROOT/src-tauri/binaries"
 BUNDLE="$ROOT/src-tauri/target/$TRIPLE/release/bundle"
-APP="$BUNDLE/macos/DullDoc.app"
+APP="$BUNDLE/macos/ManoDoc.app"
 DMG_DIR="$BUNDLE/dmg"
 SIDECARS=(pandoc typst uv)
-SIGN_IDENTITY="${DULLDOC_SIGN_IDENTITY:--}"
+SIGN_IDENTITY="${MANODOC_SIGN_IDENTITY:--}"
 
 log() { printf '\n==> %s\n' "$*"; }
 fail() { printf '\n错误: %s\n' "$*" >&2; exit 1; }
@@ -81,13 +81,13 @@ log "校验 .dmg"
 MOUNT="$(hdiutil attach -nobrowse -readonly "$DMG" | awk '/\/Volumes\//{sub(/^.*\/Volumes\//,"/Volumes/"); print}' | tail -1)"
 [ -n "$MOUNT" ] || fail "无法挂载 $DMG"
 trap 'hdiutil detach "$MOUNT" -quiet >/dev/null 2>&1 || true' EXIT
-[ -d "$MOUNT/DullDoc.app" ] || fail "DMG 内缺少 DullDoc.app"
+[ -d "$MOUNT/ManoDoc.app" ] || fail "DMG 内缺少 ManoDoc.app"
 hdiutil detach "$MOUNT" -quiet
 trap - EXIT
 
 log "校验 Info.plist"
 plutil -extract CFBundleShortVersionString raw "$APP/Contents/Info.plist" | grep -qx "0.1.0" || fail "版本号不符"
-plutil -extract CFBundleIdentifier raw "$APP/Contents/Info.plist" | grep -qx "dev.dulldoc.app" || fail "Bundle ID 不符"
+plutil -extract CFBundleIdentifier raw "$APP/Contents/Info.plist" | grep -qx "dev.manodoc.app" || fail "Bundle ID 不符"
 plutil -extract LSMinimumSystemVersion raw "$APP/Contents/Info.plist" | grep -qx "12.0" || fail "最低系统版本不符"
 
 log "Gatekeeper 评估（无 Developer ID 时期望被拒绝）"
@@ -105,17 +105,18 @@ if [ "$SIGN_IDENTITY" = "-" ]; then
 本机没有 Developer ID Application 证书，当前为 ad-hoc 签名，Gatekeeper 拒绝属预期。
 发布前需要：
   1. 申请 Developer ID Application 证书并导入钥匙串；
-  2. export DULLDOC_SIGN_IDENTITY="Developer ID Application: <团队名> (<TEAMID>)" 后重新运行本脚本；
-  3. 保存公证凭据：xcrun notarytool store-credentials dulldoc-notary --apple-id <AppleID> --team-id <TEAMID> --password <app-specific-password>；
-  4. 分别公证 .app 与 .dmg：xcrun notarytool submit <文件> --keychain-profile dulldoc-notary --wait；
-  5. 成功后再 staple：xcrun stapler staple DullDoc.app 与 DullDoc_<版本>_aarch64.dmg，最后 spctl 复核。
+  2. export MANODOC_SIGN_IDENTITY="Developer ID Application: <团队名> (<TEAMID>)" 后重新运行本脚本；
+  3. 保存公证凭据：xcrun notarytool store-credentials manodoc-notary --apple-id <AppleID> --team-id <TEAMID> --password <app-specific-password>；
+  4. 分别公证 .app 与 .dmg：xcrun notarytool submit <文件> --keychain-profile manodoc-notary --wait；
+  5. 成功后再 staple：xcrun stapler staple ManoDoc.app 与 ManoDoc_<版本>_aarch64.dmg，最后 spctl 复核。
 MSG
   exit 20
 fi
 
 log "公证与 staple"
-xcrun notarytool submit "$APP" --keychain-profile "${DULLDOC_NOTARY_PROFILE:-dulldoc-notary}" --wait
+NOTARY_PROFILE="${MANODOC_NOTARY_PROFILE:-manodoc-notary}"
+xcrun notarytool submit "$APP" --keychain-profile "$NOTARY_PROFILE" --wait
 xcrun stapler staple "$APP"
-xcrun notarytool submit "$DMG" --keychain-profile "${DULLDOC_NOTARY_PROFILE:-dulldoc-notary}" --wait
+xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
 xcrun stapler staple "$DMG"
 spctl --assess --type execute --verbose "$APP"

@@ -66,9 +66,9 @@ pub struct OcrProgress {
     pub file_count: usize,
 }
 
-/// 测试与诊断可用 `DULLDOC_MODEL_DIR` 指向独立目录，生产固定落在应用数据目录的 `models`。
+/// 测试与诊断可用 `MANODOC_MODEL_DIR` 指向独立目录，生产固定落在应用数据目录的 `models`。
 pub fn model_dir() -> PathBuf {
-    if let Ok(value) = std::env::var("DULLDOC_MODEL_DIR") {
+    if let Ok(value) = std::env::var("MANODOC_MODEL_DIR") {
         if !value.trim().is_empty() {
             return PathBuf::from(value);
         }
@@ -79,7 +79,7 @@ pub fn model_dir() -> PathBuf {
             migrate_legacy_dir(&models);
             models
         }
-        Err(_) => PathBuf::from(".dull_doc-models"),
+        Err(_) => PathBuf::from(".manodoc-models"),
     }
 }
 
@@ -197,10 +197,10 @@ fn sha256_file(path: &Path) -> Result<String, AppError> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
-/// 本地镜像与离线测试通过 `DULLDOC_MODEL_BASE_URL` 覆盖 HF endpoint。
+/// 本地镜像与离线测试通过 `MANODOC_MODEL_BASE_URL` 覆盖 HF endpoint。
 fn hf_client(root: &Path) -> Result<HFClientSync, AppError> {
     // 固定官方 endpoint：避免用户环境的 HF_ENDPOINT 镜像缺少 ETag 等必需响应头。
-    let endpoint = match std::env::var("DULLDOC_MODEL_BASE_URL") {
+    let endpoint = match std::env::var("MANODOC_MODEL_BASE_URL") {
         Ok(base) if !base.trim().is_empty() => base.trim().trim_end_matches('/').to_string(),
         _ => HF_ENDPOINT_OFFICIAL.to_string(),
     };
@@ -378,7 +378,7 @@ mod tests {
 
     #[test]
     fn missing_model_dir_reports_not_ready() {
-        let dir = std::env::temp_dir().join(format!("dulldoc-ocr-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("manodoc-ocr-{}", uuid::Uuid::new_v4()));
         let status = status_at(&dir);
         assert!(!status.ready);
         assert!(!status.partial);
@@ -461,14 +461,14 @@ mod tests {
             }
         });
 
-        let dir = std::env::temp_dir().join(format!("dulldoc-ocr-mirror-{}", uuid::Uuid::new_v4()));
-        std::env::set_var("DULLDOC_MODEL_BASE_URL", format!("http://127.0.0.1:{port}"));
+        let dir = std::env::temp_dir().join(format!("manodoc-ocr-mirror-{}", uuid::Uuid::new_v4()));
+        std::env::set_var("MANODOC_MODEL_BASE_URL", format!("http://127.0.0.1:{port}"));
         let progress_events = Arc::new(AtomicUsize::new(0));
         let counter = progress_events.clone();
         let result = install_at(&dir, move |_| {
             counter.fetch_add(1, Ordering::Relaxed);
         });
-        std::env::remove_var("DULLDOC_MODEL_BASE_URL");
+        std::env::remove_var("MANODOC_MODEL_BASE_URL");
         stop.store(true, Ordering::Relaxed);
         server.join().ok();
 
@@ -488,7 +488,7 @@ mod tests {
     #[test]
     #[ignore = "需要访问 huggingface.co；验证 hf-hub 真实下载与 SHA-256"]
     fn installs_models_from_huggingface() {
-        let dir = std::env::temp_dir().join(format!("dulldoc-ocr-hf-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("manodoc-ocr-hf-{}", uuid::Uuid::new_v4()));
         let status = install_at(&dir, |_| {}).expect("应从 Hugging Face 下载模型");
         assert!(status.ready);
         assert!(status.installed_bytes > 30_000_000);

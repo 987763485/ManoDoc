@@ -6,7 +6,7 @@
 
 web
 
-> DullDoc 是 macOS 桌面应用，使用 Tauri 2 的 WebView 渲染界面；设计语言按桌面 Web 应用处理，不套用 iOS/Android 原生组件。
+> ManoDoc 是 macOS 桌面应用，使用 Tauri 2 的 WebView 渲染界面；设计语言按桌面 Web 应用处理，不套用 iOS/Android 原生组件。
 
 ## Stack
 
@@ -20,13 +20,13 @@ Tauri 2（Rust 后端 + WebView 前端）；前端 React 19 + TypeScript + Vite 
 
 ## Product Purpose
 
-DullDoc 是一个 **macOS 本地优先的文档转换工作台**：以 Markdown 为核心，同时保留 Word、PDF、HTML、EPUB、图片等基础一对一转换；需要时，再把一批文档清洗、切块、补充元数据，产出厂商中立的语料包。
+ManoDoc 是一个 **macOS 本地优先的文档转换工作台**：以 Markdown 为核心，同时保留 Word、PDF、HTML、EPUB、图片等基础一对一转换；需要时，再把一批文档清洗、切块、补充元数据，产出厂商中立的语料包。
 
 成功意味着：日常 80% 的转换不再需要打开终端或浏览器；断网可用；失败可定位；同输入 + 同预设可复现。
 
 ## Positioning
 
-不是在线转换站，也不是需要写脚本的 CLI 集合。DullDoc 的机制是：
+不是在线转换站，也不是需要写脚本的 CLI 集合。ManoDoc 的机制是：
 
 1. **本地离线**：默认零网络请求，不上传、不登录、不埋点。
 2. **引擎分层与可选**：anydoc 快路径 + xberg OCR/复杂表格/回退 + PaddleOCR（P1）中文 OCR 增强 + pandoc 互转；同一方向有多个引擎时由用户选择或自动路由。
@@ -36,7 +36,7 @@ DullDoc 是一个 **macOS 本地优先的文档转换工作台**：以 Markdown 
 ## Operating Context
 
 - 用户通常在 macOS 上处理内部标准、测评报告、合同与制度文件；这些文件不适合上传到第三方服务。
-- **应用数据统一存放在 `~/.dull_doc/`**：`settings.json`、`presets.json`、`history.json`、`logs/`、`tmp/`、`runtimes/`；用户输出目录独立，可配置。
+- **应用数据统一存放在 `~/.manodoc/`**：`settings.json`、`presets.json`、`history.json`、`logs/`、`tmp/`、`runtimes/`；用户输出目录独立，可配置。
 - 典型任务：单个文件快速转换；一个资料文件夹批量转换；把一批文档变成可入库的 Markdown + JSONL 语料包。
 - 产物要能放进 Obsidian、静态站点、RAG / 向量库或直接交给同事。
 - 用户可能不熟悉命令行，但愿意为「准确、省事、可复现」付出学习成本。
@@ -48,16 +48,16 @@ DullDoc 是一个 **macOS 本地优先的文档转换工作台**：以 Markdown 
 
 **约束**：
 - 首发 macOS Apple Silicon；Windows / Linux 为 P2。
-- Marker / PaddleOCR 等 Python 引擎为 P1 可选组件；由内置 `uv` 在 `~/.dull_doc/runtimes/<engine>/.venv` 按需安装，不依赖系统 Python，不静默下载。
+- Marker / PaddleOCR 等 Python 引擎为 P1 可选组件；由内置 `uv` 在 `~/.manodoc/runtimes/<engine>/.venv` 按需安装，不依赖系统 Python，不静默下载。
 - PDF→Word 走 PDF→Markdown→Word 管线，不分发 pdf2docx；Markdown→PDF 由 pandoc 生成 Typst 再编译 PDF；复杂版式不承诺像素级保真。
-- MVP 使用本地 JSON 存储，统一放在 `~/.dull_doc/`，不引入数据库；用户输出目录独立。
+- MVP 使用本地 JSON 存储，统一放在 `~/.manodoc/`，不引入数据库；用户输出目录独立。
 - 默认离线；任何云服务必须显式开启并二次确认。
 - 语料制作的输出格式固定 Markdown；其他格式走单文件转换；清洗/切块/语料开关集中在语料制作配置，系统设置仅保留语料包全局默认。
 - 应用 MIT；pandoc 以独立 sidecar 按 GPL 合规分发；PaddleOCR Apache-2.0。
 
 ## Brand Commitments
 
-- 名称：**DullDoc**；中英文双语，默认中文。
+- 名称：**ManoDoc**；中英文双语，默认中文。
 - 语气：克制、专业、直接；错误信息给原因与下一步，不卖萌、不堆感叹号。
 - 不虚构客户、案例、价格或性能数据。
 

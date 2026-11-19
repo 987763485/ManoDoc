@@ -37,7 +37,7 @@ describe("应用壳与导航", () => {
 
     expect(screen.getByRole("heading", { name: "Convert" })).toBeInTheDocument();
     await waitFor(() => {
-      const saved = JSON.parse(localStorage.getItem("dulldoc.settings") ?? "{}");
+      const saved = JSON.parse(localStorage.getItem("manodoc.settings") ?? "{}");
       expect(saved.language).toBe("en");
     });
   });
@@ -48,7 +48,7 @@ describe("应用壳与导航", () => {
 
     await waitFor(() => {
       expect(document.documentElement.dataset.theme).toBe("dark");
-      const saved = JSON.parse(localStorage.getItem("dulldoc.settings") ?? "{}");
+      const saved = JSON.parse(localStorage.getItem("manodoc.settings") ?? "{}");
       expect(saved.theme).toBe("dark");
     });
   });

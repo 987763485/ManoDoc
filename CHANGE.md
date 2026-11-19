@@ -1,4 +1,4 @@
-# CHANGE.md — DullDoc Change 总索引
+# CHANGE.md — ManoDoc Change 总索引
 
 > 本文件是 change 状态的唯一总索引。每个 change 在 Open / Build / Verify / Archive 阶段都必须同步本表；未同步的 change 不得归档或提交。
 > 需求编号引用 `docs/superpowers/需求文档.md`；Comet 正式产物位于 `docs/comet/changes/<change>/`。

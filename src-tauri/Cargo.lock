@@ -1699,27 +1699,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dulldoc"
-version = "0.1.0"
-dependencies = [
- "anydoc",
- "chrono",
- "dirs 6.0.0",
- "hf-hub",
- "lopdf 0.47.0",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "thiserror 2.0.21",
- "uuid",
- "xberg",
- "zip 2.6.1",
-]
-
-[[package]]
 name = "dunce"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3875,6 +3854,27 @@ dependencies = [
  "hashify",
  "memchr",
  "simdutf8",
+]
+
+[[package]]
+name = "manodoc"
+version = "0.1.0"
+dependencies = [
+ "anydoc",
+ "chrono",
+ "dirs 6.0.0",
+ "hf-hub",
+ "lopdf 0.47.0",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "thiserror 2.0.21",
+ "uuid",
+ "xberg",
+ "zip 2.6.1",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-//! 用户预设：内置预设只读，用户预设写入 `~/.dull_doc/presets.json`。
+//! 用户预设：内置预设只读，用户预设写入 `~/.manodoc/presets.json`。
 
 use std::fs;
 use std::path::Path;
@@ -100,14 +100,14 @@ pub fn upsert(mut preset: Preset) -> Result<Vec<Preset>, AppError> {
     } else {
         user.push(preset);
     }
-    write_user(&user).map_err(|e| AppError::new("E_PRESET", e, "检查 ~/.dull_doc 是否可写"))?;
+    write_user(&user).map_err(|e| AppError::new("E_PRESET", e, "检查 ~/.manodoc 是否可写"))?;
     Ok(list())
 }
 
 pub fn delete(id: &str) -> Result<Vec<Preset>, AppError> {
     let mut user = read_user();
     user.retain(|preset| preset.id != id);
-    write_user(&user).map_err(|e| AppError::new("E_PRESET", e, "检查 ~/.dull_doc 是否可写"))?;
+    write_user(&user).map_err(|e| AppError::new("E_PRESET", e, "检查 ~/.manodoc 是否可写"))?;
     Ok(list())
 }
 
@@ -139,7 +139,7 @@ pub fn import_from(source: &Path) -> Result<Vec<Preset>, AppError> {
         AppError::new("E_PRESET", format!("读取预设文件失败: {e}"), "确认文件可读")
     })?;
     let parsed = serde_json::from_slice::<PresetFile>(&bytes).map_err(|e| {
-        AppError::new("E_PRESET", format!("预设文件格式无效: {e}"), "选择 DullDoc 导出的预设 JSON")
+        AppError::new("E_PRESET", format!("预设文件格式无效: {e}"), "选择 ManoDoc 导出的预设 JSON")
     })?;
     let mut user = read_user();
     for mut preset in parsed.presets {
@@ -155,7 +155,7 @@ pub fn import_from(source: &Path) -> Result<Vec<Preset>, AppError> {
             user.push(preset);
         }
     }
-    write_user(&user).map_err(|e| AppError::new("E_PRESET", e, "检查 ~/.dull_doc 是否可写"))?;
+    write_user(&user).map_err(|e| AppError::new("E_PRESET", e, "检查 ~/.manodoc 是否可写"))?;
     Ok(list())
 }
 
