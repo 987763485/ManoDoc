@@ -68,6 +68,7 @@
 | S7 | Change 总索引 | `CHANGE.md` | CHG-001~006 已归档 |
 | S7 | Change 归档 | `docs/comet/archive/2026-11-18-mvp-implementation/`、`docs/comet/archive/2026-11-18-batch-corpus-v2/`、`docs/comet/archive/2026-11-18-xberg-ocr/`、`docs/comet/archive/2026-11-18-pandoc-typst/`、`docs/comet/archive/2026-11-18-packaging-signing/`、`docs/comet/archive/2026-11-19-p0-completion/` | A1–A8 通过 |
 | S7 | P0 自检 | `docs/superpowers/P0自检.md` | 71 条 P0 收口记录（CHG-006） |
+| S0 | 产品 Logo | `docs/superpowers/logo/logo-manodoc.svg` | MD 共笔 + 双向转换箭头（1024 PNG 同目录） |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
 
 > 文档归类规则：哪个 skill 生成，就归入 `docs/.{skill-name}/` 对应目录。
@@ -190,6 +191,8 @@
 | 2026-11-19 | S7 Verify → Archive | CHG-006 通过 Comet Verify（A1–A8）；用户接受结果并归档至 `docs/comet/archive/2026-11-19-p0-completion/`；71 条 P0 关闭 |
 
 | 2026-11-19 | 维护 | 项目与产品更名为 ManoDoc：应用标识 `dev.manodoc.app`、crate/包名、数据目录 `~/.manodoc`、环境变量 `MANODOC_*`、界面文案与文档同步；按新项目处理，不保留 `.dull_doc` 目录兼容。`pnpm build`、`pnpm test`（17 项）、`cargo test`（29 项）通过。 |
+
+| 2026-11-19 | 维护 | 重新设计产品 Logo：MD 共享竖笔构成，D 字怀内双向箭头表达 Markdown ↔ Document 转换；暖纸 + 深绿，输出 `docs/superpowers/logo/logo-manodoc.svg` 与 1024 PNG，并替换 Tauri 全套图标（32/64/128/256/512 与 `.icns`）。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->
