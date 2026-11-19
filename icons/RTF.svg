@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="256" height="256">
-  <path d="M132 32h548l212 212v748H132z" fill="#6B4C8A"/>
-  <path d="M680 32v212h212z" fill="#FFFFFF" opacity=".28"/>
-  <path d="M604 132h384v760H604z" fill="#FFFFFF"/>
-  <rect x="660" y="220" width="272" height="30" rx="8" fill="#6B4C8A" opacity=".7"/><rect x="660" y="290" width="272" height="22" rx="8" fill="#6B4C8A" opacity=".55"/><rect x="660" y="350" width="220" height="22" rx="8" fill="#6B4C8A" opacity=".45"/><rect x="660" y="410" width="260" height="22" rx="8" fill="#6B4C8A" opacity=".35"/>
-  <text x="340" y="710" font-family="Arial, Helvetica, sans-serif" font-size="320" font-weight="800" fill="#FFFFFF" text-anchor="middle">R</text>
-</svg>
