@@ -265,7 +265,7 @@ export async function getEngineInfo(): Promise<EngineInfo> {
       xbergVersion: "1.4.0",
       ready: true,
       ocrReady: true,
-      ocrModelDir: "~/.dull_doc/models/paddleocr",
+      ocrModelDir: "~/.dull_doc/models",
       pandocReady: true,
       pandocVersion: "pandoc 3.14",
       typstReady: true,
@@ -284,7 +284,7 @@ export async function getOcrStatus(): Promise<OcrStatus> {
       partial: false,
       installedBytes: 31_186_579,
       requiredBytes: 31_186_579,
-      modelDir: "~/.dull_doc/models/paddleocr",
+      modelDir: "~/.dull_doc/models",
       source: "https://huggingface.co/xberg-io/paddleocr-onnx-models",
       files: [],
     };

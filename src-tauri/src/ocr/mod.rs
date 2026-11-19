@@ -4,10 +4,12 @@
 //! 用户显式触发并校验 SHA-256；转换路径会设置离线模式，缺失模型直接失败。
 
 use std::fs;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::sync::{Arc, Mutex};
 
+use hf_hub::progress::{DownloadEvent, Progress, ProgressEvent, ProgressHandler};
+use hf_hub::{HFClient, HFClientSync};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Emitter};
@@ -23,7 +25,10 @@ const REQUIRED_FILES: &[&str] = &[
     "v6/rec/small/dict.txt",
 ];
 
+const REPO_OWNER: &str = "xberg-io";
+const REPO_NAME: &str = "paddleocr-onnx-models";
 const REPO_DIR: &str = "models--xberg-io--paddleocr-onnx-models";
+const HF_ENDPOINT_OFFICIAL: &str = "https://huggingface.co";
 const DOWNLOAD_SOURCE: &str = "https://huggingface.co/xberg-io/paddleocr-onnx-models";
 
 #[derive(Debug, Clone, Serialize)]
@@ -61,7 +66,7 @@ pub struct OcrProgress {
     pub file_count: usize,
 }
 
-/// 测试与诊断可用 `DULLDOC_MODEL_DIR` 指向独立目录，生产固定落在应用数据目录。
+/// 测试与诊断可用 `DULLDOC_MODEL_DIR` 指向独立目录，生产固定落在应用数据目录的 `models`。
 pub fn model_dir() -> PathBuf {
     if let Ok(value) = std::env::var("DULLDOC_MODEL_DIR") {
         if !value.trim().is_empty() {
@@ -69,9 +74,34 @@ pub fn model_dir() -> PathBuf {
         }
     }
     match storage::data_dir() {
-        Ok(root) => root.join("models").join("paddleocr"),
+        Ok(root) => {
+            let models = root.join("models");
+            migrate_legacy_dir(&models);
+            models
+        }
         Err(_) => PathBuf::from(".dull_doc-models"),
     }
+}
+
+/// 早期版本把 HF 缓存放在 `models/paddleocr`；整体上移一层即可，blob 相对链接保持有效。
+fn migrate_legacy_dir(models: &Path) {
+    let legacy_repo = models.join("paddleocr").join(REPO_DIR);
+    let target = models.join(REPO_DIR);
+    if legacy_repo.is_dir() && !target.exists() {
+        if fs::rename(&legacy_repo, &target).is_ok() {
+            let _ = fs::remove_dir(models.join("paddleocr"));
+        }
+    }
+}
+
+/// manifest 的 source_url 形如 `.../resolve/<revision>/<file>`，缓存目录按同一 revision 存放。
+fn revision(entry: &ModelManifestEntry) -> Option<&str> {
+    entry
+        .source_url
+        .split("/resolve/")
+        .nth(1)?
+        .split('/')
+        .next()
 }
 
 fn required_entries() -> Vec<ModelManifestEntry> {
@@ -167,164 +197,143 @@ fn sha256_file(path: &Path) -> Result<String, AppError> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
-/// 测试或诊断可用 `DULLDOC_MODEL_BASE_URL` 把 HF 源替换为本地镜像；
-/// 生产默认始终使用 xberg manifest 中的官方地址。
-fn download_url(entry: &ModelManifestEntry) -> String {
-    match std::env::var("DULLDOC_MODEL_BASE_URL") {
-        Ok(base) if !base.trim().is_empty() => {
-            let path = entry
-                .source_url
-                .strip_prefix("https://huggingface.co")
-                .unwrap_or(&entry.relative_path);
-            format!("{}{}", base.trim_end_matches('/'), path)
+/// 本地镜像与离线测试通过 `DULLDOC_MODEL_BASE_URL` 覆盖 HF endpoint。
+fn hf_client(root: &Path) -> Result<HFClientSync, AppError> {
+    // 固定官方 endpoint：避免用户环境的 HF_ENDPOINT 镜像缺少 ETag 等必需响应头。
+    let endpoint = match std::env::var("DULLDOC_MODEL_BASE_URL") {
+        Ok(base) if !base.trim().is_empty() => base.trim().trim_end_matches('/').to_string(),
+        _ => HF_ENDPOINT_OFFICIAL.to_string(),
+    };
+    let builder = HFClient::builder().cache_dir(root).endpoint(endpoint);
+    builder.build_sync().map_err(|error| {
+        AppError::new(
+            "E_OCR_MODEL_DOWNLOAD",
+            format!("无法初始化 Hugging Face 客户端: {error}"),
+            "检查网络或代理设置后重试",
+        )
+    })
+}
+
+/// hf-hub 的进度回调要求 `Send + Sync`；用互斥锁把回调转成可共享的 sink。
+struct ProgressBridge<F> {
+    sink: Arc<Mutex<F>>,
+    file: String,
+    index: usize,
+    count: usize,
+}
+
+impl<F: FnMut(&OcrProgress) + Send + 'static> ProgressHandler for ProgressBridge<F> {
+    fn on_progress(&self, event: &ProgressEvent) {
+        let ProgressEvent::Download(DownloadEvent::Progress { files }) = event else {
+            return;
+        };
+        let Some(file) = files.iter().find(|file| file.filename == self.file) else {
+            return;
+        };
+        if let Ok(mut sink) = self.sink.lock() {
+            sink(&OcrProgress {
+                file: self.file.clone(),
+                downloaded: file.bytes_completed,
+                total: file.total_bytes,
+                percent: percent(file.bytes_completed, file.total_bytes),
+                file_index: self.index,
+                file_count: self.count,
+            });
         }
-        _ => entry.source_url.clone(),
     }
 }
 
-fn download<F: FnMut(&OcrProgress)>(
-    on_progress: &mut F,
-    entry: &ModelManifestEntry,
-    target: &Path,
-    index: usize,
-    count: usize,
-) -> Result<(), AppError> {
-    let parent = target.parent().ok_or_else(|| {
-        AppError::new(
-            "E_OCR_MODEL_DOWNLOAD",
-            "模型目标路径无效",
-            "检查应用数据目录权限后重试",
-        )
-    })?;
-    fs::create_dir_all(parent).map_err(|error| {
-        AppError::new(
-            "E_OCR_MODEL_DOWNLOAD",
-            format!("无法创建模型目录: {error}"),
-            "检查 ~/.dull_doc 是否可写",
-        )
-    })?;
-
-    let temp = target.with_extension(format!("part-{}", uuid::Uuid::new_v4()));
-    let agent: ureq::Agent = ureq::Agent::config_builder()
-        .timeout_global(Some(Duration::from_secs(300)))
-        .build()
-        .into();
-
-    // 下载失败必须清理半写文件，避免下次状态检测把不完整文件当成已安装。
-    let result = (|| -> Result<(), AppError> {
-        let mut response = agent.get(&download_url(entry)).call().map_err(|error| {
-            AppError::new(
-                "E_OCR_MODEL_DOWNLOAD",
-                format!("无法下载 OCR 模型（离线或网络不可达）: {error}"),
-                "联网后重试；也可手动把模型放入应用数据目录的 models/paddleocr",
-            )
-        })?;
-        let mut reader = response.body_mut().as_reader();
-        let mut file = fs::File::create(&temp).map_err(|error| {
-            AppError::new(
-                "E_OCR_MODEL_DOWNLOAD",
-                format!("无法创建临时模型文件: {error}"),
-                "检查磁盘空间与目录权限",
-            )
-        })?;
-        let mut hasher = Sha256::new();
-        let mut downloaded = 0u64;
-        let mut buffer = vec![0u8; 256 * 1024];
-        let mut last_emit = Instant::now();
-        loop {
-            let read = reader.read(&mut buffer).map_err(|error| {
-                AppError::new(
-                    "E_OCR_MODEL_DOWNLOAD",
-                    format!("下载中断: {error}"),
-                    "联网后重试",
-                )
-            })?;
-            if read == 0 {
-                break;
-            }
-            file.write_all(&buffer[..read]).map_err(|error| {
-                AppError::new(
-                    "E_OCR_MODEL_DOWNLOAD",
-                    format!("写入模型失败: {error}"),
-                    "检查磁盘空间与目录权限",
-                )
-            })?;
-            hasher.update(&buffer[..read]);
-            downloaded += read as u64;
-            if last_emit.elapsed() >= Duration::from_millis(200) {
-                on_progress(&progress_payload(entry, downloaded, index, count));
-                last_emit = Instant::now();
-            }
-        }
-        file.sync_all().ok();
-        drop(file);
-        on_progress(&progress_payload(entry, downloaded, index, count));
-
-        if downloaded != entry.size_bytes {
-            return Err(AppError::new(
-                "E_OCR_MODEL_DOWNLOAD",
-                format!(
-                    "模型大小不匹配: {} 期望 {} 字节，实际 {} 字节",
-                    entry.relative_path, entry.size_bytes, downloaded
-                ),
-                "重新下载 OCR 模型",
-            ));
-        }
-        let actual = format!("{:x}", hasher.finalize());
-        if !actual.eq_ignore_ascii_case(&entry.sha256) {
-            return Err(AppError::new(
-                "E_OCR_MODEL_CHECKSUM",
-                format!("模型校验失败: {}", entry.relative_path),
-                "删除该文件后重新安装 OCR 模型",
-            ));
-        }
-        fs::rename(&temp, target).map_err(|error| {
-            AppError::new(
-                "E_OCR_MODEL_DOWNLOAD",
-                format!("提交模型文件失败: {error}"),
-                "检查目录权限后重试",
-            )
-        })?;
-        Ok(())
-    })();
-
-    if result.is_err() {
-        let _ = fs::remove_file(&temp);
-    }
-    result
-}
-
-fn progress_payload(
-    entry: &ModelManifestEntry,
-    downloaded: u64,
-    index: usize,
-    count: usize,
-) -> OcrProgress {
-    let percent = if entry.size_bytes == 0 {
+fn percent(downloaded: u64, total: u64) -> u8 {
+    if total == 0 {
         0
     } else {
-        ((downloaded.saturating_mul(100) / entry.size_bytes).min(100)) as u8
-    };
-    OcrProgress {
-        file: entry.relative_path.clone(),
-        downloaded,
-        total: entry.size_bytes,
-        percent,
-        file_index: index,
-        file_count: count,
+        (downloaded.saturating_mul(100) / total).min(100) as u8
     }
+}
+
+fn download_error(entry: &ModelManifestEntry, error: impl std::fmt::Display) -> AppError {
+    AppError::new(
+        "E_OCR_MODEL_DOWNLOAD",
+        format!(
+            "无法下载 {}（离线或网络不可达）: {error}",
+            entry.relative_path
+        ),
+        "联网后重试；也可手动把模型放入应用数据目录的 models",
+    )
+}
+
+fn download<F: FnMut(&OcrProgress) + Send + 'static>(
+    client: &HFClientSync,
+    sink: Arc<Mutex<F>>,
+    entry: &ModelManifestEntry,
+    index: usize,
+    count: usize,
+) -> Result<PathBuf, AppError> {
+    let revision = revision(entry).ok_or_else(|| {
+        AppError::new(
+            "E_OCR_MODEL_DOWNLOAD",
+            format!("模型地址缺少 revision: {}", entry.source_url),
+            "更新应用后重试",
+        )
+    })?;
+    let repo = client.model(REPO_OWNER, REPO_NAME);
+    let progress = Progress::new(ProgressBridge {
+        sink,
+        file: entry.relative_path.clone(),
+        index,
+        count,
+    });
+    let path = repo
+        .download_file()
+        .filename(entry.relative_path.clone())
+        .revision(revision.to_string())
+        .progress(progress)
+        .send()
+        .map_err(|error| download_error(entry, error))?;
+
+    // hf-hub 负责缓存与并发安全；这里仍校验 manifest 的固定大小与 SHA-256。
+    let size = fs::metadata(&path)
+        .map(|meta| meta.len())
+        .unwrap_or_default();
+    if size != entry.size_bytes {
+        let _ = fs::remove_file(&path);
+        return Err(AppError::new(
+            "E_OCR_MODEL_DOWNLOAD",
+            format!(
+                "模型大小不匹配: {} 期望 {} 字节，实际 {} 字节",
+                entry.relative_path, entry.size_bytes, size
+            ),
+            "重新下载 OCR 模型",
+        ));
+    }
+    let actual = sha256_file(&path)?;
+    if !actual.eq_ignore_ascii_case(&entry.sha256) {
+        let _ = fs::remove_file(&path);
+        return Err(AppError::new(
+            "E_OCR_MODEL_CHECKSUM",
+            format!("模型校验失败: {}", entry.relative_path),
+            "删除该文件后重新安装 OCR 模型",
+        ));
+    }
+    Ok(path)
 }
 
 /// 只下载缺失或校验失败的文件；已通过校验的文件不重复下载。
 pub fn install(app: &AppHandle) -> Result<OcrStatus, AppError> {
-    install_at(&model_dir(), |progress| {
-        let _ = app.emit("ocr-model-progress", progress);
+    let handle = app.clone();
+    install_at(&model_dir(), move |progress| {
+        let _ = handle.emit("ocr-model-progress", progress);
     })
 }
 
-pub fn install_at<F: FnMut(&OcrProgress)>(root: &Path, mut on_progress: F) -> Result<OcrStatus, AppError> {
+pub fn install_at<F: FnMut(&OcrProgress) + Send + 'static>(
+    root: &Path,
+    on_progress: F,
+) -> Result<OcrStatus, AppError> {
     let entries = required_entries();
     let count = entries.len();
+    let sink = Arc::new(Mutex::new(on_progress));
+    let client = hf_client(root)?;
 
     for (index, entry) in entries.iter().enumerate() {
         let target = file_path(root, entry).ok_or_else(|| {
@@ -345,7 +354,7 @@ pub fn install_at<F: FnMut(&OcrProgress)>(root: &Path, mut on_progress: F) -> Re
         if target.exists() {
             let _ = fs::remove_file(&target);
         }
-        download(&mut on_progress, entry, &target, index + 1, count)?;
+        download(&client, sink.clone(), entry, index + 1, count)?;
     }
 
     Ok(status_at(root))
@@ -378,31 +387,52 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "使用本地 HTTP 镜像验证下载、进度、SHA-256 与原子写入；需要已安装模型作为源"]
+    #[ignore = "使用本地 HTTP 镜像验证 hf-hub 下载、进度与 SHA-256；需要已安装模型作为源"]
     fn downloads_models_from_local_mirror() {
         use std::io::{Read as _, Write as _};
         use std::net::TcpListener;
+        use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
         use std::thread;
+        use std::time::Duration;
 
         let source_root = model_dir();
         let entries = required_entries();
         let mut payloads = Vec::new();
         for entry in &entries {
             let path = file_path(&source_root, entry).expect("源模型路径");
-            payloads.push((entry.relative_path.clone(), fs::read(path).expect("读取源模型")));
+            payloads.push((
+                entry.relative_path.clone(),
+                entry.sha256.clone(),
+                revision(entry).expect("revision").to_string(),
+                fs::read(path).expect("读取源模型"),
+            ));
         }
 
         let listener = TcpListener::bind("127.0.0.1:0").expect("绑定本地端口");
+        listener.set_nonblocking(true).expect("非阻塞监听");
         let port = listener.local_addr().unwrap().port();
+        let stop = Arc::new(AtomicBool::new(false));
+        let requests = Arc::new(AtomicUsize::new(0));
         let server_payloads = payloads.clone();
+        let server_stop = stop.clone();
+        let server_requests = requests.clone();
         let server = thread::spawn(move || {
-            for _ in 0..server_payloads.len() {
+            while !server_stop.load(Ordering::Relaxed) {
                 let Ok((mut stream, _)) = listener.accept() else {
-                    break;
+                    thread::sleep(Duration::from_millis(10));
+                    continue;
                 };
-                let mut buffer = [0u8; 4096];
+                // 监听 socket 非阻塞会让 accept 出的 stream 也不阻塞，写大文件会截断。
+                stream.set_nonblocking(false).ok();
+                server_requests.fetch_add(1, Ordering::Relaxed);
+                let mut buffer = [0u8; 8192];
                 let read = stream.read(&mut buffer).unwrap_or(0);
                 let request = String::from_utf8_lossy(&buffer[..read]);
+                let mut lines = request.lines();
+                let method = lines
+                    .next()
+                    .and_then(|line| line.split_whitespace().next())
+                    .unwrap_or("");
                 let target = request
                     .lines()
                     .next()
@@ -410,15 +440,19 @@ mod tests {
                     .unwrap_or("");
                 let hit = server_payloads
                     .iter()
-                    .find(|(relative, _)| target.ends_with(relative.as_str()));
+                    .find(|(relative, _, _, _)| target.ends_with(relative.as_str()));
                 match hit {
-                    Some((_, data)) => {
+                    Some((_, sha, rev, data)) => {
                         let header = format!(
-                            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-                            data.len()
+                            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nETag: \"{}\"\r\nX-Repo-Commit: {}\r\nConnection: close\r\n\r\n",
+                            data.len(),
+                            sha,
+                            rev
                         );
                         let _ = stream.write_all(header.as_bytes());
-                        let _ = stream.write_all(data);
+                        if method != "HEAD" {
+                            let _ = stream.write_all(data);
+                        }
                     }
                     None => {
                         let _ = stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
@@ -429,18 +463,36 @@ mod tests {
 
         let dir = std::env::temp_dir().join(format!("dulldoc-ocr-mirror-{}", uuid::Uuid::new_v4()));
         std::env::set_var("DULLDOC_MODEL_BASE_URL", format!("http://127.0.0.1:{port}"));
-        let mut progress_events = 0usize;
-        let result = install_at(&dir, |_| progress_events += 1);
+        let progress_events = Arc::new(AtomicUsize::new(0));
+        let counter = progress_events.clone();
+        let result = install_at(&dir, move |_| {
+            counter.fetch_add(1, Ordering::Relaxed);
+        });
         std::env::remove_var("DULLDOC_MODEL_BASE_URL");
-        let status = result.expect("本地镜像安装应成功");
+        stop.store(true, Ordering::Relaxed);
         server.join().ok();
 
+        let status = result.expect("本地镜像安装应成功");
         assert!(status.ready);
         assert!(status.installed_bytes > 30_000_000);
-        assert!(progress_events > 0, "应产生进度事件");
+        assert!(progress_events.load(Ordering::Relaxed) > 0, "应产生进度事件");
+        assert!(requests.load(Ordering::Relaxed) >= entries.len(), "每个文件至少一次 HEAD");
         // 第二次安装应复用已校验文件，不再发起下载。
+        let before = requests.load(Ordering::Relaxed);
         let again = install_at(&dir, |_| {}).expect("重复安装应成功");
         assert!(again.ready);
+        assert_eq!(requests.load(Ordering::Relaxed), before, "已安装文件不应重复下载");
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    #[ignore = "需要访问 huggingface.co；验证 hf-hub 真实下载与 SHA-256"]
+    fn installs_models_from_huggingface() {
+        let dir = std::env::temp_dir().join(format!("dulldoc-ocr-hf-{}", uuid::Uuid::new_v4()));
+        let status = install_at(&dir, |_| {}).expect("应从 Hugging Face 下载模型");
+        assert!(status.ready);
+        assert!(status.installed_bytes > 30_000_000);
+        assert!(dir.join(REPO_DIR).is_dir());
         let _ = fs::remove_dir_all(dir);
     }
 }

@@ -64,6 +64,12 @@ log "校验 .app"
 for name in "${SIDECARS[@]}"; do
   [ -x "$APP/Contents/MacOS/$name" ] || fail "应用内缺少 sidecar: Contents/MacOS/$name"
 done
+# 前端由 Tauri 内嵌主可执行文件；Resources 只应放图标等资源，避免重复打包导致真源分裂。
+for asset in index.html assets; do
+  [ ! -e "$APP/Contents/Resources/$asset" ] || fail "Resources 不应包含前端产物: $asset"
+done
+BIG_RESOURCE="$(find "$APP/Contents/Resources" -type f -size +10M -print -quit)"
+[ -z "$BIG_RESOURCE" ] || fail "Resources 出现意外大文件: $BIG_RESOURCE"
 codesign --verify --deep --strict --verbose=2 "$APP" || fail ".app 签名校验失败"
 SIGNATURE="$(codesign -dv --verbose=2 "$APP" 2>&1 | awk -F= '/^Signature=/{print $2}')"
 [ -n "$SIGNATURE" ] || fail "无法读取 .app 签名信息"

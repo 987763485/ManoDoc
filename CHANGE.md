@@ -46,3 +46,4 @@
 | 2026-11-19 | CHG-005 | Open → Build | Comet Native Shape 已确认，进入打包与签名实现 |
 | 2026-11-19 | CHG-005 | Build → Verify | 候选实现提交；打包、签名、DMG 与包内 sidecar 实机证据待验收 |
 | 2026-11-19 | CHG-005 | Verify → Archive | 用户按既有授权接受结果，A1–A8 通过；归档至 `docs/comet/archive/2026-11-18-packaging-signing/`；公证待 Developer ID |
+| 2026-11-19 | CHG-005 | 维护 | 打包校验新增前端资源断言；A1「Resources 含前端产物」更正为 Tauri 内嵌主可执行文件，详见打包与签名文档 |
