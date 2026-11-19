@@ -48,8 +48,6 @@ export function SettingsPage({
   const [tab, setTab] = useState<Tab>("general");
   const [engines, setEngines] = useState<EngineInfo | null>(null);
   const [presets, setPresets] = useState<Preset[]>([]);
-  const [presetName, setPresetName] = useState("");
-  const [presetBase, setPresetBase] = useState("builtin-standard");
   const [editingPreset, setEditingPreset] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
@@ -256,31 +254,6 @@ export function SettingsPage({
               <h2>{t("settings.presets")}</h2>
               <p className="intro">{t("settings.presetsIntro")}</p>
               <div className="actions" style={{ marginBottom: 12 }}>
-                <input
-                  value={presetName}
-                  placeholder={t("settings.presetName")}
-                  onChange={(event) => setPresetName(event.target.value)}
-                />
-                <Select value={presetBase} onValueChange={setPresetBase}>
-                  <SelectTrigger aria-label={t("settings.presetBase")}><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {presets.filter((preset) => preset.builtin).map((preset) => (
-                      <SelectItem key={preset.id} value={preset.id}>{preset.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <button
-                  className="btn secondary small"
-                  disabled={!presetName.trim()}
-                  onClick={async () => {
-                    const base = presets.find((preset) => preset.id === presetBase);
-                    if (!base) return;
-                    setPresets(await savePreset({ id: `user-${Date.now()}`, name: presetName.trim(), builtin: false, config: base.config }));
-                    setPresetName("");
-                  }}
-                >
-                  {t("settings.presetCreate")}
-                </button>
                 <button
                   className="btn ghost small"
                   onClick={async () => {
@@ -420,9 +393,8 @@ export function SettingsPage({
                 <b>PaddleOCR</b><span>Apache-2.0 · OCR 组件（P1）</span>
                 <b>Typst</b><span>Apache-2.0 · PDF 排版</span>
                 <b>pandoc</b><span>GPL-2.0 · 独立 sidecar 进程调用</span>
+                <b>{t("settings.licenseTitle")}</b><span>MIT License</span>
               </div>
-              <h3>{t("settings.licenseTitle")}</h3>
-              <p className="license-name">MIT License</p>
               <p className="hint">{t("settings.pandocLicense")}</p>
             </section>
           ) : null}

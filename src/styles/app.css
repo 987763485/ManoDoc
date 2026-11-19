@@ -222,7 +222,6 @@ html[data-theme="dark"] .ui-dialog-overlay { background: rgba(0, 0, 0, .62); }
 .tb-task-cancel:hover { background: var(--surface-2); color: var(--ink); }
 .tb-task-cancel svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
 .preflight-pages { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
-.license-name { margin: 8px 0 4px; color: var(--ink); font-size: 13px; font-weight: 600; }
 .engine-group { margin-top: 22px; }
 .engine-group:first-of-type { margin-top: 14px; }
 .engine-group > h3 { margin: 0; font-size: 13px; font-weight: 650; color: var(--ink); }
@@ -239,4 +238,33 @@ html[data-theme="dark"] .ui-dialog-overlay { background: rgba(0, 0, 0, .62); }
   color: var(--ink);
   padding: 8px 10px;
   font-size: 13px;
+}
+
+/* 窄窗口下页头改为标题与操作并排、说明独占一行，避免按钮散落在标题下方。 */
+@media (max-width: 1280px) {
+  #page-convert .page-head,
+  #page-batch .page-head,
+  #page-history .page-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 12px;
+    max-width: none;
+    margin: 0 0 18px;
+  }
+  #page-convert .convert-grid { grid-template-columns: minmax(0, 1fr); }
+  #page-convert .page-head h1,
+  #page-batch .page-head h1,
+  #page-history .page-head h1 { grid-column: 1; }
+  #page-convert .page-head p,
+  #page-batch .page-head p,
+  #page-history .page-head p { grid-column: 1 / -1; margin: 0; }
+  #page-convert .page-head .actions,
+  #page-batch .page-head .actions,
+  #page-history .page-head .actions {
+    grid-column: 2;
+    grid-row: 1;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
 }
