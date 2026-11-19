@@ -29,25 +29,110 @@ ManoDoc 把 Word、PDF、Excel、PowerPoint、Markdown 与图片整理成干净�
 
 ## 下载安装
 
-前往 [GitHub Releases](https://github.com/987763485/ManoDoc/releases) 下载最新的 `.dmg`。
+ManoDoc 目前只为 macOS Apple Silicon 提供预编译安装包；Windows 与 Linux 需要从源码自行编译。
+
+| 平台 | 分发方式 | 说明 |
+| --- | --- | --- |
+| macOS 12+ Apple Silicon | [GitHub Releases](https://github.com/987763485/ManoDoc/releases) 下载 `.dmg` | ad-hoc 签名，首次启动需右键「打开」 |
+| Windows 10/11 x64 | 自行编译 | 无预编译包、未签名 |
+| Linux x64（WebKitGTK 4.1） | 自行编译 | 无预编译包、未签名 |
+
+macOS 安装步骤：
 
 1. 打开 DMG，把 **ManoDoc** 拖入「应用程序」。
 2. 首次启动若被 Gatekeeper 拦截，右键应用选择「打开」。
 3. 需要 macOS 12 或更高版本，首发支持 Apple Silicon。
 
-> 当前构建为 ad-hoc 签名，尚未完成 Developer ID 公证；正式发布前会补齐。
+> 当前 macOS 构建为 ad-hoc 签名，尚未完成 Developer ID 公证；正式发布前会补齐。
 
 ### 从源码构建
 
-环境：Node.js 22+、pnpm、Rust 1.99、Xcode Command Line Tools。
+Windows 与 Linux 没有预编译包，需要用同一份源码在本机编译。项目目前只在 macOS Apple Silicon 上做过实机验证，Windows / Linux 构建尚未实机验证。
+
+#### 通用环境
+
+- Node.js 22+、pnpm
+- Rust 1.99+（用 [rustup](https://rustup.rs) 安装对应平台的 toolchain）
+- CMake（xberg 的 OCR 依赖需要）
+- 三个 sidecar：pandoc、Typst、uv。构建前按 `<名称>-<target-triple>` 命名放进 `src-tauri/binaries/`，Windows 额外保留 `.exe` 后缀。
+
+建议与 macOS 预编译包保持相同版本，减少行为差异：
+
+| Sidecar | 版本 | 下载 |
+| --- | --- | --- |
+| pandoc | 3.14 | <https://github.com/jgm/pandoc/releases> |
+| Typst | 0.15.1 | <https://github.com/typst/typst/releases> |
+| uv | 0.13.9 | <https://github.com/astral-sh/uv/releases> |
+
+#### macOS
+
+环境：Xcode Command Line Tools。
 
 ```bash
 pnpm install
-pnpm tauri dev      # 开发
-pnpm package:mac    # 生成 .app 与 .dmg
+pnpm package:mac    # 暂存并签名 sidecar，生成 .app 与 .dmg
 ```
 
 打包脚本会把 pandoc、Typst 与 uv 暂存并签名到 `src-tauri/binaries/`，再调用 Tauri 打包。
+
+#### Windows
+
+环境：Visual Studio「使用 C++ 的桌面开发」工作负载（MSVC 与 Windows SDK）、WebView2（Windows 10 1803+ 与 Windows 11 通常已内置）、Rust 的 `x86_64-pc-windows-msvc` toolchain。
+
+在 PowerShell 中，把下载的 sidecar 按 target triple 命名后暂存：
+
+```powershell
+Copy-Item .\pandoc.exe .\src-tauri\binaries\pandoc-x86_64-pc-windows-msvc.exe
+Copy-Item .\typst.exe  .\src-tauri\binaries\typst-x86_64-pc-windows-msvc.exe
+Copy-Item .\uv.exe     .\src-tauri\binaries\uv-x86_64-pc-windows-msvc.exe
+
+pnpm install
+pnpm tauri build
+```
+
+产物在 `src-tauri\target\release\bundle\`：`nsis\ManoDoc_0.1.0_x64-setup.exe` 与 `msi\ManoDoc_0.1.0_x64_en-US.msi`。安装包未签名，Windows SmartScreen 可能提示。
+
+开发模式（`pnpm tauri dev`）不会自动找到这些 sidecar，需要先指向本机二进制：
+
+```powershell
+$env:MANODOC_PANDOC = "C:\path\to\pandoc.exe"
+$env:MANODOC_TYPST  = "C:\path\to\typst.exe"
+pnpm tauri dev
+```
+
+#### Linux
+
+以 Debian / Ubuntu 为例，先安装 Tauri 2 与 WebKitGTK 4.1 依赖：
+
+```bash
+sudo apt update
+sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file \
+  libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+```
+
+暂存 sidecar（x86_64；ARM64 改用 `aarch64-unknown-linux-gnu` 并把下载换为对应架构）：
+
+```bash
+cp pandoc src-tauri/binaries/pandoc-x86_64-unknown-linux-gnu
+cp typst  src-tauri/binaries/typst-x86_64-unknown-linux-gnu
+cp uv     src-tauri/binaries/uv-x86_64-unknown-linux-gnu
+chmod +x src-tauri/binaries/*
+
+pnpm install
+pnpm tauri build
+```
+
+产物在 `src-tauri/target/release/bundle/`：`deb/ManoDoc_0.1.0_amd64.deb` 与 `appimage/ManoDoc_0.1.0_amd64.AppImage`。安装包未签名。
+
+开发模式同样需要先指定 sidecar：
+
+```bash
+export MANODOC_PANDOC="/path/to/pandoc"
+export MANODOC_TYPST="/path/to/typst"
+pnpm tauri dev
+```
+
+> 窗口按 1280×800 以上设计；Windows / Linux 上建议使用 1440×900 及以上的屏幕。
 
 ## 使用
 

@@ -84,6 +84,12 @@
   .step h3{margin:4px 0 4px;font-size:15.5px}
   .step p{margin:0;color:var(--ink-2);font-size:13.5px}
   .callout{margin-top:22px;background:var(--amber-soft);border:1px solid #e4c99f;border-radius:10px;padding:14px 16px;color:#5c3f16;font-size:13.5px}
+  .subhead{margin:28px 0 8px;font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+  .build{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:var(--paper-2);padding:18px 20px}
+  .build p,.build li{color:var(--ink-2);font-size:13.5px;margin:0 0 8px}
+  .build ol{margin:0 0 10px;padding-left:20px}
+  .build pre{margin:0 0 12px;padding:11px 14px;background:var(--paper-3);border-radius:8px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--ink)}
+  .build pre code{background:none;padding:0;border-radius:0;font-size:inherit}
   .callout b{color:#3f2a0d}
 
   table{width:100%;max-width:100%;border-collapse:collapse;font-size:13.5px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -244,15 +250,46 @@
         <div class="kicker">Download</div>
         <div>
           <h2>下载安装</h2>
-          <p>首发支持 macOS Apple Silicon。安装包包含转换所需的 sidecar，无需单独安装 pandoc 或 Typst。</p>
+          <p>macOS Apple Silicon 提供预编译安装包，内含转换所需的 sidecar；Windows 与 Linux 暂无预编译包，需要从源码自行编译。</p>
         </div>
       </div>
+      <div class="subhead">平台与分发</div>
+      <table>
+        <thead><tr><th>平台</th><th>分发方式</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>macOS 12+ Apple Silicon</td><td>DMG（预编译）</td><td>ad-hoc 签名，首次启动需右键「打开」</td></tr>
+          <tr><td>Windows 10/11 x64</td><td>自行编译</td><td>无预编译包、未签名</td></tr>
+          <tr><td>Linux x64（WebKitGTK 4.1）</td><td>自行编译</td><td>无预编译包、未签名</td></tr>
+        </tbody>
+      </table>
+      <div class="subhead">macOS 安装</div>
       <div class="steps">
         <div class="step"><div class="n">STEP 01</div><h3>下载 DMG</h3><p>前往 <a href="https://github.com/987763485/ManoDoc/releases">GitHub Releases</a> 下载最新的 <code>ManoDoc_0.1.0_aarch64.dmg</code>。</p></div>
         <div class="step"><div class="n">STEP 02</div><h3>拖入应用程序</h3><p>打开 DMG，把 ManoDoc 拖入「应用程序」文件夹，然后从启动台打开。</p></div>
         <div class="step"><div class="n">STEP 03</div><h3>首次打开</h3><p>若被 Gatekeeper 拦截，右键应用选择「打开」。系统要求 macOS 12 或更高版本。</p></div>
       </div>
       <div class="callout"><b>签名说明：</b>当前构建使用 ad-hoc 签名，尚未完成 Developer ID 公证；首次打开可能出现系统提示，不影响本地功能。正式发布前会补齐公证与 staple。</div>
+
+      <div class="subhead">Windows / Linux：自行编译</div>
+      <div class="build">
+        <p>Windows 10/11 与 Linux 目前不提供预编译包，需要用同一份源码在本机编译。构建产物未签名；项目尚未在 Windows / Linux 实机验证。</p>
+        <ol>
+          <li>安装 Node.js 22+、pnpm、Rust 1.99+（rustup）与 CMake。Windows 另需 Visual Studio「使用 C++ 的桌面开发」工作负载；Linux 需安装 WebKitGTK 4.1 等系统依赖。</li>
+          <li>下载 pandoc 3.14、Typst 0.15.1 与 uv 0.13.9，按 <code>&lt;名称&gt;-&lt;target-triple&gt;</code> 命名后放进 <code>src-tauri/binaries/</code>；Windows 需保留 <code>.exe</code> 后缀。</li>
+          <li>安装依赖并构建：<code>pnpm install</code>，然后 <code>pnpm tauri build</code>；产物在 <code>src-tauri/target/release/bundle/</code>。</li>
+        </ol>
+        <p>以 x64 为例，先暂存 sidecar：</p>
+        <pre><code># Windows (PowerShell)
+Copy-Item .\pandoc.exe .\src-tauri\binaries\pandoc-x86_64-pc-windows-msvc.exe
+Copy-Item .\typst.exe  .\src-tauri\binaries\typst-x86_64-pc-windows-msvc.exe
+Copy-Item .\uv.exe     .\src-tauri\binaries\uv-x86_64-pc-windows-msvc.exe</code></pre>
+        <pre><code># Linux (x86_64)
+cp pandoc src-tauri/binaries/pandoc-x86_64-unknown-linux-gnu
+cp typst  src-tauri/binaries/typst-x86_64-unknown-linux-gnu
+cp uv     src-tauri/binaries/uv-x86_64-unknown-linux-gnu
+chmod +x src-tauri/binaries/*</code></pre>
+        <p>开发模式需要先通过 <code>MANODOC_PANDOC</code> 与 <code>MANODOC_TYPST</code> 指向本机二进制。完整依赖、ARM64 与产物路径见 <a href="https://github.com/987763485/ManoDoc/blob/main/README.md#从源码构建">README · 从源码构建</a>。</p>
+      </div>
     </section>
 
     <section id="usage">
@@ -355,6 +392,7 @@
             <li>双内核路由与 OCR：anydoc + xberg + PaddleOCR，记录实际引擎、回退原因与 OCR 页。</li>
             <li>语料制作：批量队列、清洗、切块、元数据与镜像 Markdown / chunks.jsonl / manifest.json。</li>
             <li>历史、预设、日志与脱敏诊断包；中英文与浅色 / 深色主题；⌘K 命令面板。</li>
+            <li>macOS Apple Silicon 提供预编译 DMG；Windows / Linux 需按文档从源码自行编译。</li>
           </ul>
         </article>
       </div>

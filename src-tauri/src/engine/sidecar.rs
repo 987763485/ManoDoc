@@ -74,12 +74,12 @@ fn candidates(tool: Tool) -> Vec<PathBuf> {
     }
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
-            // Tauri 打包后的 sidecar 通常与主程序同目录。
-            paths.push(dir.join(tool.binary()));
-            paths.push(dir.join(format!("{}-aarch64-apple-darwin", tool.binary())));
+            // Tauri 打包后的 sidecar 与主程序同目录；Windows 需要保留 .exe 后缀。
+            let suffix = std::env::consts::EXE_SUFFIX;
+            paths.push(dir.join(format!("{}{suffix}", tool.binary())));
         }
     }
-    // 开发期使用项目内工具目录；S6 已固定版本与路径。
+    // 开发期使用项目内工具目录（macOS 随仓库提供）；其他平台设置环境变量指定。
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let project = manifest.parent().unwrap_or(manifest);
     match tool {
@@ -103,7 +103,7 @@ pub fn resolve(tool: Tool) -> Result<PathBuf, AppError> {
         tool.missing_code(),
         format!("未找到可执行的 {} sidecar", tool.binary()),
         format!(
-            "把 {} 放到应用包 Contents/MacOS/（或开发期 tools/macos），或设置 {}；已检查: {}",
+            "把 {} 放到应用可执行文件同目录，或在开发期设置 {} 指向本地可执行文件；已检查: {}",
             tool.binary(),
             tool.env_name(),
             candidates
