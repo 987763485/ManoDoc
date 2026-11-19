@@ -97,3 +97,24 @@
   .app { grid-template-columns: 200px minmax(0, 1fr); }
   .app.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
 }
+
+/* 语料制作页：低频配置折叠，默认只露出预设、输出格式与引擎。 */
+.advanced { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 10px; }
+.advanced-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  padding: 6px 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.advanced-toggle .meta { margin-left: auto; color: var(--ink-3); font-weight: 500; font-size: 12px; }
+.advanced-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; transition: transform .15s ease; }
+.advanced-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.advanced-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.advanced-body { margin-top: 8px; display: grid; gap: 14px; }

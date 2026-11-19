@@ -1861,6 +1861,27 @@
         padding: 12px 14px;
       }
     }
+
+    .advanced { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 10px; }
+    .advanced-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      background: transparent;
+      padding: 6px 0;
+      color: var(--ink-2);
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .advanced-toggle .meta { margin-left: auto; color: var(--ink-3); font-weight: 500; font-size: 12px; }
+    .advanced-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; transition: transform .15s ease; }
+    .advanced-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+    .advanced-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+    .advanced-body { margin-top: 8px; display: grid; gap: 14px; }
+    .advanced-body[hidden] { display: none; }
   </style>
 </head>
 
@@ -2216,45 +2237,55 @@
                   <option>pandoc</option>
                 </select>
               </div>
-              <div class="field">
-                <label data-i18n="batch.concurrency">并发</label>
-                <select>
-                  <option data-i18n="batch.concurrencyDefault">4（默认）</option>
-                  <option>2</option>
-                  <option>8</option>
-                </select>
-              </div>
-              <div class="label" data-i18n="batch.cleaning">清洗与语料</div>
-              <div class="rows">
-                <div class="row"><span class="grow" data-i18n="opt.headers">清洗页眉页脚</span><span class="switch"></span>
+              <div class="advanced">
+                <button class="advanced-toggle" id="batch-advanced-toggle" aria-expanded="false" aria-controls="batch-advanced">
+                  <span data-i18n="batch.advanced">高级设置</span>
+                  <span class="meta" data-i18n="batch.advancedMeta">并发 4 · 切块 1200/50</span>
+                  <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                <div class="advanced-body" id="batch-advanced" hidden>
+                  <div class="field">
+                    <label data-i18n="batch.concurrency">并发</label>
+                    <select>
+                      <option data-i18n="batch.concurrencyDefault">4（默认）</option>
+                      <option>2</option>
+                      <option>8</option>
+                    </select>
+                  </div>
+                  <div class="label" data-i18n="batch.cleaning">清洗与语料</div>
+                  <div class="rows">
+                    <div class="row"><span class="grow" data-i18n="opt.headers">清洗页眉页脚</span><span class="switch"></span>
+                    </div>
+                    <div class="row"><span class="grow" data-i18n="opt.cjk">中文标题规范化</span><span class="switch"></span></div>
+                    <div class="row"><span class="grow" data-i18n="opt.tables">表格质量分级</span><span class="switch"></span>
+                    </div>
+                    <div class="row"><span class="grow" data-i18n="opt.assets">图片落 assets/</span><span
+                        class="switch"></span></div>
+                    <div class="row"><span class="grow" data-i18n="opt.chunk">切块</span><span class="switch"></span></div>
+                    <div class="row"><span class="grow" data-i18n="opt.meta">元数据</span><span class="switch"></span></div>
+                    <div class="row"><span class="grow" data-i18n="opt.corpus">生成语料包</span><span class="switch off"></span>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label data-i18n="batch.chunkSize">切块上限</label>
+                    <select>
+                      <option data-i18n="chunk.1200">1200 字符</option>
+                      <option data-i18n="chunk.800">800 字符</option>
+                      <option data-i18n="chunk.2000">2000 字符</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label data-i18n="batch.overlap">切块重叠</label>
+                    <select>
+                      <option>0</option>
+                      <option selected>50</option>
+                      <option>100</option>
+                      <option>200</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="row"><span class="grow" data-i18n="opt.cjk">中文标题规范化</span><span class="switch"></span></div>
-                <div class="row"><span class="grow" data-i18n="opt.tables">表格质量分级</span><span class="switch"></span>
-                </div>
-                <div class="row"><span class="grow" data-i18n="opt.assets">图片落 assets/</span><span
-                    class="switch"></span></div>
-                <div class="row"><span class="grow" data-i18n="opt.chunk">切块</span><span class="switch"></span></div>
-                <div class="row"><span class="grow" data-i18n="opt.meta">元数据</span><span class="switch"></span></div>
-                <div class="row"><span class="grow" data-i18n="opt.corpus">生成语料包</span><span class="switch off"></span>
-                </div>
               </div>
-              <div class="field">
-                <label data-i18n="batch.chunkSize">切块上限</label>
-                <select>
-                  <option data-i18n="chunk.1200">1200 字符</option>
-                  <option data-i18n="chunk.800">800 字符</option>
-                  <option data-i18n="chunk.2000">2000 字符</option>
-                </select>
-              </div>
-              <div class="field">
-                <label data-i18n="batch.overlap">切块重叠</label>
-                <select>
-                  <option>0</option>
-                  <option selected>50</option>
-                  <option>100</option>
-                  <option>200</option>
-                </select>
-              </div>
+
               <div class="actions">
                 <button class="btn primary" data-i18n="batch.start">开始批量</button>
                 <button class="btn secondary" data-i18n="batch.openCorpus">打开语料包目录</button>
@@ -2632,7 +2663,7 @@
         "mark.table": "表格 · 合并单元格", "mark.tableDesc": "第 2 行第 3 列疑似串行，建议人工复核。", "mark.line": "断行 · 已合并", "mark.lineDesc": "“固定，并设置”已从硬换行恢复为一段。", "mark.header": "页眉 · 已移除", "mark.headerDesc": "“GB/T 28448—2019”重复出现 12 次。",
         "batch.title": "语料制作", "batch.sub": "一个文件夹，一次完成转换、清洗与打包", "batch.add": "添加文件", "batch.start": "开始批量", "batch.files": "文件 · 已导入", "batch.chunks": "语料块 · 待生成", "batch.warnings": "警告 · 需复核",
         "batch.queue": "队列", "batch.all": "全部", "batch.running": "进行中", "batch.failed": "失败", "batch.search": "搜索文件…", "th.file": "文件", "th.status": "状态", "th.engine": "引擎", "th.grade": "表格", "th.time": "耗时", "th.action": "操作",
-        "batch.config": "配置", "batch.configDesc": "应用到本批次所有文件；单个文件可在队列中覆盖。", "batch.preset": "预设", "batch.outputFormat": "输出格式", "batch.engine": "引擎", "batch.addFolder": "添加文件夹", "batch.report": "导出报告", "batch.concurrency": "并发", "batch.concurrencyDefault": "4（默认）", "batch.overlap": "切块重叠", "batch.outputLocked": "批量输出固定为 Markdown；其他格式请在单文件转换中选择。", "batch.cleaning": "清洗与语料", "opt.clean": "清洗与规范化", "opt.chunk": "切块", "opt.meta": "元数据", "batch.chunkSize": "切块上限", "batch.openCorpus": "打开语料包目录",
+        "batch.config": "配置", "batch.configDesc": "应用到本批次所有文件；单个文件可在队列中覆盖。", "batch.preset": "预设", "batch.outputFormat": "输出格式", "batch.engine": "引擎", "batch.addFolder": "添加文件夹", "batch.report": "导出报告", "batch.concurrency": "并发", "batch.advanced": "高级设置", "batch.advancedMeta": "并发 4 · 切块 1200/50", "batch.concurrencyDefault": "4（默认）", "batch.overlap": "切块重叠", "batch.outputLocked": "批量输出固定为 Markdown；其他格式请在单文件转换中选择。", "batch.cleaning": "清洗与语料", "opt.clean": "清洗与规范化", "opt.chunk": "切块", "opt.meta": "元数据", "batch.chunkSize": "切块上限", "batch.openCorpus": "打开语料包目录",
         "history.title": "转换历史", "history.sub": "最近 50 条任务，点击查看详情、重跑或打开输出", "history.clear": "清空历史", "history.srTitle": "历史任务", "history.item1sub": "单文件 · 标准文档预设", "history.item2sub": "批量 · 12 文件 · 知识库预设", "history.item3sub": "单文件 · xberg OCR", "history.item4sub": "批量 · 失败 · E_ENGINE_FAILED", "history.item1count": "49 标题", "history.item2count": "248 块", "history.item3count": "12 标题",
         "detail.preset": "预设", "detail.target": "输出格式", "detail.engine": "引擎", "detail.output": "输出", "detail.stats": "统计", "detail.warnings": "警告", "detail.direction": "方向", "detail.rerun": "重跑", "detail.open": "打开输出", "detail.copy": "复制参数",
         "settings.title": "系统设置", "settings.sub": "输出、引擎、语言与主题", "settings.general": "通用", "settings.engines": "引擎", "settings.output": "输出", "settings.presets": "预设", "settings.presetsIntro": "内置预设可直接使用；自定义预设保存在 ~/.dull_doc/presets，可复制或导入导出。", "settings.presetNew": "新建预设", "settings.presetImport": "导入", "settings.presetExport": "导出", "settings.logs": "日志", "settings.about": "关于",
@@ -2665,7 +2696,7 @@
         "mark.table": "Table · merged cells", "mark.tableDesc": "Row 2, column 3 looks misaligned. Review it.", "mark.line": "Line break · merged", "mark.lineDesc": "“fixed, and set” was restored to one paragraph.", "mark.header": "Header · removed", "mark.headerDesc": "“GB/T 28448—2019” appeared 12 times.",
         "batch.title": "Batch", "batch.sub": "One folder, one pass: convert, clean, package", "batch.add": "Add files", "batch.start": "Start batch", "batch.files": "files · imported", "batch.chunks": "chunks · pending", "batch.warnings": "warnings · review",
         "batch.queue": "Queue", "batch.all": "All", "batch.running": "Running", "batch.failed": "Failed", "batch.search": "Search files…", "th.file": "File", "th.status": "Status", "th.engine": "Engine", "th.grade": "Grade", "th.time": "Time", "th.action": "Action",
-        "batch.config": "Configuration", "batch.configDesc": "Applied to every file; override per file in the queue.", "batch.preset": "Preset", "batch.outputFormat": "Output format", "batch.engine": "Engine", "batch.addFolder": "Add folder", "batch.report": "Export report", "batch.concurrency": "Concurrency", "batch.concurrencyDefault": "4 (default)", "batch.overlap": "Chunk overlap", "batch.outputLocked": "Batch output is fixed to Markdown; use single-file conversion for other formats.", "batch.cleaning": "Cleaning & corpus", "opt.clean": "Clean & normalize", "opt.chunk": "Chunk", "opt.meta": "Metadata", "batch.chunkSize": "Chunk limit", "batch.openCorpus": "Open corpus folder",
+        "batch.config": "Configuration", "batch.configDesc": "Applied to every file; override per file in the queue.", "batch.preset": "Preset", "batch.outputFormat": "Output format", "batch.engine": "Engine", "batch.addFolder": "Add folder", "batch.report": "Export report", "batch.concurrency": "Concurrency", "batch.advanced": "Advanced settings", "batch.advancedMeta": "Concurrency 4 · Chunks 1200/50", "batch.concurrencyDefault": "4 (default)", "batch.overlap": "Chunk overlap", "batch.outputLocked": "Batch output is fixed to Markdown; use single-file conversion for other formats.", "batch.cleaning": "Cleaning & corpus", "opt.clean": "Clean & normalize", "opt.chunk": "Chunk", "opt.meta": "Metadata", "batch.chunkSize": "Chunk limit", "batch.openCorpus": "Open corpus folder",
         "history.title": "History", "history.sub": "Last 50 tasks. Open one for details, rerun, or open output.", "history.clear": "Clear history", "history.srTitle": "History tasks", "history.item1sub": "Single file · Standard preset", "history.item2sub": "Batch · 12 files · Knowledge base preset", "history.item3sub": "Single file · xberg OCR", "history.item4sub": "Batch · failed · E_ENGINE_FAILED", "history.item1count": "49 headings", "history.item2count": "248 chunks", "history.item3count": "12 headings",
         "detail.preset": "Preset", "detail.target": "Output format", "detail.engine": "Engine", "detail.output": "Output", "detail.stats": "Stats", "detail.warnings": "Warnings", "detail.direction": "Direction", "detail.rerun": "Rerun", "detail.open": "Open output", "detail.copy": "Copy settings",
         "settings.title": "Settings", "settings.sub": "Output, engines, language and theme", "settings.general": "General", "settings.engines": "Engines", "settings.output": "Output", "settings.presets": "Presets", "settings.presetsIntro": "Built-in presets are ready to use; custom presets live in ~/.dull_doc/presets and can be duplicated or exported.", "settings.presetNew": "New preset", "settings.presetImport": "Import", "settings.presetExport": "Export", "settings.logs": "Logs", "settings.about": "About",
@@ -3091,6 +3122,13 @@
     document.getElementById("open-palette").addEventListener("click", openPalette);
     document.getElementById("sidebar-toggle").addEventListener("click", () => {
       document.querySelector(".app").classList.toggle("sidebar-collapsed");
+    });
+    document.getElementById("batch-advanced-toggle").addEventListener("click", (event) => {
+      const toggle = event.currentTarget;
+      const body = document.getElementById("batch-advanced");
+      const open = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", String(!open));
+      body.hidden = open;
     });
     pInput.addEventListener("input", e => { pIndex = 0; renderPalette(e.target.value); });
     pInput.addEventListener("keydown", e => {

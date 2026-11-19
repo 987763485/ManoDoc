@@ -97,6 +97,7 @@ export function BatchPage({
   const { t } = useI18n();
   const [rows, setRows] = useState<Row[]>([]);
   const [config, setConfig] = useState<BatchConfig>(DEFAULT_CONFIG);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "running" | "failed">("all");
   const [query, setQuery] = useState("");
   const [running, setRunning] = useState(false);
@@ -471,62 +472,83 @@ export function BatchPage({
             {!ocrReady ? <p className="hint">{t("convert.ocrModelMissing")}</p> : null}
           </div>
 
-          <div className="field">
-            <label>{t("batch.concurrency")}</label>
-            <select
-              value={config.concurrency}
-              onChange={(event) => updateConfig("concurrency", Number(event.target.value))}
+          <div className="advanced">
+            <button
+              className="advanced-toggle"
+              aria-expanded={advancedOpen}
+              aria-controls="batch-advanced"
+              onClick={() => setAdvancedOpen((open) => !open)}
             >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={4}>4</option>
-              <option value={8}>8</option>
-            </select>
-          </div>
+              <span>{t("batch.advanced")}</span>
+              <span className="meta">
+                {t("batch.advancedMeta")
+                  .replace("{c}", String(config.concurrency))
+                  .replace("{size}", String(config.chunkSize))
+                  .replace("{overlap}", String(config.overlap))}
+              </span>
+              <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+            {advancedOpen ? (
+              <div className="advanced-body" id="batch-advanced">
+              <div className="field">
+                <label>{t("batch.concurrency")}</label>
+                <select
+                  value={config.concurrency}
+                  onChange={(event) => updateConfig("concurrency", Number(event.target.value))}
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={4}>4</option>
+                  <option value={8}>8</option>
+                </select>
+              </div>
 
-          <div className="label">{t("batch.cleaning")}</div>
-          <div className="rows">
-            <Toggle
-              label={t("opt.headers")}
-              on={config.cleanHeaders}
-              onChange={(value) => updateConfig("cleanHeaders", value)}
-            />
-            <Toggle
-              label={t("opt.cjk")}
-              on={config.cleanCjk}
-              onChange={(value) => updateConfig("cleanCjk", value)}
-            />
-            <Toggle
-              label={t("opt.tables")}
-              on={config.gradeTables}
-              onChange={(value) => updateConfig("gradeTables", value)}
-            />
-            <Toggle label={t("batch.imageAssets")} on={false} disabled title={t("batch.imageLater")} onChange={() => {}} />
-            <Toggle label={t("batch.chunk")} on={config.chunk} onChange={(value) => updateConfig("chunk", value)} />
-            <Toggle label={t("batch.meta")} on={config.metadata} onChange={(value) => updateConfig("metadata", value)} />
-            <Toggle label={t("batch.corpus")} on={config.corpus} onChange={(value) => updateConfig("corpus", value)} />
-          </div>
+              <div className="label">{t("batch.cleaning")}</div>
+              <div className="rows">
+                <Toggle
+                  label={t("opt.headers")}
+                  on={config.cleanHeaders}
+                  onChange={(value) => updateConfig("cleanHeaders", value)}
+                />
+                <Toggle
+                  label={t("opt.cjk")}
+                  on={config.cleanCjk}
+                  onChange={(value) => updateConfig("cleanCjk", value)}
+                />
+                <Toggle
+                  label={t("opt.tables")}
+                  on={config.gradeTables}
+                  onChange={(value) => updateConfig("gradeTables", value)}
+                />
+                <Toggle label={t("batch.imageAssets")} on={false} disabled title={t("batch.imageLater")} onChange={() => {}} />
+                <Toggle label={t("batch.chunk")} on={config.chunk} onChange={(value) => updateConfig("chunk", value)} />
+                <Toggle label={t("batch.meta")} on={config.metadata} onChange={(value) => updateConfig("metadata", value)} />
+                <Toggle label={t("batch.corpus")} on={config.corpus} onChange={(value) => updateConfig("corpus", value)} />
+              </div>
 
-          <div className="field">
-            <label>{t("batch.chunkSize")}</label>
-            <select
-              value={config.chunkSize}
-              onChange={(event) => updateConfig("chunkSize", Number(event.target.value))}
-            >
-              <option value={800}>800</option>
-              <option value={1200}>1200</option>
-              <option value={2000}>2000</option>
-            </select>
-          </div>
+              <div className="field">
+                <label>{t("batch.chunkSize")}</label>
+                <select
+                  value={config.chunkSize}
+                  onChange={(event) => updateConfig("chunkSize", Number(event.target.value))}
+                >
+                  <option value={800}>800</option>
+                  <option value={1200}>1200</option>
+                  <option value={2000}>2000</option>
+                </select>
+              </div>
 
-          <div className="field">
-            <label>{t("batch.overlap")}</label>
-            <select value={config.overlap} onChange={(event) => updateConfig("overlap", Number(event.target.value))}>
-              <option value={0}>0</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={200}>200</option>
-            </select>
+              <div className="field">
+                <label>{t("batch.overlap")}</label>
+                <select value={config.overlap} onChange={(event) => updateConfig("overlap", Number(event.target.value))}>
+                  <option value={0}>0</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
+                </select>
+              </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="actions">

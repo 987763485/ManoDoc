@@ -39,11 +39,26 @@ describe("语料制作", () => {
     expect(openPackage).toBeEnabled();
   });
 
+  it("高级设置默认折叠，展开后显示并发与清洗选项", async () => {
+    setup();
+    const page = await openBatch();
+
+    const toggle = within(page).getByRole("button", { name: /高级设置/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(within(page).queryByText("清洗与语料")).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(within(page).getByText("清洗与语料")).toBeInTheDocument();
+    expect(within(page).getByRole("switch", { name: "切块" })).toBeInTheDocument();
+  });
+
   it("输出格式锁定 Markdown，图片资产禁用", async () => {
     setup();
     const page = await openBatch();
 
     expect(within(page).getByText("批量输出固定为 Markdown；其他格式请在单文件转换中选择。")).toBeInTheDocument();
+    fireEvent.click(within(page).getByRole("button", { name: /高级设置/ }));
     const imageSwitch = within(page).getByRole("switch", { name: "图片落 assets/" });
     expect(imageSwitch).toBeDisabled();
     expect(imageSwitch).toHaveAttribute("aria-checked", "false");
