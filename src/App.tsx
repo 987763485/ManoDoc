@@ -249,7 +249,7 @@ function AppShell({
   return (
     <div className={sidebarOpen ? "app" : "app sidebar-collapsed"}>
       <header className="titlebar" data-tauri-drag-region>
-        <div className="tb-left">
+        <div className="tb-left" data-tauri-drag-region>
           <button
             className="tb-icon"
             title={t("titlebar.sidebar")}
@@ -271,8 +271,8 @@ function AppShell({
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
           </button>
         </div>
-        <div className="tb-title">{t("app.name")}</div>
-        <div className="tb-right">
+        <div className="tb-title" data-tauri-drag-region>{t("app.name")}</div>
+        <div className="tb-right" data-tauri-drag-region>
           <div className="seg" aria-label={t("settings.lang")}>
             <button className={settings.language === "zh" ? "on" : ""} onClick={() => settings.language !== "zh" && onToggleLanguage()}>中文</button>
             <button className={settings.language === "en" ? "on" : ""} onClick={() => settings.language !== "en" && onToggleLanguage()}>EN</button>
