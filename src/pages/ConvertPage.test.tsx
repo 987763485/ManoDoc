@@ -24,16 +24,18 @@ describe("文档转换的引擎选择", () => {
     fireEvent.drop(drop, { dataTransfer: { files: [file] } });
 
     expect(await screen.findByText("note.md")).toBeInTheDocument();
-    const target = document.getElementById("target-format") as HTMLSelectElement;
-    expect(Array.from(target.options).map((option) => option.value)).toEqual([
-      "docx",
-      "pdf",
-      "html",
-      "epub",
-    ]);
-    fireEvent.change(target, { target: { value: "pdf" } });
+    const target = document.getElementById("target-format") as HTMLElement;
+    expect(target).toHaveTextContent("Word");
+
+    fireEvent.pointerDown(target, { button: 0, pointerType: "mouse" });
+    const targetValues = (await screen.findAllByRole("option")).map((option) => option.textContent);
+    expect(targetValues).toEqual(["Word", "PDF", "HTML", "EPUB"]);
+
+    fireEvent.click(screen.getByRole("option", { name: "PDF" }));
     expect(screen.getByText(/由 pandoc 生成 Typst 后编译/)).toBeInTheDocument();
-    fireEvent.change(target, { target: { value: "docx" } });
+
+    fireEvent.pointerDown(target, { button: 0, pointerType: "mouse" });
+    fireEvent.click(screen.getByRole("option", { name: "Word" }));
     expect(screen.queryByText(/由 pandoc 生成 Typst 后编译/)).not.toBeInTheDocument();
   });
 
@@ -42,17 +44,16 @@ describe("文档转换的引擎选择", () => {
     fireEvent.click(screen.getByRole("button", { name: /^选择文件$/ }));
     await screen.findByText("GB-T-28448.docx");
 
-    const engine = Array.from(document.querySelectorAll(".route-row select")).find((select) =>
-      Array.from((select as HTMLSelectElement).options).some((option) => option.value === "anydoc"),
-    ) as HTMLSelectElement;
-    expect(engine).toBeDefined();
-    const xberg = Array.from(engine.options).find((option) => option.value === "xberg");
+    const engine = document.querySelector('.route-row .ui-select-trigger[aria-label="引擎"]') as HTMLElement;
+    fireEvent.pointerDown(engine, { button: 0, pointerType: "mouse" });
+    const xberg = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(
+      (option) => option.textContent?.includes("xberg"),
+    );
     expect(xberg).toBeDefined();
     // 浏览器 mock 返回 ocrReady=true，因此 xberg 不应被禁用。
-    await waitFor(() => expect(xberg?.disabled).toBe(false));
-
-    fireEvent.change(engine, { target: { value: "xberg" } });
-    expect(engine.value).toBe("xberg");
+    await waitFor(() => expect(xberg).not.toHaveAttribute("data-disabled"));
+    fireEvent.click(xberg!);
+    expect(engine).toHaveTextContent(/xberg/);
 
     fireEvent.click(screen.getByRole("button", { name: "开始转换" }));
     expect(

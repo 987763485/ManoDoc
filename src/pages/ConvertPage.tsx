@@ -17,6 +17,7 @@ import {
 } from "../lib/ipc";
 import { FileIcon } from "../components/FileIcon";
 import { Modal } from "../components/Modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Status = "empty" | "idle" | "converting" | "success" | "error";
 
@@ -328,42 +329,51 @@ export function ConvertPage({
                       <span>{file.format}</span>
                     </span>
                     <span aria-hidden="true">→</span>
-                    <select
-                      id="target-format"
+                    <Select
                       value={target}
-                      onChange={(event) => {
-                        setTarget(event.target.value);
+                      onValueChange={(value) => {
+                        setTarget(value);
                         // 目标切换后引擎能力变化，回到 auto 避免保留不可用选择。
                         setEngine("auto");
                       }}
                     >
-                      {(file.targets ?? ["markdown"]).map((value) => (
-                        <option key={value} value={value}>
-                          {t((TARGET_LABEL_KEYS[value] ?? "target.markdown") as MessageKey)}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger id="target-format" aria-label={t("convert.direction")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(file.targets ?? ["markdown"]).map((value) => (
+                          <SelectItem key={value} value={value}>
+                            {t((TARGET_LABEL_KEYS[value] ?? "target.markdown") as MessageKey)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="field">
                   <label>{t("convert.engine")}</label>
-                  <select
+                  <Select
                     value={engine}
-                    onChange={(event) =>
-                      setEngine(event.target.value as "auto" | "anydoc" | "xberg" | "pandoc")
+                    onValueChange={(value) =>
+                      setEngine(value as "auto" | "anydoc" | "xberg" | "pandoc")
                     }
                   >
-                    <option value="auto">
-                      {isMarkdownSource && target !== "markdown"
-                        ? t("convert.engineAutoPandoc")
-                        : t("convert.engineAuto")}
-                    </option>
-                    <option value="anydoc" disabled={!engineAllowed("anydoc")}>anydoc</option>
-                    <option value="xberg" disabled={!engineAllowed("xberg") || !ocrReady}>
-                      xberg{t("convert.engineOcrSuffix")}
-                    </option>
-                    <option value="pandoc" disabled={!engineAllowed("pandoc")}>pandoc</option>
-                  </select>
+                    <SelectTrigger aria-label={t("convert.engine")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">
+                        {isMarkdownSource && target !== "markdown"
+                          ? t("convert.engineAutoPandoc")
+                          : t("convert.engineAuto")}
+                      </SelectItem>
+                      <SelectItem value="anydoc" disabled={!engineAllowed("anydoc")}>anydoc</SelectItem>
+                      <SelectItem value="xberg" disabled={!engineAllowed("xberg") || !ocrReady}>
+                        xberg{t("convert.engineOcrSuffix")}
+                      </SelectItem>
+                      <SelectItem value="pandoc" disabled={!engineAllowed("pandoc")}>pandoc</SelectItem>
+                    </SelectContent>
+                  </Select>
                   {!ocrReady && engineAllowed("xberg") ? (
                     <span className="hint">{t("convert.ocrModelMissing")}</span>
                   ) : null}
@@ -371,11 +381,16 @@ export function ConvertPage({
               </div>
               <div className="field">
                 <label>{t("convert.preset")}</label>
-                <select defaultValue="standard">
-                  <option value="standard">{t("convert.presetStandard")}</option>
-                  <option value="table">{t("settings.presetTable")}</option>
-                  <option value="knowledge">{t("settings.presetCorpus")}</option>
-                </select>
+                <Select defaultValue="standard">
+                  <SelectTrigger aria-label={t("convert.preset")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">{t("convert.presetStandard")}</SelectItem>
+                    <SelectItem value="table">{t("settings.presetTable")}</SelectItem>
+                    <SelectItem value="knowledge">{t("settings.presetCorpus")}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <p className="hint">{t("convert.imageLimit")}</p>
               {qualityNote ? <p className="hint" id="quality-note">{qualityNote}</p> : null}

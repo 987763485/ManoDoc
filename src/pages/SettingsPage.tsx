@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../i18n";
 import { chooseDirectory, getEngineInfo, type EngineInfo, type Settings } from "../lib/ipc";
 import { OcrModelCard } from "../components/OcrModelCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Tab = "general" | "engines" | "output" | "presets" | "logs" | "about";
 
@@ -80,11 +81,17 @@ export function SettingsPage({
               <div className="setting-row">
                 <div className="info"><b>{t("settings.theme")}</b><span>{t("settings.themeDesc")}</span></div>
                 <div className="control">
-                  <select value={settings.theme} onChange={(event) => void onUpdate({ theme: event.target.value as Settings["theme"] })}>
-                    <option value="system">{t("theme.system")}</option>
-                    <option value="light">{t("theme.light")}</option>
-                    <option value="dark">{t("theme.dark")}</option>
-                  </select>
+                  <Select
+                    value={settings.theme}
+                    onValueChange={(value) => void onUpdate({ theme: value as Settings["theme"] })}
+                  >
+                    <SelectTrigger aria-label={t("settings.theme")}><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="system">{t("theme.system")}</SelectItem>
+                      <SelectItem value="light">{t("theme.light")}</SelectItem>
+                      <SelectItem value="dark">{t("theme.dark")}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="setting-row">
@@ -155,12 +162,20 @@ export function SettingsPage({
               <div className="setting-row">
                 <div className="info"><b>{t("settings.imageMode")}</b><span>{t("settings.imageModeDesc")}</span></div>
                 <div className="control">
-                  <select disabled><option>{t("settings.assets")}</option></select>
+                  <Select value="assets" disabled>
+                    <SelectTrigger aria-label={t("settings.imageMode")}><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="assets">{t("settings.assets")}</SelectItem></SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="setting-row">
                 <div className="info"><b>{t("settings.overwrite")}</b><span>{t("settings.overwriteDesc")}</span></div>
-                <div className="control"><select disabled><option>{t("settings.autoname")}</option></select></div>
+                <div className="control">
+                  <Select value="autoname" disabled>
+                    <SelectTrigger aria-label={t("settings.overwrite")}><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="autoname">{t("settings.autoname")}</SelectItem></SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="setting-row">
                 <div className="info"><b>{t("settings.corpus")}</b><span>{t("settings.corpusDesc")}</span></div>
@@ -188,7 +203,16 @@ export function SettingsPage({
               <p className="intro">{t("settings.logsIntro")}</p>
               <div className="setting-row">
                 <div className="info"><b>{t("settings.logLevel")}</b><span>info / warn / error / debug</span></div>
-                <div className="control"><select defaultValue="info"><option>info</option><option>warn</option><option>debug</option></select></div>
+                <div className="control">
+                  <Select defaultValue="info">
+                    <SelectTrigger aria-label={t("settings.logLevel")}><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="info">info</SelectItem>
+                      <SelectItem value="warn">warn</SelectItem>
+                      <SelectItem value="debug">debug</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="setting-row">
                 <div className="info"><b>{t("settings.logDir")}</b><span>~/.dull_doc/logs</span></div>

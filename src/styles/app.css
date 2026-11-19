@@ -118,3 +118,57 @@
 .advanced-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
 .advanced-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
 .advanced-body { margin-top: 8px; display: grid; gap: 14px; }
+
+/* shadcn/ui Select 适配：结构来自 Radix，视觉继续使用 Proofing Desk token。 */
+.ui-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.ui-select-trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.ui-select-trigger[data-disabled] { opacity: .5; cursor: not-allowed; }
+.ui-select-chevron { width: 14px; height: 14px; flex: none; color: var(--ink-3); stroke: currentColor; fill: none; stroke-width: 1.8; }
+.ui-select-content {
+  z-index: 130;
+  min-width: var(--radix-select-trigger-width);
+  max-height: 320px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+}
+.ui-select-viewport { padding: 4px; }
+.ui-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+.ui-select-item[data-highlighted] { background: var(--surface-2); color: var(--ink); }
+.ui-select-item[data-disabled] { opacity: .45; pointer-events: none; }
+.ui-select-item-indicator { width: 14px; flex: none; display: grid; place-items: center; color: var(--blue); }
+.ui-select-item-indicator svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.ui-select-scroll { display: flex; align-items: center; justify-content: center; height: 22px; color: var(--ink-3); }
+.ui-select-scroll svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.ui-select-label { padding: 6px 10px; font-size: 11px; color: var(--ink-3); letter-spacing: .08em; font-weight: 700; }
+.ui-select-separator { height: 1px; background: var(--line); margin: 4px 0; }
+.route-control .ui-select-trigger { border: 0; background: transparent; padding: 0; min-height: 0; height: auto; font-size: 12px; }
+.setting-row .control .ui-select-trigger { min-width: 180px; }

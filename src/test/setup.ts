@@ -37,3 +37,17 @@ if (!window.requestAnimationFrame) {
   window.requestAnimationFrame = (callback) => window.setTimeout(() => callback(Date.now()), 0);
   window.cancelAnimationFrame = (handle) => window.clearTimeout(handle);
 }
+
+// Radix Select 依赖指针捕获与 scrollIntoView；jsdom 未实现，补最小替身。
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "../i18n";
 import { FileIcon } from "../components/FileIcon";
 import { Modal } from "../components/Modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   cancelBatch,
   chooseDirectory,
@@ -442,33 +443,44 @@ export function BatchPage({
 
           <div className="field">
             <label>{t("batch.preset")}</label>
-            <select value={config.preset} onChange={(event) => updateConfig("preset", event.target.value)}>
-              <option value="standard">{t("settings.presetStandard")}</option>
-              <option value="table">{t("settings.presetTable")}</option>
-              <option value="corpus">{t("settings.presetCorpus")}</option>
-            </select>
+            <Select value={config.preset} onValueChange={(value) => updateConfig("preset", value)}>
+              <SelectTrigger aria-label={t("batch.preset")}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standard">{t("settings.presetStandard")}</SelectItem>
+                <SelectItem value="table">{t("settings.presetTable")}</SelectItem>
+                <SelectItem value="corpus">{t("settings.presetCorpus")}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="field">
             <label>{t("batch.outputFormat")}</label>
-            <select value="markdown" disabled title={t("batch.outputLocked")}>
-              <option value="markdown">Markdown</option>
-              <option disabled>Word</option>
-              <option disabled>PDF</option>
-            </select>
+            <Select value="markdown" disabled>
+              <SelectTrigger aria-label={t("batch.outputFormat")} title={t("batch.outputLocked")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="markdown">Markdown</SelectItem>
+                <SelectItem value="word" disabled>Word</SelectItem>
+                <SelectItem value="pdf" disabled>PDF</SelectItem>
+              </SelectContent>
+            </Select>
             <p className="hint">{t("batch.outputLocked")}</p>
           </div>
 
           <div className="field">
             <label>{t("batch.engine")}</label>
-            <select value={config.engine} onChange={(event) => updateConfig("engine", event.target.value)}>
-              <option value="auto">{t("convert.engineAuto")}</option>
-              <option value="anydoc">anydoc</option>
-              <option value="xberg" disabled={!ocrReady}>
-                xberg{t("convert.engineOcrSuffix")}
-              </option>
-              <option disabled>pandoc · {t("convert.engineLater")}</option>
-            </select>
+            <Select value={config.engine} onValueChange={(value) => updateConfig("engine", value)}>
+              <SelectTrigger aria-label={t("batch.engine")}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">{t("convert.engineAuto")}</SelectItem>
+                <SelectItem value="anydoc">anydoc</SelectItem>
+                <SelectItem value="xberg" disabled={!ocrReady}>
+                  xberg{t("convert.engineOcrSuffix")}
+                </SelectItem>
+                <SelectItem value="pandoc" disabled>pandoc · {t("convert.engineLater")}</SelectItem>
+              </SelectContent>
+            </Select>
             {!ocrReady ? <p className="hint">{t("convert.ocrModelMissing")}</p> : null}
           </div>
 
@@ -492,15 +504,18 @@ export function BatchPage({
               <div className="advanced-body" id="batch-advanced">
               <div className="field">
                 <label>{t("batch.concurrency")}</label>
-                <select
-                  value={config.concurrency}
-                  onChange={(event) => updateConfig("concurrency", Number(event.target.value))}
+                <Select
+                  value={String(config.concurrency)}
+                  onValueChange={(value) => updateConfig("concurrency", Number(value))}
                 >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={4}>4</option>
-                  <option value={8}>8</option>
-                </select>
+                  <SelectTrigger aria-label={t("batch.concurrency")}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="8">8</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="label">{t("batch.cleaning")}</div>
@@ -528,24 +543,33 @@ export function BatchPage({
 
               <div className="field">
                 <label>{t("batch.chunkSize")}</label>
-                <select
-                  value={config.chunkSize}
-                  onChange={(event) => updateConfig("chunkSize", Number(event.target.value))}
+                <Select
+                  value={String(config.chunkSize)}
+                  onValueChange={(value) => updateConfig("chunkSize", Number(value))}
                 >
-                  <option value={800}>800</option>
-                  <option value={1200}>1200</option>
-                  <option value={2000}>2000</option>
-                </select>
+                  <SelectTrigger aria-label={t("batch.chunkSize")}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="800">800</SelectItem>
+                    <SelectItem value="1200">1200</SelectItem>
+                    <SelectItem value="2000">2000</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="field">
                 <label>{t("batch.overlap")}</label>
-                <select value={config.overlap} onChange={(event) => updateConfig("overlap", Number(event.target.value))}>
-                  <option value={0}>0</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={200}>200</option>
-                </select>
+                <Select
+                  value={String(config.overlap)}
+                  onValueChange={(value) => updateConfig("overlap", Number(value))}
+                >
+                  <SelectTrigger aria-label={t("batch.overlap")}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                    <SelectItem value="200">200</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               </div>
             ) : null}
