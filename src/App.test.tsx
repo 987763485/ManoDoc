@@ -105,7 +105,7 @@ describe("单文件转换与历史", () => {
     await within(historyPage).findByText("GB-T-28448.docx");
     fireEvent.click(within(historyPage).getByRole("button", { name: "清空历史" }));
 
-    const dialog = document.querySelector("dialog[open]") as HTMLElement;
+    const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByRole("heading", { name: "清空转换历史？" })).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole("button", { name: "清空历史" }));
 
@@ -126,7 +126,7 @@ describe("单文件转换与历史", () => {
     const row = await within(historyPage).findByRole("button", { name: /GB-T-28448\.docx/ });
     fireEvent.click(row);
 
-    const dialog = document.querySelector("dialog[open]") as HTMLElement;
+    const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByRole("heading", { name: "GB-T-28448.docx" })).toBeInTheDocument();
     expect(within(dialog).getByText("DOCX → Markdown")).toBeInTheDocument();
     expect(within(dialog).getByText(/anydoc/)).toBeInTheDocument();

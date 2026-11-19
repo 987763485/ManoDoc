@@ -1,8 +1,10 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
+
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 /**
- * 统一使用原生 dialog，保留 Esc、焦点返回与遮罩语义。
- * className 由调用方选择 history-dialog 等既有样式。
+ * 全应用统一弹窗：shadcn/ui Dialog（Radix），固定屏幕居中。
+ * 面板样式仍由调用方的 history-modal 等类提供。
  */
 export function Modal({
   open,
@@ -17,30 +19,13 @@ export function Modal({
   labelledBy?: string;
   children: ReactNode;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
   return (
-    <dialog
-      ref={ref}
-      className={className}
-      aria-labelledby={labelledBy}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClose={onClose}
-      onClick={(event) => {
-        if (event.target === ref.current) onClose();
-      }}
-    >
-      {children}
-    </dialog>
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className={className} aria-labelledby={labelledBy}>
+        {/* Radix 需要 Title 才算可访问；可见标题由调用方的 h2 提供。 */}
+        <DialogTitle className="sr-only">DullDoc</DialogTitle>
+        {children}
+      </DialogContent>
+    </Dialog>
   );
 }

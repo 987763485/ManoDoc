@@ -79,7 +79,7 @@ describe("语料制作", () => {
     expect(within(history).getByText(/8 语料块/)).toBeInTheDocument();
 
     fireEvent.click(within(history).getByRole("button", { name: /corpus/ }));
-    const dialog = document.querySelector("dialog[open]") as HTMLElement;
+    const dialog = screen.getByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "重跑" }));
 
     expect(await within(page).findByText("GB-T-28448.docx")).toBeInTheDocument();
