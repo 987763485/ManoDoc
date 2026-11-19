@@ -1,0 +1,613 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n, type MessageKey } from "../i18n";
+import {
+  cancelConversion,
+  chooseFile,
+  convertFile,
+  errorToAppError,
+  getEngineInfo,
+  inspectFile,
+  onFileDrop,
+  onProgress,
+  openPath,
+  preflightPdf,
+  type PreflightResult,
+  type AppError,
+  type ConversionResult,
+  type FileInfo,
+  type Settings,
+} from "../lib/ipc";
+import { FileIcon } from "../components/FileIcon";
+import { Modal } from "../components/Modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { setActiveTask, updateActiveTask } from "../lib/taskbar";
+
+type Status = "empty" | "idle" | "converting" | "success" | "error";
+
+const MATRIX = [
+  ["Word", "Markdown", "anydoc · xberg · pandoc"],
+  ["PDF", "Markdown", "anydoc · xberg · Marker"],
+  ["PDF", "Word", "PDF→MD→Word · pandoc · 目录/图片保真有限"],
+  ["Markdown", "Word", "pandoc"],
+  ["Markdown", "PDF", "pandoc + Typst"],
+  ["Markdown", "HTML / EPUB", "pandoc"],
+  ["PNG / JPEG", "Markdown", "xberg · PaddleOCR · Marker"],
+  ["Excel / CSV / ODS", "Markdown", "anydoc · xberg"],
+  ["PowerPoint / ODP", "Markdown", "anydoc · xberg"],
+  ["HTML / RTF / ODT / EPUB", "Markdown", "anydoc · xberg"],
+];
+
+const TARGET_LABEL_KEYS: Record<string, string> = {
+  markdown: "target.markdown",
+  docx: "target.docx",
+  pdf: "target.pdf",
+  html: "target.html",
+  epub: "target.epub",
+};
+
+export function ConvertPage({
+  active,
+  settings,
+  showToast,
+  onHistoryChanged,
+  requestedPath,
+  requestedTarget,
+  onRequestedConsumed,
+  onOpenSettings,
+  onEngineChange,
+}: {
+  active: boolean;
+  settings: Settings;
+  showToast: (message: string) => void;
+  onHistoryChanged: () => void;
+  requestedPath?: string | null;
+  requestedTarget?: string | null;
+  onRequestedConsumed: () => void;
+  onOpenSettings: () => void;
+  onEngineChange?: (engine: string) => void;
+}) {
+  const { t } = useI18n();
+  const [file, setFile] = useState<FileInfo | null>(null);
+  const [status, setStatus] = useState<Status>("empty");
+  const [progress, setProgress] = useState({ stage: "reading", percent: 0 });
+  const [result, setResult] = useState<ConversionResult | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
+  const [matrixOpen, setMatrixOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [engine, setEngine] = useState<"auto" | "anydoc" | "xberg" | "pandoc">(
+    (settings.engine as "auto" | "anydoc" | "xberg" | "pandoc") || "auto",
+  );
+  const [noTextPolicy, setNoTextPolicy] = useState<"skip" | "fail" | "ocr">("skip");
+  const [preflight, setPreflight] = useState<PreflightResult | null>(null);
+  const [preflightOpen, setPreflightOpen] = useState(false);
+  const [ocrReady, setOcrReady] = useState(true);
+  const [target, setTarget] = useState("markdown");
+  const taskRef = useRef<string | null>(null);
+  const dropRef = useRef<(path: string) => void>(() => {});
+
+  useEffect(() => {
+    const unsubscribe = onProgress((event) => {
+      if (event.taskId === taskRef.current) {
+        setProgress({ stage: event.stage, percent: event.percent });
+        updateActiveTask(event.percent);
+      }
+    });
+    return () => {
+      void unsubscribe.then((fn) => fn());
+    };
+  }, []);
+
+  useEffect(() => {
+    void getEngineInfo()
+      .then((info) => {
+        setOcrReady(info.ocrReady);
+        // 模型被卸载后不应继续保留不可用的显式 xberg 选择。
+        if (!info.ocrReady) {
+          setEngine((current) => (current === "xberg" ? "auto" : current));
+        }
+      })
+      .catch(() => setOcrReady(false));
+  }, []);
+
+  // Tauri 默认接管原生拖放，浏览器预览仍使用 HTML5 drop。
+  dropRef.current = (path) => {
+    if (active) void loadPath(path);
+  };
+  useEffect(() => {
+    const unsubscribe = onFileDrop((paths) => {
+      if (paths[0]) dropRef.current(paths[0]);
+    });
+    return () => {
+      void unsubscribe.then((fn) => fn());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!requestedPath) return;
+    onRequestedConsumed();
+    void loadPath(requestedPath).then(() => {
+      if (requestedTarget) setTarget(requestedTarget);
+    });
+    // loadPath 是稳定操作；requestedPath 消费后由 App 清空。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedPath]);
+
+  async function loadPath(path: string) {
+    try {
+      const info = await inspectFile(path);
+      setFile(info);
+      setTarget(info.defaultTarget ?? info.targets?.[0] ?? "markdown");
+      setEngine((settings.engine as "auto" | "anydoc" | "xberg" | "pandoc") || "auto");
+      setResult(null);
+      setError(null);
+      setStatus("idle");
+      showToast(t("toast.loaded"));
+      if (info.format === "PDF") {
+        void preflightPdf(info.path)
+          .then((check) => {
+            if (!check) return;
+            setPreflight(check);
+            if (check.pagesWithoutText.length > 0) {
+              // 单文件默认跳过无文本页并继续；OCR 与失败策略由用户在预检弹窗中选择。
+              setNoTextPolicy("skip");
+              setPreflightOpen(true);
+            }
+          })
+          .catch(() => {});
+      } else {
+        setPreflight(null);
+      }
+    } catch (unknownError) {
+      // 换文件失败时清掉旧文件，避免错误卡与旧文件信息互相矛盾。
+      setFile(null);
+      setResult(null);
+      setActiveTask(null);
+      setError(errorToAppError(unknownError));
+      setStatus("error");
+    }
+  }
+
+  async function choose() {
+    const path = await chooseFile();
+    if (path) await loadPath(path);
+  }
+
+  async function drop(event: React.DragEvent) {
+    event.preventDefault();
+    setDragging(false);
+    const dropped = event.dataTransfer.files[0] as (File & { path?: string }) | undefined;
+    if (!dropped) return;
+    if (!dropped.path) {
+      showToast(t("toast.realOnly"));
+      return;
+    }
+    await loadPath(dropped.path);
+  }
+
+  async function start(policyOverride?: "skip" | "fail" | "ocr") {
+    if (!file) return;
+    const policy = policyOverride ?? noTextPolicy;
+    const taskId = crypto.randomUUID();
+    taskRef.current = taskId;
+    setStatus("converting");
+    setError(null);
+    setResult(null);
+    setProgress({ stage: "reading", percent: 4 });
+    setActiveTask({
+      id: taskId,
+      label: `${file.name} → ${target.toUpperCase()}`,
+      percent: 4,
+      onCancel: () => void cancelConversion(taskId),
+    });
+    try {
+      const converted = await convertFile(file.path, taskId, engine, target, policy);
+      setResult(converted);
+      setActiveTask(null);
+      setStatus("success");
+      showToast(t("toast.converted"));
+      onHistoryChanged();
+    } catch (unknownError) {
+      const appError = errorToAppError(unknownError);
+      // 取消是用户主动动作，不按失败呈现；仍保留当前文件供再次开始。
+      if (appError.code === "E_CANCELLED") {
+        setStatus(file ? "idle" : "empty");
+        return;
+      }
+      if (appError.code === "E_NEEDS_OCR") {
+        // 模型可能在本次会话期间被移动或删除，错误详情比启动时的状态更权威。
+        const detail = appError.detail as { ocrAvailable?: boolean } | undefined;
+        if (detail?.ocrAvailable === false) setOcrReady(false);
+      }
+      setError(appError);
+      setStatus("error");
+    } finally {
+      taskRef.current = null;
+    }
+  }
+
+  async function cancel() {
+    if (taskRef.current) await cancelConversion(taskRef.current);
+    setStatus(file ? "idle" : "empty");
+    showToast(t("toast.cancelled"));
+  }
+
+  const stageText = useMemo(() => {
+    if (progress.stage === "reading") return t("convert.reading");
+    if (progress.stage === "ocr") return t("convert.ocr");
+    if (progress.stage === "rendering") return t("convert.rendering");
+    if (progress.stage === "writing") return t("convert.writing");
+    if (progress.stage === "done") return t("convert.done");
+    return t("convert.converting");
+  }, [progress.stage, t]);
+
+  const stats = result?.stats ?? { chars: 0, headings: 0, tableRows: 0 };
+  const errorTitle =
+    error?.code === "E_NEEDS_OCR"
+      ? t("error.ocr")
+      : error?.code === "E_UNSUPPORTED_FORMAT"
+        ? t("error.unsupported")
+        : error?.code === "E_OUTPUT_PERMISSION"
+          ? t("error.permission")
+          : t("error.title");
+
+  // 常见错误由前端本地化；未知错误保留 Rust 的诊断正文，避免丢失细节。
+  const ocrPages = (() => {
+    if (error?.code !== "E_NEEDS_OCR") return 1;
+    const detail = error.detail as { pages?: unknown[] } | undefined;
+    return Array.isArray(detail?.pages) ? detail.pages.length : 1;
+  })();
+  const errorMessage =
+    error?.code === "E_NEEDS_OCR"
+      ? file?.isImage
+        ? t("error.ocrImage")
+        : t("error.ocrDesc", { n: ocrPages })
+      : error?.code === "E_UNSUPPORTED_FORMAT"
+        ? t("error.unsupportedDesc")
+        : error?.code === "E_OUTPUT_PERMISSION"
+          ? t("error.permissionDesc")
+          : (error?.message ?? "");
+  const errorNext =
+    error?.code === "E_NEEDS_OCR"
+      ? ocrReady
+        ? t("error.nextOcrReady")
+        : t("error.nextOcr")
+      : error?.code === "E_UNSUPPORTED_FORMAT"
+        ? t("error.nextUnsupported")
+        : error?.code === "E_OUTPUT_PERMISSION"
+          ? t("error.nextPermission")
+          : (error?.nextStep ?? "");
+
+  const isMarkdownSource = file?.format === "Markdown";
+  const isPdfSource = file?.format === "PDF";
+  const engineAllowed = (choice: "anydoc" | "xberg" | "pandoc") => {
+    if (choice === "pandoc") return target !== "markdown" && isMarkdownSource;
+    if (target === "markdown") return true;
+    // PDF → Word 时 anydoc/xberg 负责来源解析，pandoc 只负责导出。
+    return isPdfSource && target === "docx";
+  };
+  const qualityNote =
+    isPdfSource && target === "docx"
+      ? t("convert.qualityPdfWord")
+      : target === "pdf"
+        ? t("convert.qualityPdf")
+        : target === "epub"
+          ? t("convert.qualityEpub")
+          : null;
+
+  return (
+    <section className={`page${active ? " active" : ""}`} id="page-convert">
+      <div className="page-head">
+        <h1>{t("convert.title")}</h1>
+        <p>{t("convert.sub")}</p>
+        <div className="actions">
+          <button className="btn secondary small" onClick={() => setMatrixOpen(true)}>
+            {t("palette.pages") === "Go to" ? "Supported directions" : "支持的方向"}
+          </button>
+        </div>
+      </div>
+
+      <div className="convert-grid">
+        <aside className="panel file-panel">
+          <div className="field-label">{t("convert.file")}</div>
+
+          {status === "empty" ? (
+            <div
+              className={`file-empty show${dragging ? " dragover" : ""}`}
+              id="file-empty"
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={drop}
+              onClick={choose}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") void choose();
+              }}
+            >
+              <span>{t("convert.empty")}</span>
+              <span className="hint">{t("convert.emptyHint")}</span>
+              <button className="link-btn" onClick={(event) => { event.stopPropagation(); void choose(); }}>
+                {t("convert.choose")}
+              </button>
+            </div>
+          ) : null}
+
+          {file && status !== "empty" ? (
+            <div className="file-card">
+              <FileIcon format={file.format} name={file.name} />
+              <div className="file-info">
+                <div className="file-name" title={file.name}>{file.name}</div>
+                <div className="file-meta">
+                  {Math.max(1, Math.round(file.sizeBytes / 1024))} KB · {file.format}
+                  {file.pageCount ? ` · ${file.pageCount} 页` : ""}
+                  {file.estimatedEngine ? ` · ${file.estimatedEngine}` : ""}
+                </div>
+              </div>
+              <button className="file-remove" aria-label={t("action.cancel")} onClick={() => { setFile(null); setStatus("empty"); setResult(null); setError(null); }}>
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </div>
+          ) : null}
+
+          {file ? (
+            <>
+              <div className="route-row">
+                <div className="field">
+                  <label>{t("convert.direction")}</label>
+                  <div className="route-control">
+                    <span className="route-source">
+                      <FileIcon format={file.format} size={18} />
+                      <span>{file.format}</span>
+                    </span>
+                    <span aria-hidden="true">→</span>
+                    <Select
+                      value={target}
+                      onValueChange={(value) => {
+                        setTarget(value);
+                        // 目标切换后引擎能力变化，回到 auto 避免保留不可用选择。
+                        setEngine("auto");
+                      }}
+                    >
+                      <SelectTrigger id="target-format" aria-label={t("convert.direction")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(file.targets ?? ["markdown"]).map((value) => (
+                          <SelectItem key={value} value={value}>
+                            {t((TARGET_LABEL_KEYS[value] ?? "target.markdown") as MessageKey)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="field">
+                  <label>{t("convert.engine")}</label>
+                  <Select
+                    value={engine}
+                    onValueChange={(value) => {
+                      setEngine(value as "auto" | "anydoc" | "xberg" | "pandoc");
+                      onEngineChange?.(value);
+                    }}
+                  >
+                    <SelectTrigger aria-label={t("convert.engine")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">
+                        {isMarkdownSource && target !== "markdown"
+                          ? t("convert.engineAutoPandoc")
+                          : t("convert.engineAuto")}
+                      </SelectItem>
+                      <SelectItem value="anydoc" disabled={!engineAllowed("anydoc")}>anydoc</SelectItem>
+                      <SelectItem value="xberg" disabled={!engineAllowed("xberg") || !ocrReady}>
+                        xberg{t("convert.engineOcrSuffix")}
+                      </SelectItem>
+                      <SelectItem value="pandoc" disabled={!engineAllowed("pandoc")}>pandoc</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {!ocrReady && engineAllowed("xberg") ? (
+                    <span className="hint">{t("convert.ocrModelMissing")}</span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="field">
+                <label>{t("convert.preset")}</label>
+                <Select defaultValue="standard">
+                  <SelectTrigger aria-label={t("convert.preset")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">{t("convert.presetStandard")}</SelectItem>
+                    <SelectItem value="table">{t("settings.presetTable")}</SelectItem>
+                    <SelectItem value="knowledge">{t("settings.presetCorpus")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="hint">{t("convert.imageLimit")}</p>
+              {qualityNote ? <p className="hint" id="quality-note">{qualityNote}</p> : null}
+              {preflight && preflight.pagesWithoutText.length > 0 ? (
+                <button className="link-btn" onClick={() => setPreflightOpen(true)}>
+                  {t("preflight.review")}（{preflight.pagesWithoutText.length}/{preflight.pageCount}）
+                </button>
+              ) : null}
+
+              <div className="actions">
+                <button className="btn primary" id="start-convert" disabled={status === "converting"} onClick={() => void start()}>
+                  {t("convert.start")}
+                </button>
+              </div>
+            </>
+          ) : null}
+
+          {status === "converting" ? (
+            <div className="convert-progress show" id="convert-progress" role="status" aria-live="polite">
+              <div className="progress-line"><span style={{ width: `${progress.percent}%` }} /></div>
+              <div className="convert-progress-row">
+                <span>{stageText}</span>
+                <span className="spacer" />
+                <b>{progress.percent}%</b>
+                <button className="link-btn" onClick={() => void cancel()}>{t("action.cancel")}</button>
+              </div>
+            </div>
+          ) : null}
+
+          {status === "success" && result ? (
+            <div className="success-card show" id="convert-success">
+              <h3>{t("convert.done")}</h3>
+              <p>
+                <b>{result.outputName}</b> · {t("convert.resultHint", { chars: stats.chars, headings: stats.headings, tables: stats.tableRows })}
+              </p>
+              <p className="hint" id="convert-engine-info">
+                {result.target} · {t("convert.engineUsed")}: <b>{result.engineUsed}</b>
+                {result.ocrPages.length > 0
+                  ? ` · ${t("convert.ocrPages", { n: result.ocrPages.length })}`
+                  : ""}
+                {result.fallbackReason ? ` · ${t("convert.fallback", { reason: result.fallbackReason })}` : ""}
+              </p>
+              {result.warnings.length > 0 ? <p className="hint">{result.warnings.join(" · ")}</p> : null}
+              <div className="actions">
+                <button className="btn primary small" onClick={() => openPath(result.outputPath, true)}>{t("action.openOutput")}</button>
+                <button className="btn secondary small" onClick={() => openPath(settings.outputDir)}>{t("action.openFolder")}</button>
+              </div>
+            </div>
+          ) : null}
+
+          {status === "error" && error ? (
+            <div className="error-card show" id="convert-error">
+              <h3>{errorTitle}</h3>
+              <p><b>{error.code}</b> · {errorMessage}</p>
+              <p className="hint">{t("error.next")}: {errorNext}</p>
+              <div className="actions">
+                <button className="btn secondary small" onClick={() => void choose()}>{t("action.chooseFile")}</button>
+                {error.code === "E_OUTPUT_PERMISSION" ? (
+                  <button className="btn ghost small" onClick={onOpenSettings}>{t("action.openSettings")}</button>
+                ) : null}
+                {error.code === "E_NEEDS_OCR" && !ocrReady ? (
+                  <button className="btn secondary small" id="install-ocr-link" onClick={onOpenSettings}>
+                    {t("convert.installOcr")}
+                  </button>
+                ) : null}
+                <button
+                  className="btn ghost small"
+                  onClick={() => {
+                    const text = JSON.stringify(
+                      { code: error.code, message: error.message, nextStep: error.nextStep, detail: error.detail },
+                      null,
+                      2,
+                    );
+                    void navigator.clipboard.writeText(text).then(
+                      () => showToast(t("toast.copied")),
+                      () => showToast(text),
+                    );
+                  }}
+                >
+                  {t("error.copyDiagnostics")}
+                </button>
+                <button className="btn ghost small" onClick={() => setStatus(file ? "idle" : "empty")}>{t("action.close")}</button>
+              </div>
+            </div>
+          ) : null}
+        </aside>
+      </div>
+
+      <Modal open={preflightOpen} onClose={() => setPreflightOpen(false)} labelledBy="preflight-title">
+        <div className="history-modal">
+          <div className="history-modal-head">
+            <div className="history-modal-title">
+              <h2 id="preflight-title">{t("preflight.title")}</h2>
+              <div className="sub">
+                {preflight
+                  ? t("preflight.summary")
+                      .replace("{pages}", String(preflight.pagesWithoutText.length))
+                      .replace("{total}", String(preflight.pageCount))
+                      .replace("{ratio}", `${Math.round(preflight.ratio * 100)}%`)
+                  : ""}
+              </div>
+            </div>
+            <button className="icon-btn history-modal-close" onClick={() => setPreflightOpen(false)} aria-label={t("action.close")}>
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+          <div className="preflight-pages">
+            {preflight?.pagesWithoutText.map((page) => <span className="badge amber" key={page}>第 {page} 页</span>)}
+          </div>
+          <p className="hint">
+            {preflight?.ocrAvailable ? t("preflight.ocrHint") : t("preflight.noOcrHint")}
+          </p>
+          <div className="actions">
+            <button
+              className="btn primary small"
+              onClick={() => {
+                setNoTextPolicy("skip");
+                setPreflightOpen(false);
+                void start("skip");
+              }}
+            >
+              {t("preflight.skip")}
+            </button>
+            {preflight?.ocrAvailable ? (
+              <button
+                className="btn secondary small"
+                onClick={() => {
+                  setNoTextPolicy("ocr");
+                  setPreflightOpen(false);
+                  void start("ocr");
+                }}
+              >
+                {t("preflight.useOcr")}
+              </button>
+            ) : null}
+            <button
+              className="btn ghost small"
+              onClick={() => {
+                setNoTextPolicy("fail");
+                setPreflightOpen(false);
+                void start("fail");
+              }}
+            >
+              {t("preflight.failOption")}
+            </button>
+            <button className="btn ghost small" onClick={() => setPreflightOpen(false)}>
+              {t("preflight.cancel")}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={matrixOpen} onClose={() => setMatrixOpen(false)} labelledBy="matrix-title">
+        <div className="history-modal matrix-modal">
+          <div className="history-modal-head">
+            <div className="history-modal-title">
+              <h2 id="matrix-title">{t("palette.pages") === "Go to" ? "Supported directions" : "支持的方向"}</h2>
+              <div className="sub">{t("convert.unsupported")}</div>
+            </div>
+            <button className="icon-btn history-modal-close" onClick={() => setMatrixOpen(false)} title={t("action.close")} aria-label={t("action.close")}>
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+          <div className="matrix-list">
+            {MATRIX.map(([from, to, engines]) => (
+              <div className="matrix-row" key={`${from}-${to}`}>
+                <div className="matrix-route">
+                  <span className="matrix-formats"><b>{from}</b></span>
+                  <span>→</span>
+                  <span className="matrix-formats"><b>{to}</b></span>
+                </div>
+                <div className="matrix-meta">{engines}</div>
+              </div>
+            ))}
+          </div>
+          <p className="matrix-note">
+            {t("palette.pages") === "Go to"
+              ? "PDF → Word uses PDF → Markdown → Word; TOC/image fidelity is limited. Markdown → PDF uses pandoc + Typst."
+              : "PDF → Word 走 PDF → Markdown → Word，目录与图片保真有限；Markdown → PDF 由 pandoc + Typst 生成。"}
+          </p>
+        </div>
+      </Modal>
+    </section>
+  );
+}

@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ManoDoc 竞品分析</title>
+<style>
+  :root {
+    --ink: #14201c;
+    --ink-2: #3d4b46;
+    --ink-3: #5f6b66;
+    --paper: #f7f5ef;
+    --card: #ffffff;
+    --line: #e2ded4;
+    --line-strong: #cfc9bb;
+    --accent: #0f6b57;
+    --accent-soft: #e6f2ee;
+    --accent-line: #cfe6dd;
+    --warn: #8a4f0f;
+    --warn-soft: #fbf0df;
+    --bad: #a33f30;
+    --bad-soft: #f8ece9;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(20, 32, 28, .04), 0 10px 30px rgba(20, 32, 28, .05);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 500px at 85% -10%, #e7efe9 0%, transparent 60%),
+      var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 34px 28px 80px; }
+  section { scroll-margin-top: 84px; }
+
+  /* ---------- 导航 ---------- */
+  .toc {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; flex-wrap: wrap; gap: 4px 2px;
+    padding: 10px 4px; margin: -34px -4px 22px;
+    background: rgba(247, 245, 239, .92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .toc a {
+    color: var(--ink-3); text-decoration: none; font-size: 13px;
+    padding: 8px 12px; border-radius: 8px; font-weight: 500;
+  }
+  .toc a:hover { background: var(--accent-soft); color: var(--accent); }
+
+  .crumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--ink-3); font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .crumb .sep { color: #b3ada0; }
+  .crumb .current { color: var(--ink-2); font-weight: 600; }
+
+  h1 {
+    margin: 0 0 6px;
+    font-size: clamp(38px, 5.2vw, 58px);
+    line-height: 1.08;
+    letter-spacing: -.03em;
+    font-weight: 800;
+  }
+  .tagline {
+    margin: 0;
+    font-size: clamp(17px, 2.2vw, 22px);
+    color: var(--ink-2);
+    font-weight: 500;
+    letter-spacing: -.01em;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; font-size: 13px; color: var(--ink-3); }
+  .pill {
+    background: var(--card); border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 999px; box-shadow: var(--shadow);
+  }
+  .pill strong { color: var(--ink-2); font-weight: 600; }
+  .pill.status { background: var(--warn-soft); border-color: #f0dcc0; color: var(--warn); font-weight: 600; }
+  .pill.status.confirmed { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
+
+  /* ---------- 卡片 ---------- */
+  section.card {
+    margin-top: 34px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 30px 32px;
+    box-shadow: var(--shadow);
+  }
+  h2 {
+    display: flex; align-items: baseline; gap: 12px;
+    margin: 0 0 18px;
+    font-size: 25px; letter-spacing: -.02em;
+  }
+  h2 .num {
+    font-size: 13px; font-weight: 800; color: var(--accent);
+    letter-spacing: .08em; font-variant-numeric: tabular-nums;
+  }
+  h3 { margin: 28px 0 10px; font-size: 18px; letter-spacing: -.01em; }
+  h3:first-child { margin-top: 0; }
+  h4 { margin: 20px 0 8px; font-size: 15px; letter-spacing: -.01em; }
+  p { margin: 0 0 12px; color: var(--ink-2); }
+  p.lead { font-size: 16.5px; color: var(--ink-2); }
+  ul, ol { margin: 0 0 4px; padding-left: 1.25em; color: var(--ink-2); }
+  li { margin: 6px 0; }
+  li::marker { color: var(--accent); }
+  strong { color: var(--ink); font-weight: 650; }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: .9em; background: #f1efe8; border: 1px solid var(--line);
+    padding: 1px 6px; border-radius: 6px; color: #33413c;
+  }
+  .muted { color: var(--ink-3); font-size: 13.5px; }
+  .small { font-size: 13px; color: var(--ink-3); }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); }
+  a:hover { border-bottom-color: var(--accent); }
+
+  .callout {
+    border-radius: 12px; padding: 18px 20px;
+    background: var(--accent-soft); border: 1px solid var(--accent-line);
+    color: #145244; font-size: 14px;
+  }
+  .callout b { color: #0d3f34; }
+  .callout.warn { background: var(--warn-soft); border-color: #f0dcc0; color: #6f4210; }
+  .callout.warn b { color: #5a350c; }
+  .callout.bad { background: var(--bad-soft); border-color: #efd3cd; color: #7d2f23; }
+  .callout.bad b { color: #642217; }
+
+  /* ---------- 摘要 ---------- */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 860px) { .summary-grid { grid-template-columns: 1fr; } }
+  .finding {
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; background: #fbfaf6;
+  }
+  .finding .k {
+    display: inline-block; font-size: 12px; font-weight: 800;
+    color: var(--accent); letter-spacing: .1em; margin-bottom: 6px;
+  }
+  .finding b { display: block; font-size: 15.5px; margin-bottom: 4px; color: var(--ink); }
+  .finding p { margin: 0; font-size: 13.5px; color: var(--ink-3); }
+
+  /* ---------- 表格 ---------- */
+  .table-wrap { overflow-x: auto; margin: 6px 0 2px; border: 1px solid var(--line); border-radius: 12px; padding: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; line-height: 1.6; background: var(--card); }
+  th {
+    text-align: left; font-size: 12px; letter-spacing: .05em;
+    color: var(--ink-3); font-weight: 700; text-transform: uppercase;
+    padding: 11px 12px; border-bottom: 1px solid var(--line-strong);
+    background: #fbfaf6; white-space: nowrap;
+  }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink-2); }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: #fdfcf9; }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  .nowrap { white-space: nowrap; }
+  .center { text-align: center; }
+
+  .group-row td {
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 12px; font-weight: 800; letter-spacing: .06em;
+    padding: 10px 12px; border-bottom: 1px solid var(--accent-line);
+  }
+  .group-row:hover td { background: var(--accent-soft); }
+
+  .matrix td:first-child { min-width: 170px; position: sticky; left: 0; background: var(--card); z-index: 2; }
+  .matrix tbody tr:hover td:first-child { background: #fdfcf9; }
+  .matrix th { position: sticky; top: 0; z-index: 3; }
+  .matrix th:first-child { left: 0; z-index: 4; }
+  .matrix td, .matrix th { padding: 10px 12px; }
+  .matrix .yes { color: var(--accent); font-weight: 800; }
+  .matrix .part { color: var(--warn); font-weight: 800; }
+  .matrix .no { color: #6b655b; font-weight: 700; }
+
+  .tag {
+    display: inline-block; font-size: 12px; font-weight: 700;
+    padding: 8px 12px; border-radius: 999px; white-space: nowrap;
+  }
+  .tag.p0 { background: var(--accent-soft); color: var(--accent); }
+  .tag.p1 { background: #eef0f5; color: #4f5b75; }
+  .tag.p2 { background: #f3f1ec; color: #6b655b; }
+  .tag.no { background: var(--bad-soft); color: var(--bad); }
+
+  /* ---------- 流程 ---------- */
+  .pipeline { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 14px 0 18px; }
+  .step {
+    flex: 1 1 140px; min-width: 130px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: #fbfaf6; padding: 14px 14px;
+  }
+  .step .n { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: .08em; }
+  .step b { display: block; font-size: 13.5px; margin: 3px 0 2px; color: var(--ink); }
+  .step span { font-size: 12px; color: var(--ink-3); line-height: 1.5; display: block; }
+  .arrow { align-self: center; color: #b3ada0; font-weight: 800; }
+
+  pre {
+    margin: 12px 0; padding: 16px 18px; overflow-x: auto;
+    background: #18231f; color: #dfeae5; border-radius: 12px;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.65;
+  }
+  pre .c { color: #8fb3a6; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) {
+    .wrap { padding: 24px 16px 60px; }
+    section.card { padding: 22px; }
+    .toc { margin: -24px -4px 18px; }
+  }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 10px 0 4px; }
+  @media (max-width: 760px) { .stats { grid-template-columns: 1fr 1fr; } }
+  .stat { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: #fbfaf6; }
+  .stat .v { font-size: 24px; font-weight: 800; color: var(--accent); letter-spacing: -.02em; }
+  .stat .l { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+  footer {
+    margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--ink-3);
+  }
+
+  @media print {
+    body { background: #fff; }
+    .wrap { max-width: none; padding: 0; }
+    .toc { display: none; }
+    .card, .finding, .step, .stat { box-shadow: none; break-inside: avoid; }
+    section { break-inside: avoid; }
+    .table-wrap { overflow: visible; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="toc" aria-label="页内导航">
+    <a href="#summary">摘要</a>
+    <a href="#scope">方法与范围</a>
+    <a href="#landscape">市场全景</a>
+    <a href="#products">产品明细</a>
+    <a href="#oss">开源项目</a>
+    <a href="#matrix">功能面矩阵</a>
+    <a href="#tech">技术原理</a>
+    <a href="#test">样本验证</a>
+    <a href="#opportunity">机会与建议</a>
+    <a href="#risk">风险</a>
+    <a href="#refs">参考</a>
+  </nav>
+
+  <nav class="crumb" aria-label="面包屑">
+    <span>项目文档</span><span class="sep">/</span><span>竞品分析</span><span class="sep">/</span><span class="current">S2</span>
+  </nav>
+  <h1>竞品分析</h1>
+  <p class="tagline">文档互转与 Markdown 工作台：功能面、实现原理与 ManoDoc 的机会</p>
+  <div class="meta">
+    <span class="pill"><strong>版本</strong> v0.7</span>
+    <span class="pill"><strong>变更</strong> S6 选型：Typst PDF · 许可收敛</span>
+    <span class="pill"><strong>日期</strong> 2026-11-18</span>
+    <span class="pill"><strong>样本</strong> 40+ 产品与项目 · 61 项功能面</span>
+    <span class="pill status confirmed">状态：已确认</span>
+  </div>
+
+  <!-- ======================== 00 摘要 ======================== -->
+  <section id="summary" class="card">
+    <h2><span class="num">00</span>结论摘要</h2>
+    <div class="summary-grid">
+      <div class="finding">
+        <span class="k">FINDING 01</span>
+        <b>没有产品同时满足「本地离线 + 多格式 + 中文清洗 + 批量语料包 + 可解释」</b>
+        <p>商业套件强在 OCR 与 PDF 编辑，但在线或昂贵、不产 Markdown；开源引擎强在解析，但要么缺 OCR，要么缺批量与清洗，要么需要写代码。</p>
+      </div>
+      <div class="finding">
+        <span class="k">FINDING 02</span>
+        <b>anydoc 是 Office 与文本型 PDF 的最佳起点，但 PDF 是「全有或全无」</b>
+        <p>任一页没有文本层，整份 PDF 直接失败。真实样本的封面页就让 50 页文档无法转换；移除封面后，标题与表格立即恢复。</p>
+      </div>
+      <div class="finding">
+        <span class="k">FINDING 03</span>
+        <b>pandoc 是导出器，不是抽取器</b>
+        <p>docx 没有 Heading 样式时，pandoc 输出 0 个标题；anydoc 通过字号/加粗/编号识别出 49 个。pandoc 的价值在 Markdown → HTML/DOCX/EPUB。</p>
+      </div>
+      <div class="finding">
+        <span class="k">FINDING 04</span>
+        <b>真实样本证明「清洗层」是刚需</b>
+        <p>中文标准文档普遍存在字间空格、标题编号断行、目录点线、表格内换行。原样输出「能看」，但达不到「排版清晰、可直接使用」。</p>
+      </div>
+      <div class="finding">
+        <span class="k">FINDING 05</span>
+        <b>xberg（原 Kreuzberg）是最接近的潜在竞品，并已被选为第二内核</b>
+        <p>Rust、MIT、107 种格式、Markdown/OCR/表格/切块/CLI/API/MCP。它证明「Rust 文档智能 + 语料化」这条路成立；2026-11-18 用户决定将其纳入 ManoDoc 内核，作为 P0 第二引擎，S6 负责落地验证。</p>
+      </div>
+      <div class="finding">
+        <span class="k">FINDING 06</span>
+        <b>ManoDoc 的机会在「最后一公里」</b>
+        <p>不是再造一个解析引擎，而是把引擎路由、PDF 预检、中文清洗、质量诊断、批量队列与语料包组合成一个离线桌面工作台。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 01 方法 ======================== -->
+  <section id="scope" class="card">
+    <h2><span class="num">01</span>方法与范围</h2>
+    <p class="lead">S2 的目标不是罗列所有软件，而是建立一张足够完整的功能面地图，找出 ManoDoc 必须做、可以做和不该做的位置。</p>
+
+    <div class="two-col">
+      <div>
+        <h3>竞品分层</h3>
+        <ul>
+          <li><strong>商业桌面 PDF 套件</strong>：Acrobat、ABBYY、PDFelement、Nitro、Foxit。强在 OCR、PDF 编辑、Office 导出。</li>
+          <li><strong>在线转换服务</strong>：Smallpdf、iLovePDF、CloudConvert、Convertio、Zamzar。强在触达与格式数量，弱在隐私与离线。</li>
+          <li><strong>专业文档解析 / SDK</strong>：Mathpix、Datalab Marker、Aspose/GroupDocs、Apryse、Docparser。强在精度与可集成，弱在价格与上手成本。</li>
+          <li><strong>开源解析引擎</strong>：Pandoc、anydoc、Marker、MinerU、Docling、MarkItDown、xberg、Unstructured。强在可控与可组合，弱在工程封装。</li>
+          <li><strong>相邻平台</strong>：Stirling PDF、Paperless-ngx、RAGFlow、Obsidian Importer、PanWriter、LibreOffice、Calibre。提供能力拼图，但不是端到端产品。</li>
+        </ul>
+      </div>
+      <div>
+        <h3>评价维度</h3>
+        <ul>
+          <li><strong>输入覆盖</strong>：Office、PDF、扫描件、图片、网页、邮件、音视频。</li>
+          <li><strong>解析保真</strong>：标题、列表、表格、合并单元格、公式、图片、阅读顺序、页眉页脚。</li>
+          <li><strong>输出与语料化</strong>：Markdown / HTML / DOCX / PDF / JSON；清洗、切块、元数据、manifest。</li>
+          <li><strong>工作流</strong>：单文件、批量、队列、重试、监听、CLI/API、预设、历史。</li>
+          <li><strong>部署与合规</strong>：离线、macOS/Windows/Linux、开源许可、隐私、价格。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:18px">
+      <b>数据来源与边界：</b>官网功能页、GitHub 仓库（星标与许可证截至 2026-11-18）、公开评测，以及本机对 `example/` 四份测试文件的真实转换。厂商自测（如 anydoc 的 4.4ms/81 分）只作为线索，不作为结论；价格与免费额度随时变化，以官网为准。功能矩阵中的「△」表示部分支持、需付费、需额外依赖或存在明显限制。
+    </div>
+  </section>
+
+  <!-- ======================== 02 市场全景 ======================== -->
+  <section id="landscape" class="card">
+    <h2><span class="num">02</span>市场全景</h2>
+    <p>把「文档 → Markdown」拆成五层能力后，竞争空白非常清楚：越靠近「解析」，开源越强；越靠近「工作流与语料化」，产品越少；同时做到离线、批量、清洗、可解释的桌面产品，几乎没有。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>层级</th><th>代表产品</th><th>核心能力</th><th>对 ManoDoc 的意义</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>商业 PDF 套件</td>
+            <td>Acrobat Pro、ABBYY FineReader、PDFelement、Nitro、Foxit</td>
+            <td>OCR、PDF 编辑、Office 导出、批处理、电子签名、合规</td>
+            <td>证明用户愿意为「准确 + 省事」付费；但都不产 Markdown，且重、贵、偏 PDF 编辑。</td>
+          </tr>
+          <tr>
+            <td>在线转换服务</td>
+            <td>Smallpdf、iLovePDF、CloudConvert、Convertio、Zamzar</td>
+            <td>格式多、即开即用、API、云端批处理</td>
+            <td>证明「转换」是高频需求；但上传文件、依赖网络，不适合内部标准与测评资料。</td>
+          </tr>
+          <tr>
+            <td>专业解析 / SDK</td>
+            <td>Mathpix、Datalab Marker、Aspose/GroupDocs、Apryse、Docparser</td>
+            <td>公式/表格/版面高精度、API、私有化</td>
+            <td>证明高质量解析有溢价；但面向开发者与大型客户，普通知识工作者用不上。</td>
+          </tr>
+          <tr>
+            <td>开源解析引擎</td>
+            <td>Pandoc、anydoc、Marker、MinerU、Docling、MarkItDown、xberg、Unstructured</td>
+            <td>格式覆盖、OCR、表格、公式、Markdown、切块</td>
+            <td>ManoDoc 的引擎池；需要封装、路由、清洗与 UI，才能变成产品。</td>
+          </tr>
+          <tr>
+            <td>相邻平台</td>
+            <td>Stirling PDF、Paperless-ngx、RAGFlow、Obsidian Importer、PanWriter、LibreOffice、Calibre</td>
+            <td>PDF 工具、文档管理、RAG 解析、笔记导入、排版转换</td>
+            <td>说明「文档入口」与「语料出口」都有需求，但没人把中间那段做成顺滑的本地工作台。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout" style="margin-top:18px">
+      <b>竞争空白：</b>「离线可用的中文文档 → 干净 Markdown → 可入库语料包」这一段，商业产品不做，开源引擎不封装，在线服务不敢离线。ManoDoc 不需要赢过 Marker 的 OCR，只需要把 80% 的常见文档稳定地送到「可直接使用」的状态。
+    </div>
+  </section>
+
+  <!-- ======================== 03 产品明细 ======================== -->
+  <section id="products" class="card">
+    <h2><span class="num">03</span>商业与在线产品明细</h2>
+    <p class="lead">以下产品覆盖了用户最可能拿来对比的三类选择：桌面 PDF 套件、在线转换站、专业解析/SDK。每行都标出它是否能产出 Markdown，以及它真正值得 ManoDoc 学习的地方。</p>
+
+    <h3>3.1 商业桌面 PDF 套件</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 ManoDoc 的启示</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><a href="https://www.adobe.com/acrobat/acrobat-pro.html" target="_blank" rel="noopener">Adobe Acrobat Pro</a></td>
+            <td>Windows / macOS / 移动端；订阅制</td>
+            <td>PDF 创建与编辑、导出 Word/Excel/PPT/HTML/图片、OCR、比较、合并/拆分、压缩、表单、电子签名、Action Wizard 批处理</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>「导出 Office」是用户心智中的默认答案；但 Markdown 缺席，且批处理仍偏 PDF 编辑。ManoDoc 应把「导出 Markdown」做成第一公民。</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.abbyy.com/finereader/" target="_blank" rel="noopener">ABBYY FineReader PDF</a></td>
+            <td>Windows 为主，macOS / iOS 有版本；商业授权（Standard / Corporate）</td>
+            <td>高精度 OCR（约 190+ 语言）、PDF/扫描件 → Word/Excel/PPT/HTML/RTF/TXT/CSV/ODT/EPUB、版面保留、PDF 编辑、比较、脱敏、Hot Folder 监听、CLI、批量</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>OCR 与企业自动化的标杆。Hot Folder + CLI 说明「把转换放进工作流」有真实付费需求，正是 ManoDoc P1 自动化的参考。</td>
+          </tr>
+          <tr>
+            <td><a href="https://pdf.wondershare.com/" target="_blank" rel="noopener">Wondershare PDFelement</a></td>
+            <td>Windows / macOS / iOS / Android；订阅或买断</td>
+            <td>PDF 编辑、OCR（20+ 语言）、PDF ↔ Office/图片/HTML、批量转换/OCR/压缩、表单、AI 助手、云文档</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>以「性价比 + 批量」取胜。ManoDoc 的批量队列与预设应做到同样顺手，但不做 PDF 编辑。</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.gonitro.com/pdf-pro" target="_blank" rel="noopener">Nitro PDF Pro</a></td>
+            <td>Windows / macOS；订阅制</td>
+            <td>PDF 编辑、OCR（30+ 语言）、批量转换、Smart Redact、Office 集成、电子签名</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>「批量转换速度」是它的卖点。ManoDoc 需要把批量进度、失败重试与吞吐做成可感知的体验。</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.foxit.com/pdf-editor/" target="_blank" rel="noopener">Foxit PDF Editor</a></td>
+            <td>Windows / macOS / Linux；订阅或买断</td>
+            <td>PDF 编辑、OCR（40+ 语言）、PDF ↔ Office/HTML、批量、CLI/SDK、大文件性能、电子签名</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>OCR 语言覆盖与 CLI/SDK 是优势；说明专业用户需要「可脚本化」。ManoDoc 的 CLI 应作为 P1，而不是永远只做 GUI。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.2 在线转换服务</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 ManoDoc 的启示</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><a href="https://smallpdf.com/" target="_blank" rel="noopener">Smallpdf</a></td>
+            <td>Web / 桌面 / 移动；免费额度 + 订阅</td>
+            <td>PDF ↔ Word/Excel/PPT/图片、合并/拆分/压缩、OCR（Pro）、电子签名、云盘导入</td>
+            <td>Markdown：—<br>OCR：△（Pro）</td>
+            <td>界面与流程极简，是把「转换」做成消费级产品的范本；但上传文件、免费额度紧，无法服务内部资料。</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.ilovepdf.com/" target="_blank" rel="noopener">iLovePDF</a></td>
+            <td>Web / 移动；免费额度 + 订阅</td>
+            <td>PDF 工具全集、PDF ↔ Office/图片、OCR、批量（Premium）、云盘导入、电子签名</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>免费 OCR 与批量是获客点；ManoDoc 的「免费、离线、无限批量」本身就是差异化。</td>
+          </tr>
+          <tr>
+            <td><a href="https://cloudconvert.com/" target="_blank" rel="noopener">CloudConvert</a></td>
+            <td>Web / API；按分钟或订阅</td>
+            <td>200+ 格式、文档/图片/音视频/电子书/压缩包、OCR、页面范围、Job 链式操作、云存储、REST API、Webhook</td>
+            <td>Markdown：✓（LibreOffice / PyMuPDF4LLM / Pandoc 引擎）<br>OCR：✓</td>
+            <td>最接近「全能转换 API」的在线产品，且已支持 docx/pdf → md。它证明 Markdown 是真实需求，也提醒 ManoDoc 必须离线。</td>
+          </tr>
+          <tr>
+            <td><a href="https://convertio.co/" target="_blank" rel="noopener">Convertio</a></td>
+            <td>Web / 浏览器扩展；免费额度 + 订阅</td>
+            <td>300+ 格式、文档/图片/音视频/电子书、云盘导入、基础批处理</td>
+            <td>Markdown：△（以格式列表为准）<br>OCR：△</td>
+            <td>格式数量是护城河；但「多而浅」无法解决中文表格与标题层级。ManoDoc 应在常见格式上做深。</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.zamzar.com/" target="_blank" rel="noopener">Zamzar</a></td>
+            <td>Web / API；免费额度 + 订阅</td>
+            <td>1100+ 格式、批处理、API、云存储、邮件通知</td>
+            <td>Markdown：△<br>OCR：△</td>
+            <td>长尾格式覆盖广；对 ManoDoc 的启示是「格式清单」要透明可查，但不值得为长尾牺牲主流质量。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.3 专业解析与 SDK</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>产品</th><th>平台 / 价格</th><th>核心能力</th><th>Markdown / OCR</th><th>对 ManoDoc 的启示</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><a href="https://mathpix.com/pdf-conversion" target="_blank" rel="noopener">Mathpix</a></td>
+            <td>Web / 桌面 / 移动 / API / 本地部署；按页或订阅</td>
+            <td>STEM 文档解析、公式 → LaTeX、表格保留合并单元格、多栏阅读顺序、扫描件 OCR、MMD/Markdown/LaTeX/DOCX/HTML/PPTX/XLSX、page range、lines.json 置信度</td>
+            <td>Markdown：✓<br>OCR：✓</td>
+            <td>「公式与表格保真」的天花板；但面向 STEM，价格与中文通用文档覆盖不是它的主场。</td>
+          </tr>
+          <tr>
+            <td><a href="https://datalab.to/" target="_blank" rel="noopener">Datalab Marker</a></td>
+            <td>开源 + 托管 API；开源代码 Apache-2.0，模型权重有商用门槛</td>
+            <td>PDF/图片/Office → Markdown/JSON/HTML、OCR、表格、公式、图片、阅读顺序、批处理、GPU/CPU/MPS、LLM 增强</td>
+            <td>Markdown：✓<br>OCR：✓</td>
+            <td>ManoDoc 的 P1 候选引擎；质量高但依赖重（Python + 模型），适合「检测环境 + 引导安装」。</td>
+          </tr>
+          <tr>
+            <td><a href="https://products.groupdocs.com/conversion/" target="_blank" rel="noopener">Aspose / GroupDocs</a></td>
+            <td>SDK（.NET / Java / Python / Node.js）；商业授权</td>
+            <td>100+ 格式转换、PDF/Word/Excel/PPT/HTML/图片、OCR（Aspose.OCR 另购）、批量大小配置、文档比较、水印、元数据</td>
+            <td>Markdown：△（以目标格式列表为准）<br>OCR：△（需组合 Aspose.OCR）</td>
+            <td>企业级「格式矩阵」的代表；ManoDoc 不做 SDK，但应学习它的格式兼容与批处理参数。</td>
+          </tr>
+          <tr>
+            <td><a href="https://apryse.com/" target="_blank" rel="noopener">Apryse / Nutrient</a></td>
+            <td>SDK / 私有化；商业授权</td>
+            <td>高保真 PDF 渲染、转换、OCR、脱敏、签署、注释、表单、文档比较</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>面向嵌入式文档体验；ManoDoc 不提供预览，仅借鉴其文档处理的稳定与速度。</td>
+          </tr>
+          <tr>
+            <td><a href="https://docparser.com/" target="_blank" rel="noopener">Docparser</a></td>
+            <td>SaaS；按文档量订阅</td>
+            <td>模板化抽取发票/订单/表单字段、OCR、表格、Webhook、API、云盘集成</td>
+            <td>Markdown：—<br>OCR：✓</td>
+            <td>不是 Markdown 工具，但证明「结构化抽取 + 自动化」有付费市场；ManoDoc 的语料包可视为轻量版结构化输出。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================== 04 开源 ======================== -->
+  <section id="oss" class="card">
+    <h2><span class="num">04</span>开源项目与 GitHub</h2>
+    <p class="lead">开源生态已经覆盖「解析、OCR、表格、公式、切块」的每一块拼图。ManoDoc 的关键不是再写一个解析器，而是选对引擎、补齐工程层。以下星标为 2026-11-18 快照，仅用于判断社区体量，不代表质量。</p>
+
+    <h3>4.1 核心转换引擎</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项目</th><th>语言 / 许可</th><th>输入 → 输出</th><th>OCR / 表格 / 公式</th><th>技术要点与定位</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><a href="https://github.com/jgm/pandoc" target="_blank" rel="noopener">Pandoc</a><br><span class="small">46.9k ★</span></td>
+            <td>Haskell<br>GPL-2.0</td>
+            <td>Markdown / DOCX / ODT / EPUB / HTML / LaTeX 等 → 60+ 输出（含 DOCX/HTML/EPUB/PDF）</td>
+            <td>— / △ / ✓</td>
+            <td>统一 AST + reader/writer + 模板 + filter。文档转换的「编译器」；不适合当抽取器，PDF 输出依赖 LaTeX。</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/firecrawl/anydoc" target="_blank" rel="noopener">anydoc</a><br><span class="small">23.6k ★</span></td>
+            <td>Rust<br>MIT</td>
+            <td>DOC/DOCX、PPT/PPTX、XLS/XLSX、ODF、RTF、EPUB、CSV、文本型 PDF → GFM</td>
+            <td>— / ✓ / ✓（OMML/MathML）</td>
+            <td>共享文档模型 + 单一 Markdown 序列化器；内容级格式识别；速度极快；无 OCR，扫描件返回 <code>NeedsOcr</code>。</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/datalab-to/marker" target="_blank" rel="noopener">Marker</a><br><span class="small">41.0k ★</span></td>
+            <td>Python<br>Apache-2.0（代码）<br>模型有商用门槛</td>
+            <td>PDF、图片、DOCX、PPTX、XLSX、HTML、EPUB → Markdown / JSON / HTML / chunks</td>
+            <td>✓ / ✓ / ✓</td>
+            <td>Surya OCR + 版面/阅读顺序 + 表格重建 + 公式；GPU 快、CPU 可跑；模型体积大，适合 P1。</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/opendatalab/MinerU" target="_blank" rel="noopener">MinerU</a><br><span class="small">83.9k ★</span></td>
+            <td>Python<br>MinerU Open Source License（基于 Apache-2.0）</td>
+            <td>PDF、图片、DOCX/PPTX/XLSX、ODF、EPUB、HTML、CSV → Markdown / HTML / LaTeX / DOCX / EPUB / JSON</td>
+            <td>✓ / ✓ / ✓</td>
+            <td>中文与复杂版面强；跨页表格、表格内公式、109 语言 OCR；pipeline/vlm/hybrid；CPU/GPU/NPU/MPS。</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/docling-project/docling" target="_blank" rel="noopener">Docling</a><br><span class="small">70.7k ★</span></td>
+            <td>Python<br>MIT</td>
+            <td>PDF、Office、HTML、EPUB、图片、音视频 → Markdown / HTML / JSON / DocTags / LaTeX / Pandoc AST</td>
+            <td>✓ / ✓ / ✓</td>
+            <td>IBM 系；<code>DoclingDocument</code> 统一模型、TableFormer、RT-DETR/Heron 版面、RapidOCR；集成 LangChain/LlamaIndex。</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">MarkItDown</a><br><span class="small">196.4k ★</span></td>
+            <td>Python<br>MIT</td>
+            <td>Office、PDF、HTML、图片、音频等 25+ 格式 → Markdown</td>
+            <td>△（可选 LLM）/ △ / —</td>
+            <td>极轻量、插件式 converter；PDF 仅基础文本，无版面/OCR；适合简单 Office 文档与 Python 生态。</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/xberg-io/xberg" target="_blank" rel="noopener">xberg（原 Kreuzberg）</a><br><span class="small">9.6k ★</span></td>
+            <td>Rust<br>MIT</td>
+            <td>107 种格式 / 141 扩展名 → 文本 / Markdown / Djot / HTML / JSON tree / DocTags</td>
+            <td>✓ / ✓ / △</td>
+            <td>Rust 文档智能引擎；Tesseract/PaddleOCR/Candle/VLM、TATR/SLANet 表格、语法切块、CLI/API/MCP、14 种语言绑定。</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Unstructured-IO/unstructured" target="_blank" rel="noopener">Unstructured</a><br><span class="small">15.8k ★</span></td>
+            <td>Python<br>Apache-2.0</td>
+            <td>20+ 格式 → 结构化元素 JSON/CSV；可转 Markdown</td>
+            <td>✓ / ✓ / △</td>
+            <td>按元素分区 + 35+ 元数据字段 + by-title 切块；RAG ETL 的事实标准之一；依赖重、安装复杂。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>4.2 解析与后处理组件</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项目</th><th>语言 / 许可</th><th>作用</th><th>与 ManoDoc 的关系</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://github.com/mwilliamson/mammoth.js" target="_blank" rel="noopener">Mammoth</a></td><td>JS / Python · BSD-2-Clause</td><td>DOCX → 语义 HTML，基于样式映射</td><td>轻量 docx 解析参考；不处理版面与表格合并。</td></tr>
+          <tr><td><a href="https://github.com/matthewwithanm/python-markdownify" target="_blank" rel="noopener">markdownify</a></td><td>Python · MIT</td><td>HTML → Markdown</td><td>清洗/转换层的候选组件。</td></tr>
+          <tr><td><a href="https://github.com/Alir3z4/html2text" target="_blank" rel="noopener">html2text</a></td><td>Python · GPL-3.0</td><td>HTML → Markdown</td><td>GPL 许可需注意，适合独立进程或避免静态链接。</td></tr>
+          <tr><td><a href="https://github.com/facebookresearch/nougat" target="_blank" rel="noopener">Nougat</a></td><td>Python · MIT（代码）</td><td>学术 PDF → Markdown / LaTeX</td><td>公式/学术版面参考；模型较旧，中文与通用文档弱。</td></tr>
+          <tr><td><a href="https://github.com/getomni-ai/zerox" target="_blank" rel="noopener">Zerox</a></td><td>TypeScript · MIT</td><td>视觉模型 OCR → Markdown</td><td>VLM 路线的参考；默认依赖云模型，不符合离线优先。</td></tr>
+          <tr><td><a href="https://github.com/ocrmypdf/OCRmyPDF" target="_blank" rel="noopener">OCRmyPDF</a></td><td>Python · MPL-2.0</td><td>给扫描 PDF 加文本层</td><td>PDF 预检后的「补 OCR」候选；需 Tesseract/Ghostscript。</td></tr>
+          <tr><td><a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="noopener">Tesseract</a></td><td>C++ · Apache-2.0</td><td>OCR 引擎</td><td>离线 OCR 的稳妥选择；中文精度一般，需要预处理。</td></tr>
+          <tr><td><a href="https://github.com/PaddlePaddle/PaddleOCR" target="_blank" rel="noopener">PaddleOCR</a></td><td>Python · Apache-2.0</td><td>OCR / 版面 / 表格</td><td>中文 OCR 强；2026-11-18 用户决定纳入 P1 可选 OCR 组件；体积与 Python 依赖重。</td></tr>
+          <tr><td><a href="https://github.com/jsvine/pdfplumber" target="_blank" rel="noopener">pdfplumber</a></td><td>Python · MIT</td><td>PDF 文本/表格/坐标提取</td><td>表格修复与页级预检的参考实现。</td></tr>
+          <tr><td><a href="https://github.com/camelot-dev/camelot" target="_blank" rel="noopener">Camelot</a></td><td>Python · MIT</td><td>PDF 表格提取</td><td>规则型表格抽取；对合并单元格有限。</td></tr>
+          <tr><td><a href="https://github.com/grobidOrg/grobid" target="_blank" rel="noopener">GROBID</a></td><td>Java · Apache-2.0</td><td>学术 PDF → TEI/XML</td><td>学术结构化参考；不是通用文档工具。</td></tr>
+          <tr><td><a href="https://github.com/ArtifexSoftware/pdf2docx" target="_blank" rel="noopener">pdf2docx</a></td><td>Python · MIT</td><td>PDF → DOCX</td><td>「PDF 转可编辑」的参考；与 Markdown 目标不同。</td></tr>
+          <tr><td><a href="https://tika.apache.org/" target="_blank" rel="noopener">Apache Tika</a></td><td>Java · Apache-2.0</td><td>1000+ 格式的文本与元数据提取</td><td>格式识别与元数据参考；不做 Markdown 结构。</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>4.3 相邻平台与工具</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项目</th><th>语言 / 许可</th><th>核心能力</th><th>对 ManoDoc 的启示</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank" rel="noopener">Stirling PDF</a><br><span class="small">96.9k ★</span></td><td>Java / TypeScript · 开源（MIT 为主）</td><td>50+ PDF 工具、OCR、PDF ↔ Word/Text/HTML/XML/CSV/PPT、文件转 PDF、自动化管线、REST API、自托管</td><td>「本地/自托管 PDF 工具全集」的最佳参考；但不产 Markdown、偏 PDF。</td></tr>
+          <tr><td><a href="https://github.com/paperless-ngx/paperless-ngx" target="_blank" rel="noopener">Paperless-ngx</a><br><span class="small">48.3k ★</span></td><td>Python · GPL-3.0</td><td>扫描件归档、OCR、全文检索、标签、通信方、自动匹配</td><td>文档入口与元数据管理的参考；不做 Markdown 转换。</td></tr>
+          <tr><td><a href="https://github.com/infiniflow/ragflow" target="_blank" rel="noopener">RAGFlow</a><br><span class="small">94.4k ★</span></td><td>Go / Python · Apache-2.0</td><td>DeepDoc 解析（OCR/版面/表格/阅读顺序）、模板化切块、知识库、RAG</td><td>语料化与切块的强参考；重、面向 RAG 平台，不是桌面转换器。</td></tr>
+          <tr><td><a href="https://github.com/docling-project/docling-serve" target="_blank" rel="noopener">Docling Serve</a><br><span class="small">1.9k ★</span></td><td>Python · MIT</td><td>Docling 的 HTTP 服务与任务 API</td><td>P1 引擎以「本地服务」方式接入的形态参考。</td></tr>
+          <tr><td><a href="https://www.libreoffice.org/" target="_blank" rel="noopener">LibreOffice</a></td><td>C++ · MPL-2.0</td><td>Headless 转换、Office 格式兼容</td><td>格式兜底与 PDF 输出的重型方案；体积大，不适合作为核心。</td></tr>
+          <tr><td><a href="https://calibre-ebook.com/" target="_blank" rel="noopener">Calibre</a></td><td>Python · GPL-3.0</td><td>电子书格式互转（EPUB/MOBI/AZW3/PDF）</td><td>电子书方向的参考；不是 Markdown 工作台。</td></tr>
+          <tr><td><a href="https://github.com/mb21/panwriter" target="_blank" rel="noopener">PanWriter</a><br><span class="small">1.3k ★</span></td><td>TypeScript · GPL-3.0</td><td>Markdown 编辑器 + Pandoc 导出 + 分页预览</td><td>「Markdown 编辑 + 导出」的桌面交互参考。</td></tr>
+          <tr><td><a href="https://github.com/obsidianmd/obsidian-importer" target="_blank" rel="noopener">Obsidian Importer</a><br><span class="small">1.8k ★</span></td><td>TypeScript · MIT</td><td>Apple Notes / OneNote / Evernote / Notion / HTML → Markdown</td><td>「导入即 Markdown」的用户预期；ManoDoc 可做系统分享/拖拽入口。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================== 05 功能矩阵 ======================== -->
+  <section id="matrix" class="card">
+    <h2><span class="num">05</span>结构化功能面矩阵</h2>
+    <p class="lead">5.1 是功能面总表，用来保证「不漏功能」；5.2 / 5.3 选 24 个核心功能面对代表产品做覆盖对照；5.4 给出 ManoDoc 的组合机会。</p>
+
+    <h3>5.1 功能面总表（61 项）</h3>
+    <p class="small">优先级为 S2 初步判断：P0 = MVP 必须，P1 = 紧随其后，P2 = 后续，不做 = 明确排除。最终以 S4 功能设计与 S3 需求编号为准。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>编号</th><th>功能面</th><th>说明 / 边界</th><th>优先级</th></tr></thead>
+        <tbody>
+          <tr class="group-row"><td colspan="4">A. 输入与识别</td></tr>
+          <tr><td>F-01</td><td>Office 文档</td><td>doc/docx/ppt/pptx/xls/xlsx；含旧版 OLE 格式</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-02</td><td>ODF / RTF / EPUB / CSV</td><td>odt/ods/odp、rtf、epub、csv；anydoc 已覆盖</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-03</td><td>文本型 PDF</td><td>有文本层；需页级预检，避免「一页失败、整份失败」</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-04</td><td>扫描件 / 图片 PDF</td><td>xberg OCR（P0）；PaddleOCR（P1）中文增强；均不可用时提示跳过/失败</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-05</td><td>图片输入</td><td>PNG/JPG/TIFF；依赖 OCR，P1</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-06</td><td>HTML / MHTML / Markdown</td><td>HTML 转 Markdown；Markdown 直通并清洗</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-07</td><td>邮件</td><td>EML/MSG；附件递归</td><td><span class="tag p2">P2</span></td></tr>
+          <tr><td>F-08</td><td>内容级格式识别</td><td>读字节而不是只看扩展名；错误扩展名也能处理</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-09</td><td>加密 / 损坏 / 超大文件</td><td>密码输入、损坏提示、流式处理与内存上限</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-10</td><td>音频 / 视频转写</td><td>非「可读文档」主线，明确不做</td><td><span class="tag no">不做</span></td></tr>
+
+          <tr class="group-row"><td colspan="4">B. 解析与保真</td></tr>
+          <tr><td>F-11</td><td>标题层级</td><td>从字号、加粗、编号、样式综合判断；保留章节编号</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-12</td><td>列表 / 编号</td><td>有序、无序、多级列表；避免把编号吞进正文</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-13</td><td>表格（GFM）</td><td>标准表格输出为 GFM；复杂表格可降级为 HTML</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-14</td><td>合并单元格 / 跨页表格</td><td>MVP 尽力而为；P1 用版面引擎增强</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-15</td><td>公式 → LaTeX</td><td>OMML/MathML 已可；PDF 公式依赖 OCR/视觉模型</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-16</td><td>图片提取 / alt</td><td>落 <code>assets/</code> 相对路径；可选 base64</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-17</td><td>代码块</td><td>保留缩进与语言标记；PDF 中尽力识别</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-18</td><td>脚注 / 尾注</td><td>编号与引用关系保留</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-19</td><td>阅读顺序 / 多栏</td><td>PDF 的关键能力；Office 结构天然有序</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-20</td><td>页眉页脚 / 页码清理</td><td>中文标准文档的高频噪声；可开关</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-21</td><td>水印 / 印章</td><td>红头文件、盖章页的识别与保留策略</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-22</td><td>目录 / TOC</td><td>保留目录结构；清理点线与页码；避免与正文重复</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-23</td><td>超链接 / 锚点</td><td>保留链接；修复中文锚点与空格</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-24</td><td>批注 / 修订 / 手写</td><td>批注可忽略或附注；手写与竖排依赖 OCR</td><td><span class="tag p2">P2</span></td></tr>
+
+          <tr class="group-row"><td colspan="4">C. 输出与导出</td></tr>
+          <tr><td>F-25</td><td>Markdown</td><td>GFM 为默认；表头、脚注、公式、图片均可读</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-26</td><td>HTML</td><td>pandoc 导出；模板与 CSS 可配置</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-27</td><td>DOCX</td><td>pandoc 导出；适合回填与交付</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-28</td><td>PDF</td><td>pandoc → Typst sidecar；不使用 LaTeX；MVP 接入</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-29</td><td>EPUB</td><td>pandoc 直接支持</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-30</td><td>JSON / JSONL</td><td>语料包核心格式；每行一个 chunk</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-31</td><td>LaTeX</td><td>公式密集场景；P2</td><td><span class="tag p2">P2</span></td></tr>
+          <tr><td>F-32</td><td>图片资产</td><td>目录 + 相对路径；单文件可选 base64</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-33</td><td>模板 / 样式</td><td>HTML/DOCX 模板、代码高亮、表格样式</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-34</td><td>批量导出</td><td>一次任务导出多种格式</td><td><span class="tag p0">P0</span></td></tr>
+
+          <tr class="group-row"><td colspan="4">D. 批量与工作流</td></tr>
+          <tr><td>F-35</td><td>单文件拖拽</td><td>拖入即转；支持 Finder 打开方式</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-36</td><td>文件夹递归</td><td>镜像目录；跳过隐藏文件与系统文件</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-37</td><td>队列 / 进度 / 取消 / 重试</td><td>并发可配；失败可单独重试；可取消整体</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-38</td><td>预设 / 参数</td><td>「标准文档」「扫描件」「知识库」等预设；可复制</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-39</td><td>历史 / 回看</td><td>最近 50 条元数据；可重新导出</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-40</td><td>监听文件夹</td><td>自动转换新文件；适合固定投递目录</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-41</td><td>CLI</td><td>面向自动化与高级用户；与 GUI 共享核心</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-42</td><td>API / SDK</td><td>本地 HTTP API 或库；P2</td><td><span class="tag p2">P2</span></td></tr>
+          <tr><td>F-43</td><td>定时 / 断点续跑</td><td>跳过已存在、失败续跑、计划任务</td><td><span class="tag p1">P1</span></td></tr>
+
+          <tr class="group-row"><td colspan="4">E. 语料化</td></tr>
+          <tr><td>F-44</td><td>清洗规则</td><td>页眉页脚、页码、水印、空段、断行、重复标题</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-45</td><td>中文规范化</td><td>字间空格、全半角、标题编号、标点、目录点线</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-46</td><td>切块</td><td>按标题为主；表格整块；超长二次切分</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-47</td><td>重叠 / 父子块</td><td>块间重叠、章节父块、表格上下文</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-48</td><td>元数据</td><td>来源、文件名、格式、标题、章节路径、页码、hash</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-49</td><td>manifest / 版本</td><td>输入哈希、引擎版本、参数、时间、结果摘要</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-50</td><td>去重 / token 统计</td><td>重复段落检测；字符/token 计数</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-51</td><td>平台导入</td><td>Dify/RAGFlow/向量库；厂商中立 JSONL 优先</td><td><span class="tag p2">P2</span></td></tr>
+
+          <tr class="group-row"><td colspan="4">F. 体验与平台</td></tr>
+          <tr><td>F-52</td><td>预览 / 差异</td><td>原计划渲染 + 源码；2026-11-18 按用户决定取消，ManoDoc 不提供预览</td><td><span class="tag p2">已取消</span></td></tr>
+          <tr><td>F-53</td><td>错误诊断</td><td>文件、页、引擎、原因、下一步；可导出报告</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-54</td><td>中文界面 / 深色</td><td>中文优先；深色模式 P1</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-55</td><td>macOS / Apple Silicon</td><td>原生 arm64；MPS 加速可用</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-56</td><td>离线 / 无遥测</td><td>默认零网络；可选云服务必须显式开启</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-57</td><td>Windows / Linux</td><td>macOS 稳定后扩展</td><td><span class="tag p2">P2</span></td></tr>
+          <tr><td>F-58</td><td>签名 / 公证 / 更新</td><td>Hardened Runtime、notarization、自动更新</td><td><span class="tag p1">P1</span></td></tr>
+
+          <tr class="group-row"><td colspan="4">G. 安全与合规</td></tr>
+          <tr><td>F-59</td><td>钥匙串 / 脱敏</td><td>密钥入系统钥匙串；日志不含敏感内容</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>F-60</td><td>审计日志</td><td>本地可查的任务与文件操作记录</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>F-61</td><td>开源协议 / 授权</td><td>MIT；第三方 sidecar 许可与源码说明</td><td><span class="tag p0">P0</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>5.2 商业 / 在线覆盖矩阵</h3>
+    <p class="small">✓ 支持 · △ 部分/付费/需额外依赖 · — 不支持。在线产品的「离线」统一为 —。</p>
+    <div class="table-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>功能面</th>
+            <th>Acrobat</th><th>ABBYY</th><th>PDFelement</th><th>Foxit</th><th>Smallpdf/iLovePDF</th><th>CloudConvert</th><th>Mathpix</th><th>Aspose/GroupDocs</th><th>Marker</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Office 输入</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>文本型 PDF</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>扫描件 OCR</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>图片输入</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Markdown 输出</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>HTML / DOCX 输出</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td></tr>
+          <tr><td>PDF 输出</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
+          <tr><td>标题层级识别</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>表格保真</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>合并单元格</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="no">—</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>公式 → LaTeX</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="no">—</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>图片提取</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>阅读顺序 / 多栏</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>页眉页脚清理</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="part">△</td><td class="no">—</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>批量 / 文件夹</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>进度 / 重试</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="part">△</td><td class="part">△</td></tr>
+          <tr><td>预设 / 历史</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>监听文件夹</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="part">△</td><td class="no">—</td><td class="part">△</td><td class="no">—</td><td class="part">△</td><td class="no">—</td></tr>
+          <tr><td>CLI / API</td><td class="part">△</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>完全离线</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>中文界面</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="part">△</td><td class="part">△</td><td class="no">—</td></tr>
+          <tr><td>切块 / 元数据</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>开源 / 自托管</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="part">△</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>价格模式</td><td>订阅</td><td>买断/订阅</td><td>订阅/买断</td><td>订阅/买断</td><td>免费+订阅</td><td>按量/订阅</td><td>按页/订阅</td><td>商业授权</td><td>开源+API</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>5.3 开源引擎覆盖矩阵</h3>
+    <div class="table-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>功能面</th>
+            <th>Pandoc</th><th>anydoc</th><th>Marker</th><th>MinerU</th><th>Docling</th><th>MarkItDown</th><th>xberg</th><th>Unstructured</th><th>RAGFlow</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Office 输入</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>文本型 PDF</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>扫描件 OCR</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>图片输入</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Markdown 输出</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="part">△</td></tr>
+          <tr><td>HTML / DOCX 输出</td><td class="yes">✓</td><td class="no">—</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="part">△</td></tr>
+          <tr><td>PDF 输出</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td>标题层级识别</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>表格保真</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>合并单元格</td><td class="part">△</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td></tr>
+          <tr><td>公式 → LaTeX</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="part">△</td><td class="part">△</td><td class="part">△</td></tr>
+          <tr><td>图片提取</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>阅读顺序 / 多栏</td><td class="part">△</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>页眉页脚清理</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>批量 / 文件夹</td><td class="part">△</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>进度 / 重试</td><td class="no">—</td><td class="no">—</td><td class="part">△</td><td class="part">△</td><td class="no">—</td><td class="no">—</td><td class="part">△</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>预设 / 历史</td><td class="part">△</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="part">△</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>监听文件夹</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="part">△</td></tr>
+          <tr><td>CLI / API</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>完全离线</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>中文界面</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="part">△</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>切块 / 元数据</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="part">△</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>开源 / 自托管</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>价格模式</td><td>免费</td><td>免费</td><td>模型门槛</td><td>免费</td><td>免费</td><td>免费</td><td>免费</td><td>免费/商业</td><td>免费/商业</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>5.4 结论：ManoDoc 的组合机会</h3>
+    <div class="callout">
+      <b>单个维度上，ManoDoc 都很难赢：</b>OCR 赢不过 ABBYY/Marker，格式数量赢不过 CloudConvert/xberg，RAG 切块赢不过 RAGFlow/Unstructured。<br>
+      <b>但组合起来，空白非常明确：</b>macOS 原生、完全离线、中文优先、anydoc 快速解析 + xberg OCR/表格增强 + pandoc 导出、PDF 页级预检、清洗/切块/语料包、批量队列与可解释诊断——目前没有产品同时做到。
+    </div>
+    <div class="callout warn" style="margin-top:14px">
+      <b>后续决策（2026-11-18）：</b>用户决定将 xberg 纳入 ManoDoc 内核，作为第二解析引擎，负责扫描件/图片 PDF 的 OCR、复杂表格与 anydoc 失败回退；同时将 PaddleOCR 纳入 P1，作为中文 OCR 增强组件。同日增补中英文切换、跟随系统/浅色/深色主题与 Cmd+K 命令面板。
+      <br><br><b>范围再扩展（2026-11-18 优化请求）：</b>保留基础一对一互转（Word ↔ Markdown、PDF → Markdown / Word、Markdown → Word / PDF / HTML / EPUB、PNG/JPEG → Markdown 等），同一方向多引擎时提供引擎选择；Python 引擎由内置 uv 在应用数据目录创建隔离 `.venv`；文件类型统一使用图标。竞品中「格式互转」已是基础能力，ManoDoc 的差异仍在离线、可解释的多引擎编排与语料化；实施要求见 PRD REQ-106 ~ REQ-110。
+    </div>
+  </section>
+
+  <!-- ======================== 06 技术原理 ======================== -->
+  <section id="tech" class="card">
+    <h2><span class="num">06</span>实现技术与原理</h2>
+    <p class="lead">文档转换不是「读文件、写字符串」，而是三种完全不同的技术路线在同一个产品里协作。理解它们的边界，才能设计正确的引擎路由。</p>
+
+    <h3>6.1 三条解析路线</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>路线</th><th>原理</th><th>代表</th><th>优点</th><th>局限</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>结构化解析</td>
+            <td>解压 OOXML/ODF 容器，解析 XML（段落、样式、表格、关系、嵌入资源），建立统一文档模型后序列化为 Markdown。</td>
+            <td>anydoc、Mammoth、Pandoc、xberg（文档部分）</td>
+            <td>快、确定、无需模型；标题/列表/表格/公式结构准确。</td>
+            <td>依赖源文件结构；无样式标题可能识别失败；扫描件无能为力。</td>
+          </tr>
+          <tr>
+            <td>版式 / 视觉解析</td>
+            <td>把 PDF/图片渲染为页面，做版面检测（标题/正文/表格/图/页眉页脚）、OCR、阅读顺序重建、表格结构识别、公式识别，再生成 Markdown。</td>
+            <td>Marker/Surya、MinerU、Docling、RAGFlow DeepDoc、Mathpix</td>
+            <td>能处理扫描件、复杂版式、多栏、表格与公式。</td>
+            <td>模型体积大、速度慢、资源占用高；结果有概率性，需要置信度与人工复核。</td>
+          </tr>
+          <tr>
+            <td>规则 / 工具封装</td>
+            <td>调用 LibreOffice、Pandoc、Tika、Calibre 等外部程序，或按固定规则做文本/表格抽取。</td>
+            <td>CloudConvert、Stirling PDF、LibreOffice、Pandoc</td>
+            <td>格式覆盖广、实现成本低、生态成熟。</td>
+            <td>Markdown 结构弱；排版保真取决于工具；难以做中文清洗与语料化。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>6.2 ManoDoc 的引擎路由</h3>
+    <div class="pipeline">
+      <div class="step"><span class="n">STEP 01</span><b>格式识别</b><span>读字节 + 扩展名；识别加密、损坏、扫描件</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">STEP 02</span><b>引擎路由</b><span>Office/ODF → anydoc；文本 PDF → 预检后 anydoc；扫描件 → 提示 / P1 OCR</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">STEP 03</span><b>Markdown 生成</b><span>统一 GFM；表格、公式、图片、脚注</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">STEP 04</span><b>清洗与规范化</b><span>中文空格、标题编号、页眉页脚、目录点线</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">STEP 05</span><b>导出 / 语料化</b><span>pandoc 导出；切块、元数据、manifest</span></div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>6.3 anydoc 的关键设计</h3>
+        <ul>
+          <li><strong>共享文档模型</strong>：每种格式先解析成同一套块模型（标题、段落、列表、表格、图片、脚注），再由单一 Markdown 序列化器输出。这保证跨格式的转义、表格、锚点行为一致。</li>
+          <li><strong>内容级识别</strong>：读 PDF 头、RTF 开组、OLE 流名、ZIP mimetype，而不是只看扩展名。</li>
+          <li><strong>无 OCR</strong>：文本型 PDF 通过 <code>pdf-inspector</code> 提取；任一页需要 OCR 时返回 <code>NeedsOcr</code>，CLI 退出码 3。</li>
+          <li><strong>公式</strong>：OMML/MathML → LaTeX；图片保留原始字节，Markdown 中以 alt 文本占位。</li>
+        </ul>
+      </div>
+      <div>
+        <h3>6.4 pandoc 的关键设计</h3>
+        <ul>
+          <li><strong>AST 中间表示</strong>：reader 把输入解析为 Pandoc AST，writer 再生成目标格式；过滤器可在 AST 上做变换。</li>
+          <li><strong>模板系统</strong>：HTML/DOCX/LaTeX 输出都可通过模板控制样式。</li>
+          <li><strong>PDF 依赖外部引擎</strong>：默认 pdfLaTeX；也可用 XeLaTeX、LuaLaTeX、Typst、wkhtmltopdf、WeasyPrint 等。</li>
+          <li><strong>不是抽取器</strong>：docx 标题依赖 Word 的 Heading 样式；没有样式时，pandoc 不会猜测。</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>6.5 版面 / OCR 引擎的关键设计</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>环节</th><th>常见做法</th><th>代表实现</th></tr></thead>
+        <tbody>
+          <tr><td>版面检测</td><td>目标检测模型识别标题、正文、表格、图片、页眉页脚等区域；再按坐标与阅读顺序排序。</td><td>Docling RT-DETR/Heron、Marker Surya、MinerU layout、RAGFlow YOLOv10</td></tr>
+          <tr><td>OCR</td><td>文本检测 + 识别；中文常用 PP-OCR、Surya、Tesseract；VLM 路线直接用多模态模型读图。</td><td>PaddleOCR、Surya、Tesseract、MinerU VLM</td></tr>
+          <tr><td>表格结构</td><td>识别行/列/表头/合并单元格；输出 HTML 表格或结构化单元格网格。</td><td>TableFormer（Docling）、TATR/SLANet（xberg）、Marker TableConverter、MinerU 跨页表格</td></tr>
+          <tr><td>公式</td><td>检测公式区域 → 识别为 LaTeX；行内公式需要与正文对齐。</td><td>Mathpix、Marker、MinerU、UniMERNet</td></tr>
+          <tr><td>阅读顺序</td><td>基于坐标、栏检测与相邻块关系，重建单栏/多栏阅读顺序。</td><td>RAGFlow XGBoost、Docling reading order、Marker</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>6.6 语料化：从 Markdown 到可入库数据</h3>
+    <ul>
+      <li><strong>切块</strong>：优先按标题层级切（H1/H2/H3），表格作为整块保留；超长块再按字符/token 上限二次切分，并保留重叠。</li>
+      <li><strong>元数据</strong>：来源路径、文件名、格式、标题、章节路径、页码、输入 hash、引擎与参数、字符/token 数。</li>
+      <li><strong>manifest</strong>：记录每个文件的输入、输出、状态、耗时、警告与引擎版本；保证同输入 + 同预设可复现。</li>
+      <li><strong>厂商中立</strong>：<code>chunks.jsonl</code> 每行一个 <code>{id, text, metadata}</code>，不绑定 Dify/RAGFlow；需要时再由适配器转换。</li>
+    </ul>
+
+    <h3>6.7 Tauri 2 的桌面架构</h3>
+    <div class="pipeline">
+      <div class="step"><span class="n">UI</span><b>WebView 前端</b><span>拖拽、队列、内联状态、设置；组件化 UI</span></div>
+      <div class="arrow">⇄</div>
+      <div class="step"><span class="n">CORE</span><b>Rust 后端</b><span>任务编排、文件系统、进程管理、日志、错误</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">ENGINE</span><b>anydoc crate</b><span>直接嵌入，零进程开销</span></div>
+      <div class="arrow">+</div>
+      <div class="step"><span class="n">SIDECAR</span><b>pandoc / OCR</b><span>独立进程、参数数组、超时与取消</span></div>
+    </div>
+    <p class="small">安全边界：所有外部命令用参数数组调用，禁止拼接 shell 字符串；限制可访问路径；日志脱敏；密钥入系统钥匙串；默认不发起网络请求。</p>
+  </section>
+
+  <!-- ======================== 07 样本验证 ======================== -->
+  <section id="test" class="card">
+    <h2><span class="num">07</span>真实样本验证</h2>
+    <p class="lead">竞品资料只能说明「宣称能做什么」。这一节用 <code>example/</code> 的真实等保文档，验证 anydoc 与 pandoc 在本项目最关键的场景里到底能做到什么。</p>
+
+    <div class="stats">
+      <div class="stat"><div class="v">49</div><div class="l">anydoc 从 docx 识别的标题数</div></div>
+      <div class="stat"><div class="v">0</div><div class="l">pandoc 从同一 docx 识别的标题数</div></div>
+      <div class="stat"><div class="v">1048</div><div class="l">anydoc 从 xlsx 输出的表格行</div></div>
+      <div class="stat"><div class="v">3</div><div class="l">anydoc 处理原始 PDF 的退出码（需要 OCR）</div></div>
+    </div>
+
+    <h3>7.1 测试环境与文件</h3>
+    <ul>
+      <li>macOS Darwin 24.5，Apple Silicon；pandoc 3.8.3；anydoc 0.2.4（npm CLI）；Python 3.13 + PyMuPDF。</li>
+      <li><strong>docx</strong>：GB/T 28448-2019 等保测评要求，958 KB，<code>document.xml</code> 约 11.8 MB，2 个 Word 表格、1 张图片、0 个 Heading 样式。</li>
+      <li><strong>PDF</strong>：高风险判定实施指引，50 页，约 6.1 万字文本层；第 1 页为纯图片封面。</li>
+      <li><strong>xlsx</strong>：等保 2.0 指标清单，113 KB，单表 1048 行。</li>
+      <li><strong>md</strong>：等保测评 skill，1074 行，用于验证 Markdown → DOCX/HTML/EPUB。</li>
+    </ul>
+
+    <h3>7.2 结果对照</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>文件</th><th>引擎</th><th>结果</th><th>标题</th><th>表格</th><th>关键问题</th></tr></thead>
+        <tbody>
+          <tr><td>docx</td><td>anydoc</td><td class="yes" style="color:#0f6b57;font-weight:700">成功</td><td>49</td><td>2 个 GFM 表</td><td>标题编号带空格（<code>5 . 1</code>）；部分中文被字间空格拆开；目录锚点含空格。</td></tr>
+          <tr><td>docx</td><td>pandoc 3.8.3</td><td class="yes" style="color:#0f6b57;font-weight:700">成功</td><td>0</td><td>2 个 HTML 表</td><td>无 Heading 样式，标题全部丢失；表格为 raw HTML；图片为 <code>&lt;img&gt;</code> 标签。</td></tr>
+          <tr><td>xlsx</td><td>anydoc</td><td class="yes" style="color:#0f6b57;font-weight:700">成功</td><td>1</td><td>1048 行</td><td>表头与数据完整；长单元格可读；适合直接入库。</td></tr>
+          <tr><td>PDF（原始）</td><td>anydoc</td><td class="no" style="color:#a33f30;font-weight:700">失败</td><td>—</td><td>—</td><td>第 1 页无文本层，退出码 3；整份 50 页文档不产出。</td></tr>
+          <tr><td>PDF（去封面）</td><td>anydoc</td><td class="yes" style="color:#0f6b57;font-weight:700">成功</td><td>12</td><td>204 行 / 35 个表块</td><td>复杂表格把多段文字塞进单元格；目录点线未清理；标题层级不一致（H2/H3/H4 混用）。</td></tr>
+          <tr><td>md → docx/html/epub</td><td>pandoc 3.8.3</td><td class="yes" style="color:#0f6b57;font-weight:700">成功</td><td>—</td><td>—</td><td>三种格式均生成；DOCX 34 KB、HTML 131 KB、EPUB 30 KB。</td></tr>
+          <tr><td>md → pdf</td><td>pandoc 3.8.3</td><td class="no" style="color:#a33f30;font-weight:700">失败</td><td>—</td><td>—</td><td>未安装 pdflatex；印证 PDF 输出必须额外评估引擎。</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>7.3 五个结论</h3>
+    <div class="summary-grid">
+      <div class="finding">
+        <span class="k">01</span>
+        <b>anydoc 的 docx 结构识别明显优于 pandoc</b>
+        <p>49 vs 0 的标题差距，来自 anydoc 对字号、加粗、编号的综合判断。对没有 Heading 样式的中文标准文档，这是决定性优势。</p>
+      </div>
+      <div class="finding">
+        <span class="k">02</span>
+        <b>PDF 必须有页级预检</b>
+        <p>一个纯图片封面就让整份文档失败。MVP 必须逐页检测文本层，提供「跳过无文本页」并记录警告；否则用户会觉得「工具坏了」。</p>
+      </div>
+      <div class="finding">
+        <span class="k">03</span>
+        <b>复杂 PDF 表格不是 MVP 能承诺的</b>
+        <p>去封面后虽然能输出 204 行表格，但多段文字被塞进同一单元格。若承诺「排版清晰」，需要 P1 的版面/OCR 引擎，或明确的「表格质量警告」。</p>
+      </div>
+      <div class="finding">
+        <span class="k">04</span>
+        <b>清洗层决定「可用」与「能看」</b>
+        <p>字间空格、标题编号、目录点线、页眉页脚，都是规则可解的。它们不性感，但正是 ManoDoc 相对原始引擎的核心价值。</p>
+      </div>
+      <div class="finding">
+        <span class="k">05</span>
+        <b>xlsx 是意外的高分项</b>
+        <p>1048 行表格直接可用，说明「表格型标准/清单」是 ManoDoc 可以立刻交付价值的场景，甚至可以先于 PDF 做深。</p>
+      </div>
+      <div class="finding">
+        <span class="k">06</span>
+        <b>pandoc 的定位应收缩到「导出」</b>
+        <p>不要用它做 docx 抽取；用它做 Markdown → HTML/DOCX/EPUB/Typst。PDF 已选 Typst 编译，不使用 LaTeX。</p>
+      </div>
+    </div>
+
+    <h3>7.4 复现方式</h3>
+    <pre><span class="c"># anydoc（npm CLI）</span>
+npm exec --yes --package=@firecrawl/anydoc -- anydoc report.docx -o report.md
+npm exec --yes --package=@firecrawl/anydoc -- anydoc checklist.xlsx -o checklist.md
+
+<span class="c"># PDF：原始文件因封面页无文本层失败；去掉第 1 页后成功</span>
+python3 -I -c "import fitz; d=fitz.open('report.pdf'); d.delete_page(0); d.save('no-cover.pdf')"
+npm exec --yes --package=@firecrawl/anydoc -- anydoc no-cover.pdf -o report.md
+
+<span class="c"># pandoc 抽取与导出对照</span>
+pandoc report.docx -t gfm -o pandoc.md
+pandoc notes.md -o notes.docx
+pandoc notes.md -o notes.html
+pandoc notes.md -o notes.epub
+pandoc notes.md -o notes.pdf   <span class="c"># 本机缺少 pdflatex，失败</span></pre>
+
+    <div class="callout warn">
+      <b>厂商基准提醒：</b>anydoc 官方 benchmark 宣称 14/14 格式、4.4ms 中位耗时、81 分质量，但这些数据来自厂商自建语料与 LLM 评判，不是独立评测。上面的真实样本结果，才是 ManoDoc 做决策时更可靠的依据。
+    </div>
+  </section>
+
+  <!-- ======================== 08 机会 ======================== -->
+  <section id="opportunity" class="card">
+    <h2><span class="num">08</span>功能机会与建议</h2>
+    <p class="lead">基于竞品空白与真实样本，以下 12 项是「值得加、且竞品没有同时做好」的功能建议。它们会在 S3 转成需求编号，在 S4 排入 MVP。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>建议功能</th><th>解决什么问题</th><th>竞品空白</th><th>优先级</th></tr></thead>
+        <tbody>
+          <tr><td>01</td><td>PDF 页级预检与「跳过无文本页」</td><td>封面/插图页导致整份 PDF 失败</td><td>anydoc 全有或全无；商业套件不暴露页级诊断</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>02</td><td>中文排版清洗规则集</td><td>字间空格、标题编号、目录点线、全半角</td><td>开源引擎只做结构，不做中文规范化</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>03</td><td>表格保护与质量分级</td><td>合并单元格、跨页表格、复杂单元格</td><td>anydoc 尽力而为；商业套件不产 Markdown</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>04</td><td>质量诊断与内联错误</td><td>用户不知道哪里转坏了</td><td>开源 CLI 只给退出码；商业 GUI 不解释结构</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>05</td><td>批量队列：并发、取消、重试、跳过已存在</td><td>文件夹转换不可控</td><td>开源引擎缺 GUI；在线服务不适合内部资料</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>06</td><td>语料包：chunks.jsonl + manifest</td><td>转完还要写脚本切块与加元数据</td><td>RAGFlow/Unstructured 重且平台化；桌面产品缺失</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>07</td><td>预设与可复现</td><td>每次参数不同，结果不可比</td><td>多数工具只记全局设置，不记引擎版本与哈希</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>08</td><td>xberg 第二内核（OCR / 复杂表格）</td><td>扫描件、复杂 PDF 表格、anydoc 失败回退</td><td>Marker/MinerU 强但重；xberg 为 Rust + MIT，可作为 P0 增强</td><td><span class="tag p0">P0</span></td></tr>
+          <tr><td>09</td><td>引擎插件化</td><td>今天是 anydoc，明天可能是 xberg/MinerU</td><td>没有产品把多引擎做成可解释的路由层</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>10</td><td>监听文件夹 + CLI + Finder 快捷操作</td><td>固定投递目录与自动化</td><td>商业套件有但重；开源引擎只有 CLI</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>11</td><td>中文标准文档专项</td><td>红头文件、印章、条款编号、竖排</td><td>通用工具不处理中国公文/标准格式</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>12</td><td>集成导出（Obsidian / Dify / RAGFlow / Webhook）</td><td>转完还要手工搬运</td><td>平台各自为政；ManoDoc 可做中立出口</td><td><span class="tag p2">P2</span></td></tr>
+          <tr><td>13</td><td>PaddleOCR 中文 OCR 增强</td><td>中文扫描件、低置信度 OCR</td><td>xberg 内置 OCR 可选 PaddleOCR 后端；独立组件更可控</td><td><span class="tag p1">P1</span></td></tr>
+          <tr><td>14</td><td>中英文切换 / 主题 / 命令面板</td><td>双语用户、长时间使用、键盘操作</td><td>商业套件有中英文与主题，但命令面板通常只有开发者工具具备</td><td><span class="tag p0">P0</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>不建议做</h3>
+    <ul class="crosses" style="list-style:none;padding:0">
+      <li>PDF 编辑、注释、表单、电子签名——这是 Acrobat/ABBYY 的战场。</li>
+      <li>在线转换站、云账号、团队协作——与「本地、离线、隐私」定位冲突。</li>
+      <li>向量库管理、检索问答 UI——ManoDoc 只负责把语料做好，不负责消费语料。</li>
+      <li>追求 1100+ 长尾格式——主流 8 类格式做深，比格式数量更有价值。</li>
+      <li>自研 OCR / 版面模型——接入成熟引擎，专注清洗、路由与体验。</li>
+    </ul>
+  </section>
+
+  <!-- ======================== 09 风险 ======================== -->
+  <section id="risk" class="card">
+    <h2><span class="num">09</span>风险与待决</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>风险 / 待决</th><th>影响</th><th>建议</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>anydoc 对 PDF 的页级失败</td>
+            <td>含封面、插图、扫描页的 PDF 直接不可用；真实样本已复现。</td>
+            <td>P0 做页级预检 + xberg OCR 回退；xberg 不可用时才跳过 / 失败。</td>
+          </tr>
+          <tr>
+            <td>复杂 PDF 表格保真</td>
+            <td>「排版清晰」的承诺在复杂表格上不成立。</td>
+            <td>P0 做质量分级 + xberg 回退；Marker / MinerU 作为 P1 备选。</td>
+          </tr>
+          <tr>
+            <td>中文清洗规则误伤</td>
+            <td>过度去空格可能破坏英文、代码、URL、化学式。</td>
+            <td>规则分域：CJK 之间去空格；CJK 与 Latin 之间保留；代码/公式块跳过；提供规则开关与输出核对。</td>
+          </tr>
+          <tr>
+            <td>Marker / MinerU 的模型许可</td>
+            <td>代码开源，但模型权重有商用门槛或附加条件。</td>
+            <td>S6 逐项核对许可；默认「检测环境 + 用户自装」，不随安装包分发模型。</td>
+          </tr>
+          <tr>
+            <td>pandoc GPL 分发</td>
+            <td>sidecar 分发需合规。</td>
+            <td>独立进程调用，附许可证与源码获取方式，不静态链接。</td>
+          </tr>
+          <tr>
+            <td>PDF 输出</td>
+            <td>LaTeX 体积大、安装复杂；本机已验证缺失 pdflatex 即失败。</td>
+            <td>MVP 用 pandoc → Typst；不引入 LaTeX；Typst sidecar 需签名与字体验证。</td>
+          </tr>
+          <tr>
+            <td>xberg 的稳定性与模型依赖</td>
+            <td>项目刚更名，OCR/表格模型可能带来体积、平台差异与许可问题。</td>
+            <td>已定为 P0 第二引擎；S6 用真实样本验证体积、速度与许可，不达标再降级 P1。</td>
+          </tr>
+          <tr>
+            <td>PaddleOCR 依赖</td>
+            <td>Python + Paddle 模型，macOS 上以 CPU 为主；体积与速度需评估。</td>
+            <td>P1 可选组件，引导安装；不进入 MVP 默认路径。</td>
+          </tr>
+          <tr>
+            <td>macOS 签名 / 公证</td>
+            <td>含 sidecar 与可选 Python 环境，分发复杂。</td>
+            <td>MVP 先做本地开发版；P1 处理 Hardened Runtime、entitlements、notarization。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======================== 10 参考 ======================== -->
+  <section id="refs" class="card">
+    <h2><span class="num">10</span>参考链接</h2>
+    <div class="two-col">
+      <div>
+        <h3>商业 / 在线</h3>
+        <ul class="small">
+          <li><a href="https://www.adobe.com/acrobat/acrobat-pro.html" target="_blank" rel="noopener">Adobe Acrobat Pro</a></li>
+          <li><a href="https://www.abbyy.com/finereader/" target="_blank" rel="noopener">ABBYY FineReader PDF</a></li>
+          <li><a href="https://pdf.wondershare.com/" target="_blank" rel="noopener">Wondershare PDFelement</a></li>
+          <li><a href="https://www.gonitro.com/pdf-pro" target="_blank" rel="noopener">Nitro PDF Pro</a></li>
+          <li><a href="https://www.foxit.com/pdf-editor/" target="_blank" rel="noopener">Foxit PDF Editor</a></li>
+          <li><a href="https://smallpdf.com/" target="_blank" rel="noopener">Smallpdf</a></li>
+          <li><a href="https://www.ilovepdf.com/" target="_blank" rel="noopener">iLovePDF</a></li>
+          <li><a href="https://cloudconvert.com/" target="_blank" rel="noopener">CloudConvert</a></li>
+          <li><a href="https://convertio.co/" target="_blank" rel="noopener">Convertio</a></li>
+          <li><a href="https://www.zamzar.com/" target="_blank" rel="noopener">Zamzar</a></li>
+          <li><a href="https://mathpix.com/pdf-conversion" target="_blank" rel="noopener">Mathpix PDF Conversion</a></li>
+          <li><a href="https://datalab.to/" target="_blank" rel="noopener">Datalab</a></li>
+          <li><a href="https://products.groupdocs.com/conversion/" target="_blank" rel="noopener">GroupDocs.Conversion</a></li>
+          <li><a href="https://apryse.com/" target="_blank" rel="noopener">Apryse</a></li>
+          <li><a href="https://docparser.com/" target="_blank" rel="noopener">Docparser</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>开源 / GitHub</h3>
+        <ul class="small">
+          <li><a href="https://github.com/jgm/pandoc" target="_blank" rel="noopener">jgm/pandoc</a></li>
+          <li><a href="https://github.com/firecrawl/anydoc" target="_blank" rel="noopener">firecrawl/anydoc</a></li>
+          <li><a href="https://github.com/datalab-to/marker" target="_blank" rel="noopener">datalab-to/marker</a></li>
+          <li><a href="https://github.com/opendatalab/MinerU" target="_blank" rel="noopener">opendatalab/MinerU</a></li>
+          <li><a href="https://github.com/docling-project/docling" target="_blank" rel="noopener">docling-project/docling</a></li>
+          <li><a href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">microsoft/markitdown</a></li>
+          <li><a href="https://github.com/xberg-io/xberg" target="_blank" rel="noopener">xberg-io/xberg（原 Kreuzberg）</a></li>
+          <li><a href="https://github.com/Unstructured-IO/unstructured" target="_blank" rel="noopener">Unstructured-IO/unstructured</a></li>
+          <li><a href="https://github.com/mwilliamson/mammoth.js" target="_blank" rel="noopener">mwilliamson/mammoth.js</a></li>
+          <li><a href="https://github.com/matthewwithanm/python-markdownify" target="_blank" rel="noopener">python-markdownify</a></li>
+          <li><a href="https://github.com/Alir3z4/html2text" target="_blank" rel="noopener">Alir3z4/html2text</a></li>
+          <li><a href="https://github.com/facebookresearch/nougat" target="_blank" rel="noopener">facebookresearch/nougat</a></li>
+          <li><a href="https://github.com/getomni-ai/zerox" target="_blank" rel="noopener">getomni-ai/zerox</a></li>
+          <li><a href="https://github.com/ocrmypdf/OCRmyPDF" target="_blank" rel="noopener">ocrmypdf/OCRmyPDF</a></li>
+          <li><a href="https://github.com/tesseract-ocr/tesseract" target="_blank" rel="noopener">tesseract-ocr/tesseract</a></li>
+          <li><a href="https://github.com/PaddlePaddle/PaddleOCR" target="_blank" rel="noopener">PaddlePaddle/PaddleOCR</a></li>
+          <li><a href="https://github.com/jsvine/pdfplumber" target="_blank" rel="noopener">jsvine/pdfplumber</a></li>
+          <li><a href="https://github.com/camelot-dev/camelot" target="_blank" rel="noopener">camelot-dev/camelot</a></li>
+          <li><a href="https://github.com/grobidOrg/grobid" target="_blank" rel="noopener">grobidOrg/grobid</a></li>
+          <li><a href="https://github.com/ArtifexSoftware/pdf2docx" target="_blank" rel="noopener">ArtifexSoftware/pdf2docx</a></li>
+          <li><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank" rel="noopener">Stirling-Tools/Stirling-PDF</a></li>
+          <li><a href="https://github.com/paperless-ngx/paperless-ngx" target="_blank" rel="noopener">paperless-ngx/paperless-ngx</a></li>
+          <li><a href="https://github.com/infiniflow/ragflow" target="_blank" rel="noopener">infiniflow/ragflow</a></li>
+          <li><a href="https://github.com/docling-project/docling-serve" target="_blank" rel="noopener">docling-project/docling-serve</a></li>
+          <li><a href="https://github.com/mb21/panwriter" target="_blank" rel="noopener">mb21/panwriter</a></li>
+          <li><a href="https://github.com/obsidianmd/obsidian-importer" target="_blank" rel="noopener">obsidianmd/obsidian-importer</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>星标快照（2026-11-18）</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项目</th><th>星标</th><th>语言</th><th>许可</th><th>项目</th><th>星标</th><th>语言</th><th>许可</th></tr></thead>
+        <tbody>
+          <tr><td>MarkItDown</td><td>196.4k</td><td>Python</td><td>MIT</td><td>Stirling PDF</td><td>96.9k</td><td>TS</td><td>开源</td></tr>
+          <tr><td>RAGFlow</td><td>94.4k</td><td>Go</td><td>Apache-2.0</td><td>MinerU</td><td>83.9k</td><td>Python</td><td>自定义</td></tr>
+          <tr><td>Docling</td><td>70.7k</td><td>Python</td><td>MIT</td><td>Tesseract</td><td>77.6k</td><td>C++</td><td>Apache-2.0</td></tr>
+          <tr><td>PaddleOCR</td><td>92.8k</td><td>Python</td><td>Apache-2.0</td><td>Paperless-ngx</td><td>48.3k</td><td>Python</td><td>GPL-3.0</td></tr>
+          <tr><td>Pandoc</td><td>46.9k</td><td>Haskell</td><td>GPL-2.0</td><td>Marker</td><td>41.0k</td><td>Python</td><td>Apache-2.0</td></tr>
+          <tr><td>OCRmyPDF</td><td>35.3k</td><td>Python</td><td>MPL-2.0</td><td>Calibre</td><td>26.5k</td><td>Python</td><td>GPL-3.0</td></tr>
+          <tr><td>anydoc</td><td>23.6k</td><td>Rust</td><td>MIT</td><td>Surya</td><td>21.6k</td><td>Python</td><td>Apache-2.0</td></tr>
+          <tr><td>Unstructured</td><td>15.8k</td><td>Python</td><td>Apache-2.0</td><td>pdfplumber</td><td>10.9k</td><td>Python</td><td>MIT</td></tr>
+          <tr><td>PDF-Extract-Kit</td><td>10.1k</td><td>Python</td><td>AGPL-3.0</td><td>Nougat</td><td>10.1k</td><td>Python</td><td>MIT</td></tr>
+          <tr><td>xberg</td><td>9.6k</td><td>Rust</td><td>MIT</td><td>Mammoth</td><td>6.3k</td><td>JS</td><td>BSD-2</td></tr>
+          <tr><td>GROBID</td><td>5.2k</td><td>Java</td><td>Apache-2.0</td><td>Apache Tika</td><td>4.2k</td><td>Java</td><td>Apache-2.0</td></tr>
+          <tr><td>Camelot</td><td>3.9k</td><td>Python</td><td>MIT</td><td>pdf2docx</td><td>3.5k</td><td>Python</td><td>MIT</td></tr>
+          <tr><td>Obsidian Importer</td><td>1.8k</td><td>TS</td><td>MIT</td><td>Docling Serve</td><td>1.9k</td><td>Python</td><td>MIT</td></tr>
+          <tr><td>PanWriter</td><td>1.3k</td><td>TS</td><td>GPL-3.0</td><td>Zerox</td><td>12.2k</td><td>TS</td><td>MIT</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:12px">星标与许可为 2026-11-18 的 GitHub API 快照；项目可能改名、换许可证或调整模型条款，集成前需再次核对。</p>
+  </section>
+
+  <footer>
+    <span>ManoDoc · S2 竞品分析 · 2026-11-18</span>
+    <span>S2 已确认 · 进入 S3 需求文档</span>
+  </footer>
+
+</div>
+</body>
+</html>

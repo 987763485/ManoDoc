@@ -1,0 +1,3 @@
+# sidecar 暂存目录：由 scripts/package-macos.sh 从 tools/ 复制并签名，不入库。
+*
+!.gitignore

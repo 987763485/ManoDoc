@@ -1,0 +1,149 @@
+schema: comet.native.delta.v1
+capability: mvp
+base_hash: 51839d681712c558ba19d91e6322316bdb5e5c828260a48f5325c3b3672f61f0
+base_version: 1
+legacy_hash: 4aac21321261d60e978478602c814cb5c9f762832b909565043f738c95a891b3
+operations:
+- id: batch-pipeline
+  operation: add
+  title: 批量输入、队列与调度
+  body: "> 本节新增的批量语料能力替代第 1 节表格中「语料制作」的占位说明与第 7 节中「批量队列、语料清洗、切块、chunks.jsonl、manifest.json」的非目标；归档后这些行为属于 MVP capability。\n\n- 输入：\n  - 文件选择器支持多选文件；文件夹选择递归扫描。\n  - 跳过隐藏文件/目录、`.DS_Store`、输出目录自身、符号链接与设备文件；不重复添加同一规范化路径。\n  - 只接受 anydoc 可解析格式；不可识别文件在添加时跳过并在界面给出原因，不进入队列。\n- 队列字段：文件、状态（等待/转换/清洗/切块/完成/失败/跳过）、引擎、表格等级、耗时、警告数、操作（取消/移除/重试/打开）。\n- 调度：\n  - 并发默认 `min(4, CPU/2)`，限制 1–8；配置只作用于本次批次，不写全局设置。\n  - 等待任务按添加顺序启动；每次批次使用独立输出包，不存在跨批次覆盖。\n  - 单文件失败或 `E_NEEDS_OCR` 只标记该行，继续处理其他文件；汇总状态为 `partial` 或 `failed`。\n- 取消：停止调度；对运行中任务设置取消标记；未完成临时包目录删除，不保留半写文件。\n- 重试：仅重跑失败行；成功/跳过行不变。\n- 错误复用 CHG-001 错误码；每行显示 code 与下一步，并写入报告与 manifest。\n- 扫描与调度在 Tauri 后台执行，通过事件推送单文件与总进度。\n\n#### Scenario: 批量导入与队列统计\n\n- Given 用户选择包含嵌套目录的文件夹\n- When 扫描完成\n- Then 队列只包含受支持文件，隐藏文件、`.DS_Store` 与输出目录被跳过\n- And 统计中的文件数等于队列行数\n\nAcceptance: A1\n\n#### Scenario: 失败隔离、取消与重试\n\n- Given 队列包含一个无文本 PDF 和多个 docx\n- When 开始批量\n- Then PDF 行显示 `E_NEEDS_OCR`，其余文件继续完成\n- When 用户取消批次\n- Then 不再启动新文件，当前批次不留下半写包\n- When 用户重试失败行\n- Then 只重新处理该文件，成功行不重复\n\
+    \nAcceptance: A2"
+- id: batch-cleaning
+  operation: add
+  title: 清洗与规范化
+  body: "- 固定保守规范化（不提供开关）：合并连续 3 个以上空行为 1 个空行；标题编号 `5 . 1` → `5.1` 并去除标题内多余空格；不调整标题层级。\n- 开关：\n  - 页眉页脚/页码：默认开启。只删除匹配页码模式（纯数字行、`第 N 页`、`Page N of M`）与在文档首尾重复出现的短行；不删除正文数字。\n  - 中文排版：默认开启。删除 CJK 字符之间空格；保留 CJK 与 Latin/数字之间空格；跳过 fenced code、行内 code、URL、公式与表格行。\n  - 表格质量分级：默认开启。检查 GFM 表格列数一致性；一致为 A，存在空列/列数不一致为 B/C，只写警告，不修改表格。\n- TOC 默认保留；断行合并默认关闭，本 change 不提供断行开关。\n- 任一开关关闭时，该规则不执行，输出与未启用时一致；其他规则不受影响。\n- 清洗后 Markdown 直接写入镜像文件与后续切块，不提供预览。\n\n#### Scenario: 清洗开关与保护\n\n- Given 原始 Markdown 含重复页眉、页码、CJK 间空格、标题 `5 . 1` 与代码块\n- When 全部清洗开关关闭\n- Then 输出与原始 Markdown 完全一致\n- When 开启清洗\n- Then 页眉页码删除、空行压缩、标题变为 `5.1`、CJK 间空格移除\n- And 代码块、URL、表格与正文数字保持不变\n\nAcceptance: A3"
+- id: batch-chunking
+  operation: add
+  title: 切块与元数据
+  body: '- 默认按 H1–H3 标题切块；标题路径保存为数组；首个标题之前的内容作为独立块。
+
+    - 切块上限默认 1200 字符（可选 500–4000）；超长块先按空行/段落切分，仍超长时按字符硬切，并按 0–300 字符重叠（默认 50）。
+
+    - 表格整块不拆；超长表格保留为单块并写警告。fenced code 整块不拆；超长代码块保留并写警告。
+
+    - 每块元数据：`source`（镜像相对路径）、`source_path`（输入绝对路径）、`file_name`、`format`、`title`（文档标题或文件名）、`heading_path`、`page`（anydoc 路径为 null）、`hash`（输入 SHA-256）、`engine`、`params`（chunkSize/overlap/cleaning）、`chars`。
+
+    - chunk id：`sha256(source + heading_path.join("/") + ordinal + sha256(text))` 取前 16 个十六进制字符；同一输入与参数重复运行得到相同 id。
+
+    - 空文本块不写入；表格块与代码块可独立成块。
+
+
+    #### Scenario: 切块与稳定 id
+
+
+    - Given 一份包含多级标题、表格与超长段落的 Markdown
+
+    - When 使用默认 1200 字符/50 重叠切块两次
+
+    - Then 两次 chunk 数量与 id 完全一致
+
+    - And 表格与代码块未被拆分
+
+    - And 每个 chunk 含来源、章节路径、字符数与参数
+
+
+    Acceptance: A4'
+- id: batch-corpus
+  operation: add
+  title: 语料包与校验
+  body: "- 输出目录：`<outputDir>/<batchStem>-<YYYYMMDD-HHmmss>/`；`batchStem` 取扫描根目录名，无法确定时为 `corpus`，并做文件名安全化。\n- 布局：\n  - `mirror/` — 保留扫描根内相对路径的 Markdown。\n  - `chunks.jsonl` — 每行一个 `{id,text,metadata}`，UTF-8 无 BOM，末行换行。\n  - `manifest.json` — schema、工具名/版本、引擎名/版本、预设、创建时间、参数、输入文件列表（路径、格式、哈希、状态、错误码、统计、警告）、总计。\n  - `report.json`、`report.csv` — 成功/跳过/失败/警告计数与逐文件错误码。\n- 写入先在同级临时目录完成，校验通过后原子 rename 为批次目录；失败或取消删除临时目录，不留下半写包。\n- 校验：JSONL 每行可解析且含 `id/text/metadata`；id 唯一；manifest 文件列表与 mirror 一致；chunk 的 `source` 均存在；空块、块数不一致或 JSON 解析失败返回 `E_CORPUS_VALIDATION`，附文件与行号。\n- 语料包不绑定平台，可用于后续向量库导入。\n\n#### Scenario: 语料包产物与校验\n\n- Given 批量完成\n- When 打开批次目录\n- Then 存在 `mirror/`、`chunks.jsonl`、`manifest.json`、`report.json`、`report.csv`\n- And `chunks.jsonl` 每行可被 `jq` 解析且 id 唯一\n- And manifest 的文件列表与 mirror、报告计数一致\n- When 人为破坏一个 chunk 行后重跑校验\n- Then 返回 `E_CORPUS_VALIDATION` 并指出文件与行号\n\nAcceptance: A5"
+- id: batch-history
+  operation: add
+  title: 批量历史
+  body: '- 每次批次写入一条 `history.json` 记录：`kind: "batch"`、`created_at`、`input_paths`、`input_count`、`preset`、`engine`、`status`（completed/partial/failed）、`output_dir`、`counts`（success/skipped/failed/warnings/chunks）、`duration_ms`、`params`。
+
+    - 旧单文件记录保持可读；`kind` 缺省视为 `single`，新增字段使用默认值。
+
+    - 历史列表：批量行显示「批量 · N 文件」、状态、块数或警告数；点击打开详情，展示计数、输出目录、参数与失败明细。
+
+    - 操作：打开语料包、复制参数、重跑（把原输入与参数送回语料制作页，不自动开始）。
+
+    - 清空历史与 50 条上限规则不变；清空不删除语料包。
+
+
+    #### Scenario: 批量历史与重跑
+
+
+    - Given 完成一次 3 文件批次，其中 1 个失败
+
+    - When 进入转换历史
+
+    - Then 出现一条 batch 记录，显示 3 文件、部分完成与失败数
+
+    - And 详情显示输出目录、参数与失败明细
+
+    - When 重启应用
+
+    - Then 该记录仍在
+
+    - When 点击重跑
+
+    - Then 语料制作页恢复输入与参数，等待用户点击开始
+
+
+    Acceptance: A6'
+- id: batch-ui
+  operation: add
+  title: 语料制作页
+  body: '- 页面按 `docs/superpowers/UI.html` 的语料制作页还原：标题与四个操作按钮、三项统计、队列面板（筛选/搜索/表格）与右侧配置面板。
+
+    - 队列列：文件、状态、引擎、表格等级、耗时、操作；状态 badge 使用 Proofing Desk token；行内支持取消/移除/重试/打开。
+
+    - 配置项：预设（标准/表格/知识库）、输出格式固定 Markdown（Word/PDF 禁用并说明）、引擎自动/anydoc（xberg/pandoc 禁用）、并发 1/2/4/8、清洗开关（页眉页脚、中文标题、表格分级）、图片资产（禁用并说明 CHG-003）、切块、元数据、生成语料包、切块上限与重叠。
+
+    - 空状态、加载、部分失败与取消状态均有内联说明；不提供 Markdown 预览。
+
+    - 中英文文案完整；1280×800 与 1440×900 无横向溢出；颜色只来自 token。
+
+
+    #### Scenario: 语料制作页交互与还原
+
+
+    - Given 语料制作页为空
+
+    - When 用户添加文件并调整配置
+
+    - Then 统计、队列与配置状态即时更新
+
+    - And 输出格式只可选 Markdown，图片开关禁用并给出原因
+
+    - When 切换 English 与深色主题
+
+    - Then 页面文案与颜色即时更新
+
+    - And 1280×800 与 1440×900 无横向滚动
+
+
+    Acceptance: A7'
+- id: batch-runtime
+  operation: add
+  title: 构建、离线与安全
+  body: '- `pnpm build`、前端测试、`cargo check`、Rust 测试全部通过。
+
+    - 批量转换、清洗、切块与语料包生成不发起网络请求；不引入 xberg/pandoc/Typst/OCR sidecar。
+
+    - 扫描与写入限制在用户选择的输入根与输出目录内；拒绝符号链接逃逸与设备文件；所有外部命令使用参数数组。
+
+    - 语料包与报告只写入输出目录；`~/.dull_doc` 只写 settings/history/logs/tmp。
+
+    - 日志不记录文件正文、密钥或完整敏感路径；错误报告可定位但可安全分享。
+
+
+    #### Scenario: 构建与离线批量
+
+
+    - Given 已安装前端与 Rust 依赖并断网
+
+    - When 执行构建与测试命令
+
+    - Then 全部通过
+
+    - When 完成一次包含 docx 与 xlsx 的批量运行
+
+    - Then 语料包生成成功且无网络请求
+
+    - And `~/.dull_doc` 未新增除 settings/history/logs/tmp 之外的数据
+
+
+    Acceptance: A8'

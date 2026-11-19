@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ManoDoc 产品文档</title>
+<meta name="description" content="ManoDoc：本地优先的文档转换与语料制作工作台。">
+<style>
+  :root{
+    --paper:#f4f1e8; --paper-2:#fbf9f2; --paper-3:#ece7da;
+    --ink:#23261f; --ink-2:#5d6156; --ink-3:#6a6e60;
+    --line:#d8d2c2; --line-strong:#b8b19d;
+    --green:#2f5d4a; --green-soft:#e4ece5;
+    --amber:#9a6320; --amber-soft:#f6e9d3;
+    --radius:12px; --max:1160px;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    --serif:"Songti SC","Noto Serif SC",STSong,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Monaco,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:84px}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap,section,.cards>*,.shots>*,.license>*,.usage>*,.notes>*,.steps>*,.release{min-width:0}
+  p,li,td,th{overflow-wrap:break-word}
+  a{color:var(--green);text-decoration:none}
+  a:hover{text-decoration:underline}
+  img{max-width:100%;display:block}
+  code{font-family:var(--mono);font-size:.9em;background:var(--paper-3);padding:1px 5px;border-radius:4px}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  .mono{font-family:var(--mono)}
+
+  header.top{position:sticky;top:0;z-index:20;background:rgba(244,241,232,.88);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--line)}
+  .top-inner{max-width:var(--max);margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+  .brand img{width:30px;height:30px;border-radius:7px}
+  nav.links{display:flex;gap:18px;margin-left:auto;font-size:13.5px;flex-wrap:wrap}
+  nav.links a{color:var(--ink-2)}
+  nav.links a:hover{color:var(--ink);text-decoration:none}
+  .gh{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink);background:var(--paper-2)}
+  .gh:hover{text-decoration:none;border-color:var(--ink-3)}
+
+  .hero{padding:72px 0 40px;display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1.2fr);gap:56px;align-items:center}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,64px);line-height:1.08;letter-spacing:-.035em;margin:18px 0 18px;text-wrap:balance}
+  .lede{font-size:17px;color:var(--ink-2);max-width:34em;margin:0 0 26px}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:9px;border:1px solid var(--line-strong);background:var(--paper-2);color:var(--ink);font-size:14px;font-weight:550}
+  .btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn:hover{text-decoration:none;border-color:var(--ink-3)}
+  .btn.primary:hover{background:#274d3d;border-color:#274d3d}
+  .meta{margin-top:16px;font-size:12.5px;color:var(--ink-3);display:flex;gap:16px;flex-wrap:wrap}
+  .hero-shot{position:relative}
+  .hero-shot img{border:1px solid var(--line-strong);border-radius:14px;box-shadow:0 18px 50px rgba(35,38,31,.12)}
+  .hero-shot figcaption{margin-top:10px;font-size:12px;color:var(--ink-3);font-family:var(--mono)}
+
+  .strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper-2)}
+  .strip-inner{max-width:var(--max);margin:0 auto;padding:16px 24px;display:flex;gap:12px 36px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+  .strip b{color:var(--ink);font-weight:600}
+
+  section{padding:64px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  .section-head{display:grid;grid-template-columns:180px minmax(0,1fr);gap:28px;align-items:start;margin-bottom:34px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--green);padding-top:6px}
+  .section-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3vw,38px);line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+  .section-head p{margin:0;color:var(--ink-2);max-width:46em;font-size:15px}
+
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .card .icon{width:30px;height:30px;border-radius:8px;background:var(--green-soft);display:grid;place-items:center;color:var(--green);margin-bottom:14px}
+  .card h3{margin:0 0 6px;font-size:16px;letter-spacing:-.01em}
+  .card p{margin:0;color:var(--ink-2);font-size:13.5px;line-height:1.7}
+  .card .tag{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+
+  .shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+  .shot{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .shot img{border-bottom:1px solid var(--line)}
+  .shot figcaption{padding:14px 16px;font-size:13px;color:var(--ink-2)}
+  .shot b{color:var(--ink);font-weight:600}
+
+  .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:8px}
+  .step{border-left:2px solid var(--green);padding:2px 0 2px 16px}
+  .step .n{font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:.1em}
+  .step h3{margin:4px 0 4px;font-size:15.5px}
+  .step p{margin:0;color:var(--ink-2);font-size:13.5px}
+  .callout{margin-top:22px;background:var(--amber-soft);border:1px solid #e4c99f;border-radius:10px;padding:14px 16px;color:#5c3f16;font-size:13.5px}
+  .callout b{color:#3f2a0d}
+
+  table{width:100%;max-width:100%;border-collapse:collapse;font-size:13.5px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--paper-3)}
+  tr:last-child td{border-bottom:0}
+  td code{background:transparent;padding:0;color:var(--ink)}
+
+  .usage{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:36px;align-items:start}
+  .usage h3{margin:22px 0 6px;font-size:16px}
+  .usage h3:first-child{margin-top:0}
+  .usage p,.usage li{color:var(--ink-2);font-size:14px}
+  .usage ul{margin:6px 0 0;padding-left:20px}
+  .usage li+li{margin-top:5px}
+  .side{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .side h3{margin:0 0 10px;font-size:14px}
+  .side dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+  .side dt{color:var(--ink-3)}
+  .side dd{margin:0;font-family:var(--mono);font-size:12.5px}
+
+  .notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .note{display:flex;gap:12px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:15px}
+  .note .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none;margin-top:7px}
+  .note p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .note b{color:var(--ink)}
+
+  .license{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:36px;align-items:start}
+  .license .big{font-family:var(--serif);font-size:30px;margin:0 0 6px}
+  .license p{color:var(--ink-2);font-size:14px;margin:0 0 12px}
+
+  .log{display:grid;gap:14px}
+  .release{border:1px solid var(--line);border-radius:10px;background:var(--paper-2);padding:16px 18px}
+  .release-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .release-head .v{font-family:var(--mono);font-size:13px;color:var(--green)}
+  .release-head .date{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+  .release ul{margin:8px 0 0;padding-left:20px;color:var(--ink-2);font-size:13.5px}
+  .release li+li{margin-top:4px}
+
+  footer{padding:34px 0 48px;color:var(--ink-3);font-size:12.5px}
+  .footer-inner{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;gap:12px 28px;flex-wrap:wrap;align-items:center}
+  .footer-inner .logo{width:22px;height:22px;border-radius:5px}
+
+  @media (max-width:980px){
+    .hero{grid-template-columns:1fr;gap:32px;padding-top:52px}
+    .section-head{grid-template-columns:1fr;gap:8px}
+    .cards,.steps{grid-template-columns:1fr}
+    .shots,.notes,.license,.usage{grid-template-columns:1fr}
+    .hero-shot{order:-1}
+  }
+  @media (max-width:640px){
+    .wrap,.top-inner,.strip-inner,.footer-inner{padding-left:16px;padding-right:16px}
+    nav.links{display:none}
+    .gh{margin-left:auto}
+    h1{font-size:40px}
+    section{padding:48px 0}
+    table{display:block;overflow-x:auto;max-width:100%}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="#top"><img src="assets/logo.png" alt="ManoDoc">ManoDoc</a>
+    <nav class="links">
+      <a href="#features">能力</a>
+      <a href="#download">下载</a>
+      <a href="#usage">使用</a>
+      <a href="#notes">注意</a>
+      <a href="#license">协议</a>
+      <a href="#changelog">版本</a>
+    </nav>
+    <a class="gh" href="https://github.com/987763485/ManoDoc">GitHub ↗</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+    <section class="hero" style="border-bottom:0;padding-bottom:36px">
+      <div>
+        <div class="eyebrow">ManoDoc · v0.1.0</div>
+        <h1>把文档变成<br>可用的知识</h1>
+        <p class="lede">本地优先的文档转换与语料制作工作台。把 Word、PDF、Excel、图片整理成干净的 Markdown，再清洗、切块、打包成可检索的知识库。</p>
+        <div class="actions">
+          <a class="btn primary" href="#download">下载 macOS 版</a>
+          <a class="btn" href="https://github.com/987763485/ManoDoc">查看源码</a>
+        </div>
+        <div class="meta"><span>Apple Silicon · macOS 12+</span><span>完全离线</span><span>MIT 开源</span></div>
+      </div>
+      <figure class="hero-shot">
+        <img src="assets/screenshots/convert-card.png" alt="ManoDoc 文档转换页面">
+        <figcaption>文档转换 · 方向、引擎与预设集中在同一张配置卡</figcaption>
+      </figure>
+    </section>
+  </div>
+
+  <div class="strip">
+    <div class="strip-inner">
+      <span><b>双内核</b> anydoc 快速路径 + xberg OCR</span>
+      <span><b>可解释</b> 实际引擎、回退原因与 OCR 页</span>
+      <span><b>可追溯</b> 历史保留参数与结果摘要</span>
+      <span><b>本地</b> 默认不上传、不联网</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section id="features">
+      <div class="section-head">
+        <div class="kicker">Capabilities</div>
+        <div>
+          <h2>一次完成转换、清洗与打包</h2>
+          <p>不需要在多个在线工具之间搬运文件。选择输入，ManoDoc 按内容识别格式、选择引擎，并把结果写入你指定的目录。</p>
+        </div>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+          <h3>多格式转换</h3>
+          <p>DOCX、XLSX、PPTX、RTF、EPUB、CSV、文本型 PDF、Markdown、HTML、PNG / JPEG → Markdown；Markdown → Word / PDF / HTML / EPUB。</p>
+          <span class="tag">anydoc · xberg · pandoc · Typst</span>
+        </article>
+        <article class="card">
+          <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h7M4 12h7M4 19h7M17 5v14M17 5l4 4M17 19l4-4"/></svg></div>
+          <h3>扫描件与图片</h3>
+          <p>自动识别无文本页与图片输入，使用 xberg + PaddleOCR 识别中文内容；模型按需安装，转换时强制离线。</p>
+          <span class="tag">OCR · 模型显式安装</span>
+        </article>
+        <article class="card">
+          <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="19" cy="17" r="2"/></svg></div>
+          <h3>语料制作</h3>
+          <p>批量队列、清洗规则、按标题切块与元数据，输出厂商中立的镜像 Markdown、chunks.jsonl 与 manifest.json。</p>
+          <span class="tag">批量 · 可追溯</span>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="kicker">Screens</div>
+        <div>
+          <h2>界面就是工作流</h2>
+          <p>转换、语料与历史共用同一套任务状态；标题栏始终显示当前进度，切换页面不会丢失任务。</p>
+        </div>
+      </div>
+      <div class="shots">
+        <figure class="shot">
+          <a href="assets/screenshots/batch.png" target="_blank"><img src="assets/screenshots/batch.png" alt="ManoDoc 语料制作页面"></a>
+          <figcaption><b>语料制作</b>：队列、配置与批次报告在同一页；并发、切块与清洗收在高级设置。</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="assets/screenshots/history.png" target="_blank"><img src="assets/screenshots/history.png" alt="ManoDoc 转换历史页面"></a>
+          <figcaption><b>转换历史</b>：方向、引擎、耗时与输出摘要；支持打开、复制参数与重跑。</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="download">
+      <div class="section-head">
+        <div class="kicker">Download</div>
+        <div>
+          <h2>下载安装</h2>
+          <p>首发支持 macOS Apple Silicon。安装包包含转换所需的 sidecar，无需单独安装 pandoc 或 Typst。</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="n">STEP 01</div><h3>下载 DMG</h3><p>前往 <a href="https://github.com/987763485/ManoDoc/releases">GitHub Releases</a> 下载最新的 <code>ManoDoc_0.1.0_aarch64.dmg</code>。</p></div>
+        <div class="step"><div class="n">STEP 02</div><h3>拖入应用程序</h3><p>打开 DMG，把 ManoDoc 拖入「应用程序」文件夹，然后从启动台打开。</p></div>
+        <div class="step"><div class="n">STEP 03</div><h3>首次打开</h3><p>若被 Gatekeeper 拦截，右键应用选择「打开」。系统要求 macOS 12 或更高版本。</p></div>
+      </div>
+      <div class="callout"><b>签名说明：</b>当前构建使用 ad-hoc 签名，尚未完成 Developer ID 公证；首次打开可能出现系统提示，不影响本地功能。正式发布前会补齐公证与 staple。</div>
+    </section>
+
+    <section id="usage">
+      <div class="section-head">
+        <div class="kicker">Usage</div>
+        <div>
+          <h2>使用文档</h2>
+          <p>从单文件转换开始，或直接把一个文件夹交给语料制作。</p>
+        </div>
+      </div>
+      <div class="usage">
+        <div>
+          <h3>文档转换</h3>
+          <p>拖入或选择文件，确认方向与引擎后开始转换。PDF 含无文本页时会先弹出预检，列出页码与占比，可选择跳过、使用 OCR 或改为失败。</p>
+          <h3>语料制作</h3>
+          <ul>
+            <li>添加多个文件或整个文件夹，队列会显示格式与状态。</li>
+            <li>在右侧配置清洗、切块、元数据与语料包；并发与切块参数在「高级设置」。</li>
+            <li>完成后打开输出目录，查看镜像 Markdown、<code>chunks.jsonl</code>、<code>manifest.json</code> 与批次报告。</li>
+          </ul>
+          <h3>转换历史</h3>
+          <p>历史保留最近 50 条任务（可在设置中调整），只保存路径、参数与结果摘要，不复制文件。点击任务可打开详情、打开输出或按原参数重跑。</p>
+        </div>
+        <aside class="side">
+          <h3>快捷键</h3>
+          <dl>
+            <dt>⌘K</dt><dd>命令面板</dd>
+            <dt>⌘1–⌘4</dt><dd>切换四个页面</dd>
+            <dt>Esc</dt><dd>关闭弹窗</dd>
+          </dl>
+          <h3 style="margin-top:20px">数据位置</h3>
+          <dl>
+            <dt>应用数据</dt><dd>~/.manodoc/</dd>
+            <dt>默认输出</dt><dd>~/Documents/ManoDoc Output/</dd>
+            <dt>OCR 模型</dt><dd>~/.manodoc/models/</dd>
+            <dt>日志</dt><dd>~/.manodoc/logs/</dd>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section id="notes">
+      <div class="section-head">
+        <div class="kicker">Notes</div>
+        <div>
+          <h2>注意事项</h2>
+          <p>这些限制来自格式本身或分发方式；应用会在对应位置给出提示，不静默失败。</p>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note"><span class="dot"></span><p><b>扫描件需要 OCR 模型。</b>在「系统设置 → 引擎」安装 PP-OCRv6 small（约 31 MB）；安装前显示来源与哈希，转换期间强制离线。</p></div>
+        <div class="note"><span class="dot"></span><p><b>PDF → Word 保真有限。</b>由 PDF → Markdown → DOCX 生成，目录与图片可能被简化；结果会附带质量提示，不内置 pdf2docx。</p></div>
+        <div class="note"><span class="dot"></span><p><b>跳过页不写入输出。</b>预检选择「跳过并继续」后，无文本页会从输出与语料包中移除，并在警告和批量报告中记录页码。</p></div>
+        <div class="note"><span class="dot"></span><p><b>pandoc 为 GPL-2.0 程序。</b>以独立 sidecar 进程调用，不静态链接；源码获取方式见应用「关于」页与 pandoc.org。</p></div>
+      </div>
+    </section>
+
+    <section id="license">
+      <div class="section-head">
+        <div class="kicker">License</div>
+        <div>
+          <h2>版权与开源协议</h2>
+          <p>ManoDoc 以 MIT 协议开源。第三方组件保留各自协议与版权。</p>
+        </div>
+      </div>
+      <div class="license">
+        <div>
+          <p class="big">MIT License</p>
+          <p>Copyright © 2026 ManoDoc</p>
+          <p>完整协议文本见仓库根目录 <a href="https://github.com/987763485/ManoDoc/blob/main/LICENSE">LICENSE</a>。</p>
+        </div>
+        <div>
+          <table>
+            <thead><tr><th>组件</th><th>协议</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td>anydoc</td><td>MIT</td><td>Office / 文本型 PDF 解析</td></tr>
+              <tr><td>xberg</td><td>MIT</td><td>第二内核、OCR、表格识别</td></tr>
+              <tr><td>PaddleOCR</td><td>Apache-2.0</td><td>中文 OCR 模型</td></tr>
+              <tr><td>Typst</td><td>Apache-2.0</td><td>PDF 排版编译</td></tr>
+              <tr><td>pandoc</td><td>GPL-2.0</td><td>Markdown 与文档格式导出（独立进程）</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="changelog">
+      <div class="section-head">
+        <div class="kicker">Changelog</div>
+        <div>
+          <h2>版本日志</h2>
+          <p>公开发布记录。内部开发变更不在此列出。</p>
+        </div>
+      </div>
+      <div class="log">
+        <article class="release">
+          <div class="release-head"><span class="v">v0.1.0</span><span class="date">2026-11-19</span><span style="font-size:13px;color:var(--ink-2)">首个公开预览版</span></div>
+          <ul>
+            <li>文档转换：Office / PDF / Markdown / HTML / 图片 → Markdown，Markdown → Word / PDF / HTML / EPUB。</li>
+            <li>双内核路由与 OCR：anydoc + xberg + PaddleOCR，记录实际引擎、回退原因与 OCR 页。</li>
+            <li>语料制作：批量队列、清洗、切块、元数据与镜像 Markdown / chunks.jsonl / manifest.json。</li>
+            <li>历史、预设、日志与脱敏诊断包；中英文与浅色 / 深色主题；⌘K 命令面板。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <img class="logo" src="assets/logo.png" alt="">
+    <span>© 2026 ManoDoc · MIT License</span>
+    <span><a href="https://github.com/987763485/ManoDoc">GitHub</a></span>
+    <span><a href="https://github.com/987763485/ManoDoc/releases">Releases</a></span>
+    <span style="margin-left:auto">本地优先 · 文件不离开你的电脑</span>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>引擎调用架构 · ManoDoc</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --color-paper: #f4f1e8;
+    --color-ink: #23261f;
+    --color-muted: #5d6156;
+    --color-accent: #2f5d4a;
+    --font-sans: 'Geist', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+    --font-serif: 'Instrument Serif', 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+    --font-mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+  }
+  .frame { max-width: 1360px; width: 100%; }
+  .diagram-container { width: 100%; overflow-x: auto; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: 0.5rem;
+  }
+  h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--color-ink);
+    margin-bottom: 1.5rem;
+  }
+  svg { width: 100%; min-width: 1280px; display: block; }
+  @media print {
+    .diagram-container { overflow-x: visible; }
+    svg { min-width: 0; }
+  }
+  .note {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--color-muted);
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <p class="eyebrow">Architecture · MANODOC SKIN</p>
+  <h1>引擎调用架构</h1>
+  <div class="diagram-container">
+      <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="engine-arch-manodoc-title engine-arch-manodoc-desc">
+        <title id="engine-arch-manodoc-title">引擎调用架构</title>
+        <desc id="engine-arch-manodoc-desc">ManoDoc 从输入文件到输出的调用链：命令层调用导出编排，导出编排选择引擎路由或 pandoc/Typst，路由在 anydoc 与 xberg OCR 之间决策。</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#5d6156"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5d4a"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5d4a"/></marker>
+        </defs>
+        <rect width="100%" height="100%" fill="#f4f1e8"/>
+
+      <rect x="416" y="112" width="384" height="456" rx="8" fill="rgba(35,38,31,0.02)" stroke="rgba(35,38,31,0.14)" stroke-width="0.8"/>
+      <rect x="432" y="116" width="132" height="16" rx="2" fill="#f4f1e8"/>
+      <text x="440" y="128" fill="#6a6e60" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif">RUST 内核 · 进程内</text>
+      <rect x="824" y="288" width="232" height="116" rx="8" fill="rgba(35,38,31,0.02)" stroke="rgba(35,38,31,0.14)" stroke-width="0.8"/>
+      <rect x="840" y="292" width="144" height="16" rx="2" fill="#f4f1e8"/>
+      <text x="848" y="304" fill="#6a6e60" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif">SIDECAR · 独立进程</text>
+      <!-- connectors -->
+      <line x1="192" y1="180" x2="236" y2="180" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="408" y1="180" x2="452" y2="180" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="624" y1="180" x2="1052" y2="180" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="512" y1="212" x2="512" y2="320" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 568,212 V 248 Q 568,256 576,256 H 932 Q 1000,256 1000,264 V 320" fill="none" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 324,212 V 348 Q 324,356 332,356 H 452" fill="none" stroke="#5d6156" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <line x1="512" y1="388" x2="512" y2="480" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 568,388 V 428 Q 568,436 576,436 H 684 Q 692,436 692,444 V 480" fill="none" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+      <rect x="384" y="158" width="32" height="16" rx="2" fill="#f4f1e8"/>
+      <text x="400" y="170" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">写入</text>
+      <rect x="520" y="252" width="32" height="16" rx="2" fill="#f4f1e8"/>
+      <text x="524" y="264" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="start">提取</text>
+      <rect x="960" y="270" width="32" height="16" rx="2" fill="#f4f1e8"/>
+      <text x="976" y="282" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">导出</text>
+      <rect x="378" y="334" width="32" height="16" rx="2" fill="#f4f1e8"/>
+      <text x="394" y="346" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">批量</text>
+      <!-- 输入文件 -->
+      <rect x="48" y="148" width="144" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="48" y="148" width="144" height="64" rx="6" fill="#fbf9f2" stroke="#c9c2b0" stroke-width="1"/>
+      <rect x="56" y="155" width="30" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="71" y="164" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">INPUT</text>
+      <text x="120" y="184" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">输入文件</text>
+      <text x="120" y="199" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">PDF · DOCX · PNG · MD</text>
+      <!-- 命令层 -->
+      <rect x="240" y="148" width="168" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="240" y="148" width="168" height="64" rx="6" fill="#fbf9f2" stroke="#c9c2b0" stroke-width="1"/>
+      <rect x="248" y="155" width="21" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="258.5" y="164" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">IPC</text>
+      <text x="324" y="184" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">命令层</text>
+      <text x="324" y="199" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">convert_file · start_batch</text>
+      <!-- 导出编排 -->
+      <rect x="456" y="148" width="168" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="456" y="148" width="168" height="64" rx="6" fill="#fbf9f2" stroke="#c9c2b0" stroke-width="1"/>
+      <rect x="464" y="155" width="25" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="476.5" y="164" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ORCH</text>
+      <text x="540" y="184" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">导出编排</text>
+      <text x="540" y="199" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">export::convert</text>
+      <!-- 输出文件 -->
+      <rect x="1056" y="148" width="176" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="1056" y="148" width="176" height="64" rx="6" fill="#fbf9f2" stroke="#c9c2b0" stroke-width="1"/>
+      <rect x="1064" y="155" width="34" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="1081" y="164" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">OUTPUT</text>
+      <text x="1144" y="184" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">输出文件</text>
+      <text x="1144" y="199" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">MD · DOCX · PDF · HTML</text>
+      <!-- 引擎路由 -->
+      <rect x="456" y="324" width="168" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="456" y="324" width="168" height="64" rx="6" fill="rgba(47,93,74,0.09)" stroke="#2f5d4a" stroke-width="1.4"/>
+      <rect x="464" y="331" width="30" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="479" y="340" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ROUTE</text>
+      <text x="540" y="360" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">引擎路由</text>
+      <text x="540" y="375" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">routing::extract</text>
+      <!-- pandoc / Typst -->
+      <rect x="848" y="324" width="184" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="848" y="324" width="184" height="64" rx="6" fill="#fbf9f2" stroke="#c9c2b0" stroke-width="1"/>
+      <rect x="856" y="331" width="38" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="875" y="340" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">SIDECAR</text>
+      <text x="940" y="360" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">pandoc / Typst</text>
+      <text x="940" y="375" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">GPL-2.0 · APACHE-2.0</text>
+      <!-- anydoc -->
+      <rect x="436" y="484" width="152" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="436" y="484" width="152" height="64" rx="6" fill="#fbf9f2" stroke="#c9c2b0" stroke-width="1"/>
+      <rect x="444" y="491" width="34" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="461" y="500" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ENGINE</text>
+      <text x="512" y="520" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">anydoc</text>
+      <text x="512" y="535" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">IN-PROCESS CRATE</text>
+      <!-- xberg + OCR -->
+      <rect x="600" y="484" width="184" height="64" rx="6" fill="#f4f1e8"/>
+      <rect x="600" y="484" width="184" height="64" rx="6" fill="#fbf9f2" stroke="#c9c2b0" stroke-width="1"/>
+      <rect x="608" y="491" width="34" height="12" rx="2" fill="none" stroke="#c9c2b0" stroke-width="0.8"/>
+      <text x="625" y="500" fill="#6a6e60" font-size="7" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.08em">ENGINE</text>
+      <text x="692" y="520" fill="#23261f" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', sans-serif" text-anchor="middle">xberg + OCR</text>
+      <text x="692" y="535" fill="#5d6156" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">PADDLEOCR · ONNX</text>
+      <!-- callout -->
+      <text x="848" y="432" fill="#5d6156" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif SC', 'Songti SC', serif">引擎返回 Markdown 后，</text>
+      <text x="848" y="452" fill="#5d6156" font-size="14" font-style="italic" font-family="'Instrument Serif', 'Noto Serif SC', 'Songti SC', serif">由导出编排统一写出。</text>
+
+      <!-- legend -->
+      <line x1="48" y1="620" x2="1232" y2="620" stroke="rgba(35,38,31,0.14)" stroke-width="0.8"/>
+      <line x1="48" y1="644" x2="80" y2="644" stroke="#5d6156" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="88" y="648" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif">调用</text>
+      <line x1="180" y1="644" x2="212" y2="644" stroke="#5d6156" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <text x="220" y="648" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif">批量路径（虚线）</text>
+      <rect x="350" y="636" width="12" height="12" rx="2" fill="rgba(47,93,74,0.09)" stroke="#2f5d4a" stroke-width="1.2"/>
+      <text x="370" y="648" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif">路由决策（焦点）</text>
+      <rect x="560" y="636" width="16" height="12" rx="2" fill="rgba(35,38,31,0.02)" stroke="rgba(35,38,31,0.14)" stroke-width="0.8"/>
+      <text x="584" y="648" fill="#5d6156" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', sans-serif">区域边界</text>
+    </svg>
+  </div>
+  <div class="note"><span>同一份内容，两套皮肤对比</span><span>ManoDoc · 暖纸 / 深绿</span><span>Default · 冷白 / 朱橙</span></div>
+</div>
+</body>
+</html>

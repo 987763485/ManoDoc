@@ -1,0 +1,270 @@
+@import "tailwindcss";
+@import "./prototype.css";
+
+/* React 应用补充：只做布局衔接，视觉 token 仍来自 prototype.css。 */
+#root { height: 100%; }
+.app { height: 100dvh; }
+.main { min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.content { overflow: auto; }
+.page { display: none; }
+.page.active { display: block; }
+.nav button { width: 100%; border: 0; background: transparent; text-align: left; }
+.batch-placeholder { padding: 44px; display: grid; gap: 14px; place-items: center; text-align: center; }
+.batch-placeholder h2 { margin: 0; font-size: 20px; }
+.batch-placeholder p { margin: 0; color: var(--ink-3); max-width: 460px; line-height: 1.8; }
+.file-empty { min-height: 132px; cursor: pointer; }
+.file-empty.show { display: flex; }
+.file-empty.dragover { border-color: var(--blue); background: var(--blue-soft); }
+.side-foot .kbd { cursor: pointer; }
+.config-panel button.switch { border: 0; padding: 0; cursor: pointer; }
+.config-panel button.switch:disabled { opacity: .45; cursor: not-allowed; }
+.batch-warnings { margin: 14px 0 0; padding-left: 20px; color: var(--ink-3); font-size: 12px; line-height: 1.7; }
+.history-empty .hint { margin-top: 6px; font-size: 12px; }
+.history-empty { padding: 40px; text-align: center; color: var(--ink-3); }
+.setting-row .control select { min-width: 180px; }
+.ocr-model-card { align-items: flex-start; }
+.ocr-model-card .meta { line-height: 1.6; }
+.ocr-model-dir { word-break: break-all; }
+.ocr-model-progress { margin-top: 8px; display: grid; gap: 6px; min-width: 240px; }
+.ocr-model-error { color: var(--red); }
+.ocr-model-actions { display: flex; gap: 8px; align-items: center; }
+.brand-seal { width: 20px; height: 20px; border: 2px solid var(--red); display: grid; place-items: center; color: var(--red); font-size: 12px; font-weight: 800; transform: rotate(-3deg); }
+.palette-item .hint { margin-left: auto; }
+.toast-host { position: fixed; inset: auto 0 24px; display: grid; place-items: center; pointer-events: none; z-index: 90; }
+.status-dot { display: inline-block; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 1080px) {
+  .app { grid-template-columns: 200px minmax(0, 1fr); }
+}
+
+/* 1280 宽度下英文页头按钮较长，允许换行而不是被裁切。 */
+.page-head { flex-wrap: wrap; }
+.page-head .actions { flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 1280px) {
+  .page-head { align-items: flex-start; flex-direction: column; }
+  .page-head .actions { margin-left: 0; }
+}
+
+/* macOS 风格标题栏：整宽 header + 左侧红绿灯留白，页面内容在下方分栏。 */
+.app {
+  grid-template-columns: 216px minmax(0, 1fr);
+  grid-template-rows: 48px minmax(0, 1fr);
+  grid-template-areas:
+    "titlebar titlebar"
+    "sidebar main";
+}
+.app.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+.titlebar {
+  grid-area: titlebar;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  /* 红绿灯由系统绘制，左侧留出固定空间。 */
+  padding: 0 14px 0 84px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  user-select: none;
+}
+.tb-left, .tb-right { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.tb-right { justify-self: end; gap: 8px; }
+.tb-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+.tb-icon {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-3);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.tb-icon:hover { background: var(--surface); color: var(--ink); }
+.tb-icon:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.tb-icon svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+.sidebar { grid-area: sidebar; min-height: 0; overflow: auto; padding-top: 16px; }
+.main { grid-area: main; height: auto; min-height: 0; }
+.app.sidebar-collapsed .sidebar { padding: 0; border-right: 0; overflow: hidden; visibility: hidden; }
+@media (max-width: 1280px) {
+  .app { grid-template-columns: 200px minmax(0, 1fr); }
+  .app.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+}
+
+/* 语料制作页：低频配置折叠，默认只露出预设、输出格式与引擎。 */
+.advanced { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 10px; }
+.advanced-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  padding: 6px 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.advanced-toggle .meta { margin-left: auto; color: var(--ink-3); font-weight: 500; font-size: 12px; }
+.advanced-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; transition: transform .15s ease; }
+.advanced-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.advanced-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.advanced-body { margin-top: 8px; display: grid; gap: 14px; }
+
+/* shadcn/ui Select 适配：结构来自 Radix，视觉继续使用 Proofing Desk token。 */
+.ui-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.ui-select-trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.ui-select-trigger[data-disabled] { opacity: .5; cursor: not-allowed; }
+.ui-select-chevron { width: 14px; height: 14px; flex: none; color: var(--ink-3); stroke: currentColor; fill: none; stroke-width: 1.8; }
+.ui-select-content {
+  z-index: 130;
+  min-width: var(--radix-select-trigger-width);
+  max-height: 320px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+}
+.ui-select-viewport { padding: 4px; }
+.ui-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+.ui-select-item[data-highlighted] { background: var(--surface-2); color: var(--ink); }
+.ui-select-item[data-disabled] { opacity: .45; pointer-events: none; }
+.ui-select-item-indicator { width: 14px; flex: none; display: grid; place-items: center; color: var(--blue); }
+.ui-select-item-indicator svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.ui-select-scroll { display: flex; align-items: center; justify-content: center; height: 22px; color: var(--ink-3); }
+.ui-select-scroll svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.ui-select-label { padding: 6px 10px; font-size: 11px; color: var(--ink-3); letter-spacing: .08em; font-weight: 700; }
+.ui-select-separator { height: 1px; background: var(--line); margin: 4px 0; }
+.route-control .ui-select-trigger { border: 0; background: transparent; padding: 0; min-height: 0; height: auto; font-size: 12px; }
+.setting-row .control .ui-select-trigger { min-width: 180px; }
+
+/* shadcn/ui Dialog：遮罩与内容固定居中，面板视觉由调用方提供。 */
+.ui-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(22, 22, 22, .46);
+}
+html[data-theme="dark"] .ui-dialog-overlay { background: rgba(0, 0, 0, .62); }
+.ui-dialog-content {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 110;
+  width: min(560px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  outline: none;
+}
+.ui-dialog-content > * { max-height: calc(100vh - 48px); }
+.ui-dialog-content[data-state="open"] > .history-modal { animation: history-modal-in .18s cubic-bezier(.2, .8, .2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog-content[data-state="open"] > .history-modal { animation: none; }
+}
+.ui-dialog-title { font-size: 20px; margin: 0 0 4px; }
+.ui-dialog-description { color: var(--ink-3); font-size: 13px; line-height: 1.6; }
+
+/* 标题栏任务状态 */
+.tb-center { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tb-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--ink-2);
+  z-index: 5;
+  max-width: 70%;
+}
+.tb-task-label { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-task-bar { width: 80px; height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.tb-task-bar span { display: block; height: 100%; background: var(--blue); transition: width .2s ease; }
+.tb-task-percent { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tb-task-cancel { width: 18px; height: 18px; border: 0; border-radius: 4px; background: transparent; color: var(--ink-3); display: grid; place-items: center; cursor: pointer; }
+.tb-task-cancel:hover { background: var(--surface-2); color: var(--ink); }
+.tb-task-cancel svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+.preflight-pages { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.engine-group { margin-top: 22px; }
+.engine-group:first-of-type { margin-top: 14px; }
+.engine-group > h3 { margin: 0; font-size: 13px; font-weight: 650; color: var(--ink); }
+.engine-group-intro { margin: 2px 0 10px; font-size: 12px; color: var(--ink-3); }
+.engine-card .spacer.actions { display: flex; align-items: center; gap: 8px; }
+.engine-path { word-break: break-all; }
+.setting-row .control.actions { display: flex; gap: 8px; }
+.setting-row .control input,
+.settings-section .actions input {
+  min-width: 180px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+/* 窄窗口下页头改为标题与操作并排、说明独占一行，避免按钮散落在标题下方。 */
+@media (max-width: 1280px) {
+  #page-convert .page-head,
+  #page-batch .page-head,
+  #page-history .page-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 12px;
+    max-width: none;
+    margin: 0 0 18px;
+  }
+  #page-convert .convert-grid { grid-template-columns: minmax(0, 1fr); }
+  #page-convert .page-head h1,
+  #page-batch .page-head h1,
+  #page-history .page-head h1 { grid-column: 1; }
+  #page-convert .page-head p,
+  #page-batch .page-head p,
+  #page-history .page-head p { grid-column: 1 / -1; margin: 0; }
+  #page-convert .page-head .actions,
+  #page-batch .page-head .actions,
+  #page-history .page-head .actions {
+    grid-column: 2;
+    grid-row: 1;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+}
