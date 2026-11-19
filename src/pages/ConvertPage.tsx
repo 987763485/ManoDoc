@@ -10,6 +10,8 @@ import {
   onFileDrop,
   onProgress,
   openPath,
+  preflightPdf,
+  type PreflightResult,
   type AppError,
   type ConversionResult,
   type FileInfo,
@@ -18,6 +20,7 @@ import {
 import { FileIcon } from "../components/FileIcon";
 import { Modal } from "../components/Modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { setActiveTask, updateActiveTask } from "../lib/taskbar";
 
 type Status = "empty" | "idle" | "converting" | "success" | "error";
 
@@ -51,6 +54,7 @@ export function ConvertPage({
   requestedTarget,
   onRequestedConsumed,
   onOpenSettings,
+  onEngineChange,
 }: {
   active: boolean;
   settings: Settings;
@@ -60,6 +64,7 @@ export function ConvertPage({
   requestedTarget?: string | null;
   onRequestedConsumed: () => void;
   onOpenSettings: () => void;
+  onEngineChange?: (engine: string) => void;
 }) {
   const { t } = useI18n();
   const [file, setFile] = useState<FileInfo | null>(null);
@@ -69,7 +74,12 @@ export function ConvertPage({
   const [error, setError] = useState<AppError | null>(null);
   const [matrixOpen, setMatrixOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [engine, setEngine] = useState<"auto" | "anydoc" | "xberg" | "pandoc">("auto");
+  const [engine, setEngine] = useState<"auto" | "anydoc" | "xberg" | "pandoc">(
+    (settings.engine as "auto" | "anydoc" | "xberg" | "pandoc") || "auto",
+  );
+  const [noTextPolicy, setNoTextPolicy] = useState<"skip" | "fail" | "ocr">("skip");
+  const [preflight, setPreflight] = useState<PreflightResult | null>(null);
+  const [preflightOpen, setPreflightOpen] = useState(false);
   const [ocrReady, setOcrReady] = useState(true);
   const [target, setTarget] = useState("markdown");
   const taskRef = useRef<string | null>(null);
@@ -79,6 +89,7 @@ export function ConvertPage({
     const unsubscribe = onProgress((event) => {
       if (event.taskId === taskRef.current) {
         setProgress({ stage: event.stage, percent: event.percent });
+        updateActiveTask(event.percent);
       }
     });
     return () => {
@@ -126,15 +137,31 @@ export function ConvertPage({
       const info = await inspectFile(path);
       setFile(info);
       setTarget(info.defaultTarget ?? info.targets?.[0] ?? "markdown");
-      setEngine("auto");
+      setEngine((settings.engine as "auto" | "anydoc" | "xberg" | "pandoc") || "auto");
       setResult(null);
       setError(null);
       setStatus("idle");
       showToast(t("toast.loaded"));
+      if (info.format === "PDF") {
+        void preflightPdf(info.path)
+          .then((check) => {
+            if (!check) return;
+            setPreflight(check);
+            if (check.pagesWithoutText.length > 0) {
+              // 单文件默认跳过无文本页并继续；OCR 与失败策略由用户在预检弹窗中选择。
+              setNoTextPolicy("skip");
+              setPreflightOpen(true);
+            }
+          })
+          .catch(() => {});
+      } else {
+        setPreflight(null);
+      }
     } catch (unknownError) {
       // 换文件失败时清掉旧文件，避免错误卡与旧文件信息互相矛盾。
       setFile(null);
       setResult(null);
+      setActiveTask(null);
       setError(errorToAppError(unknownError));
       setStatus("error");
     }
@@ -157,17 +184,25 @@ export function ConvertPage({
     await loadPath(dropped.path);
   }
 
-  async function start() {
+  async function start(policyOverride?: "skip" | "fail" | "ocr") {
     if (!file) return;
+    const policy = policyOverride ?? noTextPolicy;
     const taskId = crypto.randomUUID();
     taskRef.current = taskId;
     setStatus("converting");
     setError(null);
     setResult(null);
     setProgress({ stage: "reading", percent: 4 });
+    setActiveTask({
+      id: taskId,
+      label: `${file.name} → ${target.toUpperCase()}`,
+      percent: 4,
+      onCancel: () => void cancelConversion(taskId),
+    });
     try {
-      const converted = await convertFile(file.path, taskId, engine, target);
+      const converted = await convertFile(file.path, taskId, engine, target, policy);
       setResult(converted);
+      setActiveTask(null);
       setStatus("success");
       showToast(t("toast.converted"));
       onHistoryChanged();
@@ -307,6 +342,8 @@ export function ConvertPage({
                 <div className="file-name" title={file.name}>{file.name}</div>
                 <div className="file-meta">
                   {Math.max(1, Math.round(file.sizeBytes / 1024))} KB · {file.format}
+                  {file.pageCount ? ` · ${file.pageCount} 页` : ""}
+                  {file.estimatedEngine ? ` · ${file.estimatedEngine}` : ""}
                 </div>
               </div>
               <button className="file-remove" aria-label={t("action.cancel")} onClick={() => { setFile(null); setStatus("empty"); setResult(null); setError(null); }}>
@@ -351,9 +388,10 @@ export function ConvertPage({
                   <label>{t("convert.engine")}</label>
                   <Select
                     value={engine}
-                    onValueChange={(value) =>
-                      setEngine(value as "auto" | "anydoc" | "xberg" | "pandoc")
-                    }
+                    onValueChange={(value) => {
+                      setEngine(value as "auto" | "anydoc" | "xberg" | "pandoc");
+                      onEngineChange?.(value);
+                    }}
                   >
                     <SelectTrigger aria-label={t("convert.engine")}>
                       <SelectValue />
@@ -391,6 +429,11 @@ export function ConvertPage({
               </div>
               <p className="hint">{t("convert.imageLimit")}</p>
               {qualityNote ? <p className="hint" id="quality-note">{qualityNote}</p> : null}
+              {preflight && preflight.pagesWithoutText.length > 0 ? (
+                <button className="link-btn" onClick={() => setPreflightOpen(true)}>
+                  {t("preflight.review")}（{preflight.pagesWithoutText.length}/{preflight.pageCount}）
+                </button>
+              ) : null}
 
               <div className="actions">
                 <button className="btn primary" id="start-convert" disabled={status === "converting"} onClick={() => void start()}>
@@ -448,12 +491,92 @@ export function ConvertPage({
                     {t("convert.installOcr")}
                   </button>
                 ) : null}
+                <button
+                  className="btn ghost small"
+                  onClick={() => {
+                    const text = JSON.stringify(
+                      { code: error.code, message: error.message, nextStep: error.nextStep, detail: error.detail },
+                      null,
+                      2,
+                    );
+                    void navigator.clipboard.writeText(text).then(
+                      () => showToast(t("toast.copied")),
+                      () => showToast(text),
+                    );
+                  }}
+                >
+                  {t("error.copyDiagnostics")}
+                </button>
                 <button className="btn ghost small" onClick={() => setStatus(file ? "idle" : "empty")}>{t("action.close")}</button>
               </div>
             </div>
           ) : null}
         </aside>
       </div>
+
+      <Modal open={preflightOpen} onClose={() => setPreflightOpen(false)} labelledBy="preflight-title">
+        <div className="history-modal">
+          <div className="history-modal-head">
+            <div className="history-modal-title">
+              <h2 id="preflight-title">{t("preflight.title")}</h2>
+              <div className="sub">
+                {preflight
+                  ? t("preflight.summary")
+                      .replace("{pages}", String(preflight.pagesWithoutText.length))
+                      .replace("{total}", String(preflight.pageCount))
+                      .replace("{ratio}", `${Math.round(preflight.ratio * 100)}%`)
+                  : ""}
+              </div>
+            </div>
+            <button className="icon-btn history-modal-close" onClick={() => setPreflightOpen(false)} aria-label={t("action.close")}>
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+          <div className="preflight-pages">
+            {preflight?.pagesWithoutText.map((page) => <span className="badge amber" key={page}>第 {page} 页</span>)}
+          </div>
+          <p className="hint">
+            {preflight?.ocrAvailable ? t("preflight.ocrHint") : t("preflight.noOcrHint")}
+          </p>
+          <div className="actions">
+            <button
+              className="btn primary small"
+              onClick={() => {
+                setNoTextPolicy("skip");
+                setPreflightOpen(false);
+                void start("skip");
+              }}
+            >
+              {t("preflight.skip")}
+            </button>
+            {preflight?.ocrAvailable ? (
+              <button
+                className="btn secondary small"
+                onClick={() => {
+                  setNoTextPolicy("ocr");
+                  setPreflightOpen(false);
+                  void start("ocr");
+                }}
+              >
+                {t("preflight.useOcr")}
+              </button>
+            ) : null}
+            <button
+              className="btn ghost small"
+              onClick={() => {
+                setNoTextPolicy("fail");
+                setPreflightOpen(false);
+                void start("fail");
+              }}
+            >
+              {t("preflight.failOption")}
+            </button>
+            <button className="btn ghost small" onClick={() => setPreflightOpen(false)}>
+              {t("preflight.cancel")}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={matrixOpen} onClose={() => setMatrixOpen(false)} labelledBy="matrix-title">
         <div className="history-modal matrix-modal">

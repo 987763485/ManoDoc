@@ -81,6 +81,7 @@ pub fn clean(markdown: &str, options: &CleanOptions) -> Cleaned {
         };
         if options.cjk && !next.trim_start().starts_with('|') {
             next = collapse_cjk_spaces(&next);
+            next = normalize_cjk_punctuation(&next);
         }
 
         if options.cjk && next.trim().is_empty() {
@@ -94,7 +95,48 @@ pub fn clean(markdown: &str, options: &CleanOptions) -> Cleaned {
         output.push(next);
     }
 
-    let mut result = output.join("\n");
+    let mut merged: Vec<String> = Vec::with_capacity(output.len());
+    let mut fence: Option<&str> = None;
+    for line in output {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            fence = if fence.is_some() { None } else { Some(if trimmed.starts_with("```") { "```" } else { "~~~" }) };
+            merged.push(line);
+            continue;
+        }
+        let removable = fence.is_none()
+            && (trimmed.contains(".....") || trimmed.contains("……"))
+            && trimmed.chars().rev().take_while(|c| c.is_ascii_digit()).count() > 0;
+        if removable {
+            continue;
+        }
+        let can_join = fence.is_none()
+            && !merged.is_empty()
+            && !trimmed.is_empty()
+            && !trimmed.starts_with('#')
+            && !trimmed.starts_with('|')
+            && !trimmed.starts_with('-')
+            && !trimmed.starts_with('*')
+            && !trimmed.starts_with('>')
+            && !trimmed.starts_with('<');
+        if can_join {
+            let previous = merged.last().unwrap().trim_end();
+            let previous_ends_open = previous
+                .chars()
+                .last()
+                .map(|c| !matches!(c, '。' | '！' | '？' | '.' | '!' | '?' | ':' | '：' | '；' | ';' | '】' | '」' | '）' | ')' | '`'))
+                .unwrap_or(false);
+            let starts_cjk = trimmed.chars().next().map(is_cjk).unwrap_or(false);
+            if previous_ends_open && starts_cjk && !previous.ends_with("  ") {
+                let last = merged.last_mut().unwrap();
+                last.push(' ');
+                last.push_str(trimmed);
+                continue;
+            }
+        }
+        merged.push(line);
+    }
+    let mut result = merged.join("\n");
     // 原文件没有末尾换行时，不额外增加；有则保留。
     if markdown.ends_with('\n') && !result.ends_with('\n') {
         result.push('\n');
@@ -251,6 +293,30 @@ fn normalize_numbering(text: &str) -> Option<String> {
     } else {
         format!("{prefix} {rest}")
     })
+}
+
+/// ASCII 逗号/冒号/分号夹在中文之间时改为全角，不改动代码与表格。
+fn normalize_cjk_punctuation(line: &str) -> String {
+    let chars: Vec<char> = line.chars().collect();
+    let mut out = String::with_capacity(line.len());
+    for (index, ch) in chars.iter().enumerate() {
+        let prev = index.checked_sub(1).and_then(|i| chars.get(i)).copied();
+        let next = chars.get(index + 1).copied();
+        let replace = match ch {
+            ',' => Some('，'),
+            ';' => Some('；'),
+            ':' => Some('：'),
+            _ => None,
+        };
+        if let (Some(full), Some(prev), Some(next)) = (replace, prev, next) {
+            if is_cjk(prev) && is_cjk(next) {
+                out.push(full);
+                continue;
+            }
+        }
+        out.push(*ch);
+    }
+    out
 }
 
 fn is_cjk(ch: char) -> bool {

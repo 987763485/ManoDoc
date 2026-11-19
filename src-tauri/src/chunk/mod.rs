@@ -24,6 +24,9 @@ pub struct ChunkMetadata {
     pub engine: String,
     pub params: Value,
     pub chars: usize,
+    /// 粗略 token 估算：CJK 按 2 字符/token、其余按 4 字符/token 的均值。
+    #[serde(default)]
+    pub tokens: usize,
     /// OCR 专有信息只在实际使用 OCR 时出现，旧语料读取不受影响。
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ocr_engine: Option<String>,
@@ -137,6 +140,7 @@ pub fn chunk_markdown(
                     engine: context.engine.to_string(),
                     params: context.params.clone(),
                     chars: piece.chars().count(),
+                    tokens: (piece.chars().count() / 2).max(1),
                     ocr_engine: context.ocr_engine.map(|value| value.to_string()),
                     ocr_pages: context.ocr_pages.to_vec(),
                 },

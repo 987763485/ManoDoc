@@ -7,8 +7,8 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use xberg::{
-    ExtractionConfig, ExtractionMethod, ExtractInput, OcrConfig, OcrStrategy, OutputFormat, PageConfig,
-    PaddleOcrConfig,
+    ExtractionConfig, ExtractionMethod, ExtractInput, ImageExtractionConfig, OcrConfig, OcrStrategy,
+    OutputFormat, PageConfig, PaddleOcrConfig,
 };
 
 use crate::models::AppError;
@@ -20,6 +20,17 @@ pub struct XbergExtracted {
     pub method: String,
     pub ocr_pages: Vec<u32>,
     pub warnings: Vec<String>,
+    pub images: Vec<XbergImage>,
+}
+
+#[derive(Debug, Clone)]
+pub struct XbergImage {
+    /// xberg 注入 Markdown 的占位键，例如 `embedded:p1_i0`。
+    pub placeholder: String,
+    pub format: String,
+    pub data: Vec<u8>,
+    pub page: Option<u32>,
+    pub index: u32,
 }
 
 /// xberg 内部仍可能触达 HF 下载逻辑；转换期间强制离线，缺失模型直接报错。
@@ -52,6 +63,16 @@ fn ocr_config() -> OcrConfig {
 /// `ocr_ready=false` 时仍允许文本型文档走 xberg 原生抽取；需要 OCR 的文件由
 /// routing 在调用前拦截。
 pub fn extract(input: &Path, ocr_ready: bool) -> Result<XbergExtracted, AppError> {
+    extract_with_options(input, ocr_ready, false)
+}
+
+/// `want_images=true` 时要求 xberg 提取图片并注入 `embedded:` 占位；导出层负责
+/// 把占位改写为实际 assets 相对路径。
+pub fn extract_with_options(
+    input: &Path,
+    ocr_ready: bool,
+    want_images: bool,
+) -> Result<XbergExtracted, AppError> {
     enforce_offline();
 
     let mut config = ExtractionConfig::default();
@@ -64,6 +85,13 @@ pub fn extract(input: &Path, ocr_ready: bool) -> Result<XbergExtracted, AppError
         extract_pages: true,
         ..Default::default()
     });
+    if want_images {
+        config.images = Some(ImageExtractionConfig {
+            extract_images: true,
+            inject_placeholders: true,
+            ..Default::default()
+        });
+    }
 
     let path = input.to_path_buf();
     let result = tauri::async_runtime::block_on(xberg::extract(
@@ -79,6 +107,23 @@ pub fn extract(input: &Path, ocr_ready: bool) -> Result<XbergExtracted, AppError
             "重试或复制诊断信息",
         )
     })?;
+
+    let images = document
+        .images
+        .unwrap_or_default()
+        .into_iter()
+        .map(|image| XbergImage {
+            placeholder: format!(
+                "embedded:p{}_i{}",
+                image.page_number.unwrap_or(0),
+                image.image_index
+            ),
+            format: image.format.to_string(),
+            data: image.data.to_vec(),
+            page: image.page_number,
+            index: image.image_index,
+        })
+        .collect::<Vec<_>>();
 
     let mut ocr_pages = Vec::new();
     if let Some(pages) = document.pages.as_ref() {
@@ -147,7 +192,44 @@ pub fn extract(input: &Path, ocr_ready: bool) -> Result<XbergExtracted, AppError
         method,
         ocr_pages,
         warnings,
+        images,
     })
+}
+
+/// 只读文本层做 PDF 预检：不启用 OCR、不提取图片，返回每页文本。
+pub fn page_texts(input: &Path) -> Result<Vec<(u32, String)>, AppError> {
+    enforce_offline();
+    let mut config = ExtractionConfig::default();
+    config.output_format = OutputFormat::Markdown;
+    config.use_cache = false;
+    config.ocr = None;
+    config.pages = Some(PageConfig {
+        extract_pages: true,
+        ..Default::default()
+    });
+
+    let path = input.to_path_buf();
+    let result = tauri::async_runtime::block_on(xberg::extract(
+        ExtractInput::from_uri(path.to_string_lossy().into_owned()),
+        &config,
+    ))
+    .map_err(map_error)?;
+
+    let document = result.results.into_iter().next().ok_or_else(|| {
+        AppError::new(
+            "E_PARSE_FAILED",
+            "预检没有返回结果",
+            "重试或复制诊断信息",
+        )
+    })?;
+
+    if let Some(pages) = document.pages {
+        return Ok(pages
+            .into_iter()
+            .map(|page| (page.page_number, page.content))
+            .collect());
+    }
+    Ok(vec![(1, document.content)])
 }
 
 fn map_error(error: xberg::XbergError) -> AppError {

@@ -1,6 +1,22 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "../i18n";
-import { chooseDirectory, getEngineInfo, type EngineInfo, type Settings } from "../lib/ipc";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import {
+  chooseDirectory,
+  deletePreset,
+  duplicatePreset,
+  exportDiagnostics,
+  exportPresets,
+  getEngineInfo,
+  getLogsDir,
+  importPresets,
+  listPresets,
+  openPath,
+  savePreset,
+  type EngineInfo,
+  type Preset,
+  type Settings,
+} from "../lib/ipc";
 import { OcrModelCard } from "../components/OcrModelCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -31,9 +47,15 @@ export function SettingsPage({
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("general");
   const [engines, setEngines] = useState<EngineInfo | null>(null);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [presetName, setPresetName] = useState("");
+  const [presetBase, setPresetBase] = useState("builtin-standard");
+  const [editingPreset, setEditingPreset] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
 
   useEffect(() => {
     void getEngineInfo().then(setEngines).catch(() => setEngines(null));
+    void listPresets().then(setPresets).catch(() => setPresets([]));
   }, []);
 
   async function changeOutputDir() {
@@ -141,6 +163,14 @@ export function SettingsPage({
                   </span>
                 </div>
               </div>
+              <div className="field">
+                <label>{t("settings.pandocPath")}</label>
+                <input
+                  value={settings.pandocPath}
+                  placeholder={t("settings.pandocPathHint")}
+                  onChange={(event) => void onUpdate({ pandocPath: event.target.value })}
+                />
+              </div>
               <div className="engine-card">
                 <div>
                   <div className="name">Typst</div>
@@ -162,24 +192,40 @@ export function SettingsPage({
               <div className="setting-row">
                 <div className="info"><b>{t("settings.imageMode")}</b><span>{t("settings.imageModeDesc")}</span></div>
                 <div className="control">
-                  <Select value="assets" disabled>
+                  <Select value={settings.imageMode} onValueChange={(value) => void onUpdate({ imageMode: value as Settings["imageMode"] })}>
                     <SelectTrigger aria-label={t("settings.imageMode")}><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="assets">{t("settings.assets")}</SelectItem></SelectContent>
+                    <SelectContent>
+                      <SelectItem value="assets">{t("settings.assets")}</SelectItem>
+                      <SelectItem value="alt">{t("settings.imageAlt")}</SelectItem>
+                      <SelectItem value="base64">{t("settings.imageBase64")}</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="setting-row">
                 <div className="info"><b>{t("settings.overwrite")}</b><span>{t("settings.overwriteDesc")}</span></div>
                 <div className="control">
-                  <Select value="autoname" disabled>
+                  <Select value={settings.overwrite} onValueChange={(value) => void onUpdate({ overwrite: value as Settings["overwrite"] })}>
                     <SelectTrigger aria-label={t("settings.overwrite")}><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="autoname">{t("settings.autoname")}</SelectItem></SelectContent>
+                    <SelectContent>
+                      <SelectItem value="rename">{t("settings.overwriteRename")}</SelectItem>
+                      <SelectItem value="overwrite">{t("settings.overwriteReplace")}</SelectItem>
+                      <SelectItem value="skip">{t("settings.overwriteSkip")}</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="setting-row">
-                <div className="info"><b>{t("settings.corpus")}</b><span>{t("settings.corpusDesc")}</span></div>
-                <div className="control"><span className="badge gray">{t("settings.later")}</span></div>
+                <div className="info"><b>{t("settings.historyLimit")}</b><span>{t("settings.historyLimitDesc")}</span></div>
+                <div className="control">
+                  <input
+                    type="number"
+                    min={10}
+                    max={500}
+                    value={settings.historyLimit}
+                    onChange={(event) => void onUpdate({ historyLimit: Math.max(10, Math.min(500, Number(event.target.value) || 50)) })}
+                  />
+                </div>
               </div>
             </section>
           ) : null}
@@ -188,10 +234,98 @@ export function SettingsPage({
             <section className="settings-section on" id="set-presets">
               <h2>{t("settings.presets")}</h2>
               <p className="intro">{t("settings.presetsIntro")}</p>
-              {[t("settings.presetStandard"), t("settings.presetTable"), t("settings.presetCorpus")].map((name) => (
-                <div className="engine-card" key={name}>
-                  <div><div className="name">{name}</div><div className="meta">{t("settings.later")}</div></div>
-                  <div className="spacer"><span className="badge gray">{t("settings.later")}</span></div>
+              <div className="actions" style={{ marginBottom: 12 }}>
+                <input
+                  value={presetName}
+                  placeholder={t("settings.presetName")}
+                  onChange={(event) => setPresetName(event.target.value)}
+                />
+                <Select value={presetBase} onValueChange={setPresetBase}>
+                  <SelectTrigger aria-label={t("settings.presetBase")}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {presets.filter((preset) => preset.builtin).map((preset) => (
+                      <SelectItem key={preset.id} value={preset.id}>{preset.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <button
+                  className="btn secondary small"
+                  disabled={!presetName.trim()}
+                  onClick={async () => {
+                    const base = presets.find((preset) => preset.id === presetBase);
+                    if (!base) return;
+                    setPresets(await savePreset({ id: `user-${Date.now()}`, name: presetName.trim(), builtin: false, config: base.config }));
+                    setPresetName("");
+                  }}
+                >
+                  {t("settings.presetCreate")}
+                </button>
+                <button
+                  className="btn ghost small"
+                  onClick={async () => {
+                    const source = await open({ multiple: false });
+                    if (typeof source === "string") setPresets(await importPresets(source));
+                  }}
+                >
+                  {t("settings.presetImport")}
+                </button>
+                <button
+                  className="btn ghost small"
+                  onClick={async () => {
+                    const target = await save({ defaultPath: "dulldoc-presets.json" });
+                    if (target) await exportPresets(target);
+                  }}
+                >
+                  {t("settings.presetExport")}
+                </button>
+              </div>
+              {presets.map((preset) => (
+                <div className="engine-card" key={preset.id}>
+                  {editingPreset === preset.id ? (
+                    <>
+                      <input
+                        value={editName}
+                        aria-label={t("settings.presetName")}
+                        onChange={(event) => setEditName(event.target.value)}
+                      />
+                      <div className="spacer actions">
+                        <button
+                          className="btn secondary small"
+                          disabled={!editName.trim()}
+                          onClick={async () => {
+                            setPresets(await savePreset({ ...preset, name: editName.trim() }));
+                            setEditingPreset(null);
+                          }}
+                        >
+                          {t("action.save")}
+                        </button>
+                        <button className="btn ghost small" onClick={() => setEditingPreset(null)}>
+                          {t("action.cancel")}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div><div className="name">{preset.name}</div><div className="meta">{preset.builtin ? t("settings.presetBuiltin") : t("settings.presetCustom")}</div></div>
+                      <div className="spacer actions">
+                        {!preset.builtin ? (
+                          <button
+                            className="btn ghost small"
+                            onClick={() => {
+                              setEditingPreset(preset.id);
+                              setEditName(preset.name);
+                            }}
+                          >
+                            {t("settings.presetEdit")}
+                          </button>
+                        ) : null}
+                        <button className="btn ghost small" onClick={async () => setPresets(await duplicatePreset(preset.id))}>{t("settings.presetDuplicate")}</button>
+                        {!preset.builtin ? (
+                          <button className="btn ghost small" onClick={async () => setPresets(await deletePreset(preset.id))}>{t("action.delete")}</button>
+                        ) : null}
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </section>
@@ -202,21 +336,55 @@ export function SettingsPage({
               <h2>{t("settings.logs")}</h2>
               <p className="intro">{t("settings.logsIntro")}</p>
               <div className="setting-row">
-                <div className="info"><b>{t("settings.logLevel")}</b><span>info / warn / error / debug</span></div>
+                <div className="info"><b>{t("settings.logLevel")}</b><span>{t("settings.logLevelDesc")}</span></div>
                 <div className="control">
-                  <Select defaultValue="info">
+                  <Select value={settings.logLevel} onValueChange={(value) => void onUpdate({ logLevel: value as Settings["logLevel"] })}>
                     <SelectTrigger aria-label={t("settings.logLevel")}><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="info">info</SelectItem>
+                      <SelectItem value="error">error</SelectItem>
                       <SelectItem value="warn">warn</SelectItem>
+                      <SelectItem value="info">info</SelectItem>
                       <SelectItem value="debug">debug</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="setting-row">
+                <div className="info"><b>{t("settings.logRetention")}</b><span>{t("settings.logRetentionDesc")}</span></div>
+                <div className="control">
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={settings.logRetentionDays}
+                    onChange={(event) => void onUpdate({ logRetentionDays: Math.max(1, Math.min(365, Number(event.target.value) || 7)) })}
+                  />
+                </div>
+              </div>
+              <div className="setting-row">
                 <div className="info"><b>{t("settings.logDir")}</b><span>~/.dull_doc/logs</span></div>
-                <div className="control"><span className="badge gray">{t("settings.later")}</span></div>
+                <div className="control actions">
+                  <button
+                    className="btn secondary small"
+                    onClick={async () => {
+                      const dir = await getLogsDir();
+                      await openPath(dir);
+                    }}
+                  >
+                    {t("settings.openLogs")}
+                  </button>
+                  <button
+                    className="btn secondary small"
+                    onClick={async () => {
+                      const target = await save({ defaultPath: "dulldoc-diagnostics.zip" });
+                      if (!target) return;
+                      await exportDiagnostics(target);
+                      showToast(t("toast.diagnosticsSaved"));
+                    }}
+                  >
+                    {t("settings.exportDiagnostics")}
+                  </button>
+                </div>
               </div>
             </section>
           ) : null}
@@ -226,11 +394,35 @@ export function SettingsPage({
               <h2>{t("settings.about")}</h2>
               <p className="intro">{t("settings.aboutText")}</p>
               <div className="kv">
-                <b>anydoc</b><span>MIT · Firecrawl</span>
-                <b>xberg</b><span>MIT · Rust document intelligence</span>
-                <b>PaddleOCR</b><span>Apache-2.0 · P1</span>
-                <b>pandoc</b><span>GPL-2.0 · sidecar</span>
+                <b>anydoc</b><span>MIT · Firecrawl · 文档转换内核</span>
+                <b>xberg</b><span>MIT · Rust document intelligence · OCR / 表格</span>
+                <b>PaddleOCR</b><span>Apache-2.0 · OCR 组件（P1）</span>
+                <b>Typst</b><span>Apache-2.0 · PDF 排版</span>
+                <b>pandoc</b><span>GPL-2.0 · 独立 sidecar 进程调用</span>
               </div>
+              <h3>{t("settings.licenseTitle")}</h3>
+              <pre className="license-text">{`MIT License
+
+Copyright (c) 2026 DullDoc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`}</pre>
+              <p className="hint">{t("settings.pandocLicense")}</p>
             </section>
           ) : null}
         </div>

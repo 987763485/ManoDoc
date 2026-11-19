@@ -72,7 +72,27 @@ pub fn load_settings() -> Settings {
     if settings.output_dir.trim().is_empty() {
         settings.output_dir = Settings::default().output_dir;
     }
+    if !matches!(settings.log_level.as_str(), "error" | "warn" | "info" | "debug") {
+        settings.log_level = "info".into();
+    }
+    if !(1..=365).contains(&settings.log_retention_days) {
+        settings.log_retention_days = 7;
+    }
+    if !matches!(settings.image_mode.as_str(), "assets" | "alt" | "base64") {
+        settings.image_mode = "assets".into();
+    }
+    if !matches!(settings.overwrite.as_str(), "rename" | "overwrite" | "skip") {
+        settings.overwrite = "rename".into();
+    }
+    settings.history_limit = settings.history_limit.clamp(10, 500);
+    if !matches!(settings.engine.as_str(), "auto" | "anydoc" | "xberg" | "pandoc") {
+        settings.engine = "auto".into();
+    }
     settings
+}
+
+fn history_limit() -> usize {
+    load_settings().history_limit.clamp(10, 500)
 }
 
 pub fn save_settings(settings: &Settings) -> Result<Settings, String> {
@@ -106,7 +126,8 @@ pub fn load_history() -> HistoryFile {
     if history.version == 0 {
         history.version = 1;
     }
-    history.tasks.truncate(50);
+    let limit = history_limit();
+    history.tasks.truncate(limit);
     history
 }
 
@@ -118,7 +139,8 @@ pub fn save_history(history: &HistoryFile) -> Result<(), String> {
 pub fn record_task(task: crate::models::HistoryTask) -> Result<(), String> {
     let mut history = load_history();
     history.tasks.insert(0, task);
-    history.tasks.truncate(50);
+    let limit = history_limit();
+    history.tasks.truncate(limit);
     save_history(&history)
 }
 
@@ -127,7 +149,8 @@ pub fn upsert_task(task: crate::models::HistoryTask) -> Result<(), String> {
     let mut history = load_history();
     history.tasks.retain(|current| current.id != task.id);
     history.tasks.insert(0, task);
-    history.tasks.truncate(50);
+    let limit = history_limit();
+    history.tasks.truncate(limit);
     save_history(&history)
 }
 

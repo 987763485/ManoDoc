@@ -13,7 +13,10 @@ use crate::engine::{self, routing::EngineChoice};
 use crate::models::{
     AppError, ConversionResult, EngineInfo, FileInfo, HistoryTask, ProgressEvent, Settings,
 };
+use crate::logging;
 use crate::ocr;
+use crate::preflight;
+use crate::presets::{self, Preset};
 use crate::security::{canonical_input, prepare_output_dir};
 use crate::storage;
 
@@ -31,8 +34,16 @@ pub fn get_settings() -> Settings {
 
 #[tauri::command(rename_all = "camelCase")]
 pub fn save_settings(settings: Settings) -> Result<Settings, AppError> {
-    storage::save_settings(&settings)
-        .map_err(|e| AppError::new("E_SETTINGS_WRITE", e, "检查 ~/.dull_doc 是否可写后重试"))
+    let saved = storage::save_settings(&settings)
+        .map_err(|e| AppError::new("E_SETTINGS_WRITE", e, "检查 ~/.dull_doc 是否可写后重试"))?;
+    logging::set_level(&saved.log_level);
+    logging::cleanup(saved.log_retention_days);
+    logging::log(
+        "info",
+        "settings.save",
+        serde_json::json!({ "logLevel": saved.log_level, "imageMode": saved.image_mode, "engine": saved.engine }),
+    );
+    Ok(saved)
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -113,6 +124,12 @@ pub fn inspect_file(path: String) -> Result<FileInfo, AppError> {
             .map(|target| target.label())
             .unwrap_or("Markdown")
     };
+    let estimated_engine = match kind {
+        engine::InputKind::Image => "xberg",
+        engine::InputKind::Markdown | engine::InputKind::Html => "pandoc",
+        engine::InputKind::Document(anydoc::Format::Pdf) => "auto（anydoc → xberg）",
+        engine::InputKind::Document(_) => "anydoc",
+    };
     Ok(FileInfo {
         name,
         path: input.to_string_lossy().into_owned(),
@@ -122,6 +139,12 @@ pub fn inspect_file(path: String) -> Result<FileInfo, AppError> {
         is_image: matches!(kind, engine::InputKind::Image),
         targets,
         default_target,
+        page_count: if matches!(kind, engine::InputKind::Document(anydoc::Format::Pdf)) {
+            preflight::page_count(&input)
+        } else {
+            None
+        },
+        estimated_engine: estimated_engine.into(),
     })
 }
 
@@ -133,6 +156,7 @@ pub async fn convert_file(
     task_id: String,
     engine_choice: Option<String>,
     target_format: Option<String>,
+    no_text_policy: Option<String>,
 ) -> Result<ConversionResult, AppError> {
     let started = Instant::now();
     let input = canonical_input(&input_path)?;
@@ -174,14 +198,51 @@ pub async fn convert_file(
     let source_label = engine::input_format_label(&kind).to_string();
     let direction = format!("{source_label} → {}", target.label());
 
+    // 单文件「跳过并继续」：把无文本页从临时副本中删除，转换其余页面。
+    // 预检与 lopdf 都是阻塞操作，且内部会对 xberg 调用 block_on；必须放到
+    // spawn_blocking，不能直接占用 async 命令所在的 tokio 线程。
+    let policy = no_text_policy.unwrap_or_else(|| "ask".into());
+    let mut effective_input = input.clone();
+    let mut skipped_pages: Vec<u32> = Vec::new();
+    let mut stripped_temp: Option<PathBuf> = None;
+    if policy == "skip" && matches!(kind, engine::InputKind::Document(anydoc::Format::Pdf)) {
+        let source = input.clone();
+        let prepared = tauri::async_runtime::spawn_blocking(move || {
+            let check = preflight::inspect(&source).ok()?;
+            if check.pages_without_text.is_empty()
+                || check.pages_without_text.len() >= check.page_count as usize
+            {
+                return None;
+            }
+            let temp = storage::data_dir()
+                .ok()?
+                .join("tmp")
+                .join(format!("skip-{}.pdf", uuid::Uuid::new_v4()));
+            preflight::strip_pages(&source, &check.pages_without_text, &temp).ok()?;
+            Some((temp, check.pages_without_text))
+        })
+        .await
+        .ok()
+        .flatten();
+        if let Some((temp, pages)) = prepared {
+            skipped_pages = pages;
+            effective_input = temp.clone();
+            stripped_temp = Some(temp);
+        }
+    }
+
     emit_progress(&app, &task_id, "reading", 8);
     if take_cancelled(&app, &task_id) {
         return Err(cancelled_error());
     }
     emit_progress(&app, &task_id, "converting", 24);
 
-    let input_for_task = input.clone();
+    let input_for_task = effective_input.clone();
     let output_root_for_task = output_root.clone();
+    // 跳过无文本页时转换的是临时副本，输出名与资产目录仍以原始文件名为准。
+    let output_name = input
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned());
     let progress_app = app.clone();
     let progress_task = task_id.clone();
     let exported = tauri::async_runtime::spawn_blocking(move || {
@@ -191,6 +252,7 @@ pub async fn convert_file(
             target,
             choice,
             &output_root_for_task,
+            output_name.as_deref(),
             |stage| {
                 let (label, percent) = match stage {
                     "ocr" => ("ocr", 46),
@@ -210,6 +272,9 @@ pub async fn convert_file(
             "重启应用后重试",
         )
     })??;
+    if let Some(temp) = stripped_temp {
+        let _ = fs::remove_file(temp);
+    }
 
     if take_cancelled(&app, &task_id) {
         let _ = fs::remove_file(&exported.output_path);
@@ -217,6 +282,13 @@ pub async fn convert_file(
     }
     emit_progress(&app, &task_id, "writing", 96);
 
+    let mut warnings = exported.warnings.clone();
+    if !skipped_pages.is_empty() {
+        warnings.push(format!(
+            "已跳过无文本页 {:?}；这些页面未写入输出",
+            skipped_pages
+        ));
+    }
     let stats = engine::stats(&exported.stats_markdown);
     let output_path = exported.output_path.clone();
     let duration_ms = started.elapsed().as_millis();
@@ -250,6 +322,17 @@ pub async fn convert_file(
         params: Some(params),
     };
     let _ = storage::record_task(task);
+    logging::log(
+        "info",
+        "task.completed",
+        serde_json::json!({
+            "taskId": task_id,
+            "engine": exported.engine,
+            "target": exported.target.id(),
+            "durationMs": duration_ms,
+            "chars": stats.chars,
+        }),
+    );
     let _ = app.emit(
         "conversion-progress",
         ProgressEvent {
@@ -275,7 +358,7 @@ pub async fn convert_file(
         fallback_reason: exported.fallback_reason,
         ocr_pages: exported.ocr_pages,
         ocr_engine: exported.ocr_engine,
-        warnings: exported.warnings,
+        warnings,
     })
 }
 
@@ -392,4 +475,72 @@ fn emit_progress(app: &AppHandle, task_id: &str, stage: &str, percent: u8) {
             percent,
         },
     );
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn preflight_pdf(path: String) -> Result<preflight::PreflightResult, AppError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let input = canonical_input(&path)?;
+        preflight::inspect(&input)
+    })
+    .await
+    .map_err(|error| {
+        AppError::new(
+            "E_PREFLIGHT",
+            format!("预检线程失败: {error}"),
+            "重试或复制诊断信息",
+        )
+    })?
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn get_logs_dir() -> Result<String, AppError> {
+    logging::logs_dir()
+        .map(|path| path.to_string_lossy().into_owned())
+        .map_err(|error| AppError::new("E_LOG", error, "检查 ~/.dull_doc 是否可写"))
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn export_diagnostics(target: String) -> Result<String, AppError> {
+    let path = storage::expand_tilde(&target);
+    logging::export_diagnostics(&path)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn list_presets() -> Vec<Preset> {
+    presets::list()
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn save_preset(preset: Preset) -> Result<Vec<Preset>, AppError> {
+    presets::upsert(preset)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn delete_preset(id: String) -> Result<Vec<Preset>, AppError> {
+    presets::delete(&id)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn duplicate_preset(id: String) -> Result<Vec<Preset>, AppError> {
+    presets::duplicate(&id)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn export_presets(target: String) -> Result<String, AppError> {
+    presets::export_to(&storage::expand_tilde(&target))
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn import_presets(path: String) -> Result<Vec<Preset>, AppError> {
+    let source = canonical_input(&path)?;
+    presets::import_from(&source)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub fn path_kind(path: String) -> Result<String, AppError> {
+    let meta = std::fs::metadata(&path).map_err(|error| {
+        AppError::new("E_IO", format!("无法访问路径: {error}"), "确认路径仍存在")
+    })?;
+    Ok(if meta.is_dir() { "directory" } else { "file" }.into())
 }

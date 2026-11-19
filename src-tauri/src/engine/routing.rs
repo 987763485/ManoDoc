@@ -48,6 +48,7 @@ pub struct Extracted {
     pub ocr_pages: Vec<u32>,
     pub ocr_engine: Option<String>,
     pub warnings: Vec<String>,
+    pub images: Vec<xberg_engine::XbergImage>,
 }
 
 #[derive(Debug, Clone)]
@@ -125,6 +126,7 @@ fn from_anydoc(
         ocr_pages: Vec::new(),
         ocr_engine: None,
         warnings,
+        images: Vec::new(),
     }
 }
 
@@ -146,6 +148,7 @@ fn from_xberg(
         ocr_pages: extracted.ocr_pages,
         ocr_engine,
         warnings: extracted.warnings,
+        images: extracted.images,
     }
 }
 
@@ -173,6 +176,7 @@ fn ocr_pages_from(error: &AppError) -> (Vec<u32>, usize) {
 pub fn extract<F: FnMut(&str)>(
     input: &Path,
     choice: EngineChoice,
+    want_images: bool,
     mut on_stage: F,
 ) -> Result<Extracted, AppError> {
     let bytes = fs::read(input).map_err(|error| {
@@ -199,6 +203,14 @@ pub fn extract<F: FnMut(&str)>(
         ));
     }
 
+    // 需要图片资产时 auto 先走 xberg；失败再回退 anydoc，并在警告里说明图片未提取。
+    if want_images && matches!(kind, InputKind::Document(_)) && choice == EngineChoice::Auto {
+        on_stage(if ocr_ready { "ocr" } else { "converting" });
+        if let Ok(extracted) = xberg_engine::extract_with_options(input, ocr_ready, true) {
+            return Ok(from_xberg(extracted, choice, None));
+        }
+    }
+
     match (&kind, choice) {
         (InputKind::Image, EngineChoice::Anydoc) => Err(AppError::new(
             "E_UNSUPPORTED_FORMAT",
@@ -215,7 +227,7 @@ pub fn extract<F: FnMut(&str)>(
                 ));
             }
             on_stage("ocr");
-            let extracted = xberg_engine::extract(input, true)?;
+            let extracted = xberg_engine::extract_with_options(input, true, want_images)?;
             Ok(from_xberg(extracted, choice, None))
         }
         (InputKind::Document(_), EngineChoice::Anydoc) => {
@@ -240,7 +252,7 @@ pub fn extract<F: FnMut(&str)>(
         }
         (InputKind::Document(_), EngineChoice::Xberg) => {
             on_stage(if ocr_ready { "ocr" } else { "converting" });
-            match xberg_engine::extract(input, ocr_ready) {
+            match xberg_engine::extract_with_options(input, ocr_ready, want_images) {
                 Ok(extracted) => Ok(from_xberg(extracted, choice, None)),
                 Err(error) if error.code == "E_NEEDS_OCR" => Err(needs_ocr_error(
                     &error.message,
@@ -258,7 +270,7 @@ pub fn extract<F: FnMut(&str)>(
                     let grade = clean::table_grade(&extracted.markdown);
                     if grade == "C" && ocr_ready {
                         on_stage("ocr");
-                        if let Ok(retried) = xberg_engine::extract(input, true) {
+                        if let Ok(retried) = xberg_engine::extract_with_options(input, true, want_images) {
                             let reason = Some("anydoc:table-grade-c".to_string());
                             return Ok(from_xberg(retried, choice, reason));
                         }
@@ -281,7 +293,7 @@ pub fn extract<F: FnMut(&str)>(
                         ));
                     }
                     on_stage("ocr");
-                    let retried = xberg_engine::extract(input, true).map_err(|error| {
+                    let retried = xberg_engine::extract_with_options(input, true, want_images).map_err(|error| {
                         if error.code == "E_NEEDS_OCR" {
                             needs_ocr_error(
                                 &error.message,
@@ -302,7 +314,7 @@ pub fn extract<F: FnMut(&str)>(
                 Err(error) => {
                     // 解析失败时 xberg 原生抽取仍可能成功；OCR 模型只在需要时加载。
                     on_stage(if ocr_ready { "ocr" } else { "converting" });
-                    match xberg_engine::extract(input, ocr_ready) {
+                    match xberg_engine::extract_with_options(input, ocr_ready, want_images) {
                         Ok(retried) => Ok(from_xberg(
                             retried,
                             choice,
@@ -380,7 +392,7 @@ mod tests {
         // 封面页无文本层的 50 页样本，用来验证 auto 路由会回退 xberg。
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../example/关于印发《网络安全等级保护测评高风险判定实施指引(试行 )》的通知).pdf");
-        let output = extract(&path, EngineChoice::Auto, |_| {}).expect("扫描 PDF 应完成 OCR");
+        let output = extract(&path, EngineChoice::Auto, false, |_| {}).expect("扫描 PDF 应完成 OCR");
         assert_eq!(output.engine, "xberg");
         assert_eq!(output.fallback_reason.as_deref(), Some("anydoc:needs-ocr"));
         assert!(!output.ocr_pages.is_empty());
@@ -391,7 +403,7 @@ mod tests {
     #[ignore = "依赖 DULLDOC_TEST_IMAGE 指向的本地图片与已安装的 OCR 模型"]
     fn real_image_routes_to_ocr() {
         let path = std::env::var("DULLDOC_TEST_IMAGE").expect("需要 DULLDOC_TEST_IMAGE");
-        let output = extract(Path::new(&path), EngineChoice::Auto, |_| {}).expect("图片应完成 OCR");
+        let output = extract(Path::new(&path), EngineChoice::Auto, false, |_| {}).expect("图片应完成 OCR");
         assert_eq!(output.engine, "xberg");
         assert_eq!(output.ocr_engine.as_deref(), Some("paddleocr"));
         assert!(output.markdown.chars().count() > 10);
@@ -402,7 +414,7 @@ mod tests {
     fn text_document_stays_on_anydoc() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../example/GB:T 28448-2019 信息安全技术 网络安全等级保护测评要求.docx");
-        let output = extract(&path, EngineChoice::Auto, |_| {}).expect("docx 应转换");
+        let output = extract(&path, EngineChoice::Auto, false, |_| {}).expect("docx 应转换");
         assert_eq!(output.engine, "anydoc");
         assert!(output.ocr_pages.is_empty());
         assert!(output.ocr_engine.is_none());
@@ -415,7 +427,7 @@ mod tests {
         std::env::set_var("DULLDOC_MODEL_DIR", &empty);
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../example/关于印发《网络安全等级保护测评高风险判定实施指引(试行 )》的通知).pdf");
-        let error = extract(&path, EngineChoice::Auto, |_| {}).expect_err("无模型时扫描 PDF 应失败");
+        let error = extract(&path, EngineChoice::Auto, false, |_| {}).expect_err("无模型时扫描 PDF 应失败");
         std::env::remove_var("DULLDOC_MODEL_DIR");
         assert_eq!(error.code, "E_NEEDS_OCR");
         assert!(error.next_step.contains("OCR"));

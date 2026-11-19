@@ -4,7 +4,7 @@ mod pandoc;
 pub mod routing;
 mod sidecar;
 mod typst;
-mod xberg;
+pub mod xberg;
 
 pub use anydoc::stats;
 pub use export::TargetFormat;

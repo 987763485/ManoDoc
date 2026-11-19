@@ -30,7 +30,11 @@ pub struct BatchConfig {
     pub corpus: bool,
     pub chunk_size: usize,
     pub overlap: usize,
+    #[serde(default = "default_no_text_policy")]
+    pub no_text_policy: String,
 }
+
+fn default_no_text_policy() -> String { "skip".into() }
 
 impl Default for BatchConfig {
     fn default() -> Self {
@@ -46,15 +50,19 @@ impl Default for BatchConfig {
             corpus: true,
             chunk_size: 1200,
             overlap: 50,
+            no_text_policy: default_no_text_policy(),
         }
     }
 }
 
 impl BatchConfig {
-    fn normalized(mut self) -> Self {
+    pub(crate) fn normalized(mut self) -> Self {
         self.concurrency = self.concurrency.clamp(1, 8);
         self.chunk_size = self.chunk_size.clamp(500, 4000);
         self.overlap = self.overlap.min(300);
+        if !matches!(self.no_text_policy.as_str(), "skip" | "fail" | "ask") {
+            self.no_text_policy = default_no_text_policy();
+        }
         self
     }
 
@@ -706,7 +714,28 @@ fn process_file(
         .map(|bytes| chunk::sha256_hex(&bytes))
         .unwrap_or_default();
     let choice = crate::engine::EngineChoice::parse(&config.engine);
-    let extracted = if matches!(engine::routing::detect_path(path), Some(engine::InputKind::Markdown)) {
+    let kind = engine::routing::detect_path(path);
+    // 批量「跳过」策略：只删除无文本页，保留其余页面。
+    let mut effective = path.to_path_buf();
+    let mut policy_skips = Vec::new();
+    let mut stripped_temp: Option<std::path::PathBuf> = None;
+    if config.no_text_policy == "skip" && matches!(kind, Some(engine::InputKind::Document(anydoc::Format::Pdf))) {
+        if let Ok(check) = crate::preflight::inspect(path) {
+            if !check.pages_without_text.is_empty()
+                && check.pages_without_text.len() < check.page_count as usize
+            {
+                if let Ok(root) = storage::data_dir() {
+                    let temp = root.join("tmp").join(format!("batch-skip-{}.pdf", uuid::Uuid::new_v4()));
+                    if crate::preflight::strip_pages(path, &check.pages_without_text, &temp).is_ok() {
+                        policy_skips = check.pages_without_text.clone();
+                        effective = temp.clone();
+                        stripped_temp = Some(temp);
+                    }
+                }
+            }
+        }
+    }
+    let extracted = if matches!(kind, Some(engine::InputKind::Markdown)) {
         // 批量只产出 Markdown，Markdown 输入直接作为镜像内容。
         match fs::read_to_string(path) {
             Ok(markdown) => engine::routing::Extracted {
@@ -717,6 +746,7 @@ fn process_file(
                 ocr_pages: Vec::new(),
                 ocr_engine: None,
                 warnings: Vec::new(),
+                images: Vec::new(),
             },
             Err(error) => {
                 let app_error = AppError::new(
@@ -731,9 +761,30 @@ fn process_file(
             }
         }
     } else {
-        match engine::extract(path, choice, |_| {}) {
-            Ok(extracted) => extracted,
+        let want_images = storage::load_settings().image_mode != "alt";
+        match engine::extract(&effective, choice, want_images, |_| {}) {
+            Ok(mut extracted) => {
+                if let Some(temp) = stripped_temp.take() {
+                    let _ = fs::remove_file(temp);
+                }
+                if !policy_skips.is_empty() {
+                    extracted.warnings.push(format!(
+                        "已跳过无文本页 {:?}；这些页面未写入语料包",
+                        policy_skips
+                    ));
+                }
+                extracted
+            }
             Err(error) => {
+                if let Some(temp) = stripped_temp.take() {
+                    let _ = fs::remove_file(temp);
+                }
+                if error.code == "E_NEEDS_OCR" && config.no_text_policy == "skip" {
+                    return (
+                        skipped_for_policy(input, &hash, &error, started.elapsed().as_millis() as u64),
+                        Vec::new(),
+                    );
+                }
                 return (
                     failed_result(input, &hash, &error, started.elapsed().as_millis() as u64),
                     Vec::new(),
@@ -870,6 +921,49 @@ fn failed_result(
     }
 }
 
+fn skipped_for_policy(
+    input: &BatchInput,
+    hash: &str,
+    error: &AppError,
+    duration_ms: u64,
+) -> BatchFileResult {
+    let pages = error
+        .detail
+        .as_ref()
+        .and_then(|detail| detail.get("pages"))
+        .and_then(|pages| pages.as_array())
+        .map(|pages| pages.len())
+        .unwrap_or(0);
+    BatchFileResult {
+        id: input.id.clone(),
+        path: input.path.clone(),
+        name: input.name.clone(),
+        relative: input.relative.clone(),
+        format: input.format.clone(),
+        hash: hash.to_string(),
+        status: "skipped".into(),
+        engine: "anydoc".into(),
+        engine_choice: "auto".into(),
+        fallback_reason: Some("no-text-pages".into()),
+        ocr_pages: Vec::new(),
+        ocr_engine: None,
+        table_grade: None,
+        warnings: vec![format!(
+            "跳过：{}（{} 页无文本层，批次策略 skip）",
+            error.message, pages
+        )],
+        error_code: Some("E_NEEDS_OCR_SKIPPED".into()),
+        error_message: Some(error.message.clone()),
+        next_step: Some("安装 OCR 模型，或把批次策略改为 fail 后重试".into()),
+        chars: 0,
+        headings: 0,
+        table_rows: 0,
+        chunks: 0,
+        duration_ms,
+        output_path: None,
+    }
+}
+
 fn cancelled_input(input: &BatchInput) -> BatchFileResult {
     BatchFileResult {
         id: input.id.clone(),
@@ -954,6 +1048,18 @@ fn record_history(result: &BatchResult, config: &BatchConfig, inputs: &[BatchInp
         params: Some(config.params()),
     };
     let _ = storage::upsert_task(task);
+    crate::logging::log(
+        "info",
+        "batch.completed",
+        serde_json::json!({
+            "batchId": result.batch_id,
+            "status": result.status,
+            "files": result.files.len(),
+            "success": result.counts.success,
+            "skipped": result.counts.skipped,
+            "failed": result.counts.failed,
+        }),
+    );
 }
 
 fn emit_progress(

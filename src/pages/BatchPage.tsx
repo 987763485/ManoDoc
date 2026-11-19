@@ -67,6 +67,7 @@ const DEFAULT_CONFIG: BatchConfig = {
   corpus: true,
   chunkSize: 1200,
   overlap: 50,
+  noTextPolicy: "skip",
 };
 
 const STATUS_KEYS = {
@@ -86,14 +87,18 @@ export function BatchPage({
   showToast,
   onHistoryChanged,
   rerunRequest,
+  incomingPaths,
   onRerunConsumed,
+  onIncomingConsumed,
 }: {
   active: boolean;
   settings: Settings;
   showToast: (message: string) => void;
   onHistoryChanged: () => void;
   rerunRequest?: RerunRequest | null;
+  incomingPaths?: string[] | null;
   onRerunConsumed: () => void;
+  onIncomingConsumed: () => void;
 }) {
   const { t } = useI18n();
   const [rows, setRows] = useState<Row[]>([]);
@@ -146,6 +151,14 @@ export function BatchPage({
     // 只在新的重跑请求到达时触发。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rerunRequest]);
+
+  useEffect(() => {
+    if (!incomingPaths?.length) return;
+    onIncomingConsumed();
+    void scanPaths(incomingPaths);
+    // 只在新的拖入请求到达时触发。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingPaths]);
 
   function normalizeStatus(status: string): RowStatus {
     const known = Object.keys(STATUS_KEYS) as RowStatus[];
@@ -443,7 +456,18 @@ export function BatchPage({
 
           <div className="field">
             <label>{t("batch.preset")}</label>
-            <Select value={config.preset} onValueChange={(value) => updateConfig("preset", value)}>
+            <Select
+              value={config.preset}
+              onValueChange={(value) => {
+                const preset =
+                  value === "table"
+                    ? { ...DEFAULT_CONFIG, preset: value, chunkSize: 800 }
+                    : value === "corpus"
+                      ? { ...DEFAULT_CONFIG, preset: value, chunkSize: 1200, overlap: 100 }
+                      : { ...DEFAULT_CONFIG, preset: "standard" };
+                setConfig({ ...preset, engine: config.engine, concurrency: config.concurrency });
+              }}
+            >
               <SelectTrigger aria-label={t("batch.preset")}><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="standard">{t("settings.presetStandard")}</SelectItem>
@@ -571,6 +595,21 @@ export function BatchPage({
                   </SelectContent>
                 </Select>
               </div>
+
+                <div className="field">
+                  <label>{t("batch.noTextPolicy")}</label>
+                  <Select
+                    value={config.noTextPolicy ?? "skip"}
+                    onValueChange={(value) => updateConfig("noTextPolicy", value as BatchConfig["noTextPolicy"])}
+                  >
+                    <SelectTrigger aria-label={t("batch.noTextPolicy")}><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="skip">{t("batch.policySkip")}</SelectItem>
+                      <SelectItem value="fail">{t("batch.policyFail")}</SelectItem>
+                      <SelectItem value="ask">{t("batch.policyAsk")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             ) : null}
           </div>

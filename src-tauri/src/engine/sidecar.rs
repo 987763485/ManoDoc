@@ -66,6 +66,12 @@ fn candidates(tool: Tool) -> Vec<PathBuf> {
             paths.push(PathBuf::from(value));
         }
     }
+    if tool == Tool::Pandoc {
+        let configured = crate::storage::load_settings().pandoc_path;
+        if !configured.trim().is_empty() {
+            paths.push(PathBuf::from(crate::storage::expand_tilde(&configured)));
+        }
+    }
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
             // Tauri 打包后的 sidecar 通常与主程序同目录。

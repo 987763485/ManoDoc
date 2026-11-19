@@ -414,6 +414,7 @@ mod tests {
                 engine: "anydoc".into(),
                 params: json!({"chunkSize": 1200}),
                 chars: 2,
+                tokens: 1,
                 ocr_engine: None,
                 ocr_pages: Vec::new(),
             },

@@ -1,0 +1,241 @@
+schema: comet.capability-association.v1
+status: suggested
+workflow: native
+capability: mvp
+current_spec: docs/comet/specs/mvp/spec.md
+current_hash: 2aec4f0c9acf1c20e9662b88c52cac372fbb7b76d8289fd17fc1d6811b67d922
+confidence: high
+query: 启动 CHG-006（P0 收口）
+reason: 当前总 Spec 已命中，并找到 5 个历史来源；已核对当前能力文件，匹配 4 个查询词（high）
+historical_sources:
+  - docs/comet/archive/2026-11-18-batch-corpus-v2/specs/mvp/spec.md
+  - docs/comet/archive/2026-11-18-mvp-implementation/specs/mvp/spec.md
+  - docs/comet/archive/2026-11-18-packaging-signing/specs/mvp/spec.md
+  - docs/comet/archive/2026-11-18-pandoc-typst/specs/mvp/spec.md
+  - docs/comet/archive/2026-11-18-xberg-ocr/specs/mvp/spec.md
+evidence:
+  - source: docs/comet/specs/mvp/spec.md
+    kind: native-spec
+    title: DullDoc MVP 纵向切片规格
+    snippet: >-
+      # DullDoc MVP 纵向切片规格
+
+
+      > Capability: `mvp`  
+
+      > 本规格描述归档后 DullDoc 第一条可运行切片的行为。批量语料、OCR、pandoc/Typst 与发布签名不在本规格内。
+
+
+      ## 1. 应用外壳与导航
+
+
+      DullDoc 是 Tauri 2 macOS 应用，前端使用 React 19、TypeScript、Vite 与 Tailwind CSS
+      4。应用启动后默认进入「文档转换」页。
+
+
+      四个一级页面固定为：
+
+
+      | 页面 | 本切片行为 |
+
+      | --- | --- |
+
+      | 文档转换 | 完整实现：选择/拖入文件、方向与引擎展示、转换、内联进度/成功/错误 |
+
+      | 语料制作 | 视觉占位：说明批量与语料将在后续 change 接入，不伪造队列或转换能力 |
+
+      | 转换历史 | 完整实现：真实历史列表、详情、重跑、打开、清空 |
+
+      | 系统设置 | 完整实现通用设置；引擎/输出/预设/日志/关于分组按原型展示，未实现的控件标注后续 |
+
+
+      界面必须复用 Proofing Desk token：纸色、墨色、校样红、修正蓝、成功绿、8pt 间距、原型字号与圆角。禁止在组件中写 hex
+      颜色。1280×800 与 1440×900 下不得出现横向滚动或主操作被截断。
+
+
+      ### 场景 A1｜应用启动与四页导航
+
+
+      - Given 应用已启动
+
+      - When 
+  - source: docs/comet/archive/2026-11-18-batch-corpus-v2/specs/mvp/spec.md
+    kind: native-archive
+    title: DullDoc MVP 纵向切片规格
+    snippet: >-
+      # DullDoc MVP 纵向切片规格
+
+
+      > Capability: `mvp`  
+
+      > 本规格描述归档后 DullDoc 第一条可运行切片的行为。批量语料、OCR、pandoc/Typst 与发布签名不在本规格内。
+
+
+      ## 1. 应用外壳与导航
+
+
+      DullDoc 是 Tauri 2 macOS 应用，前端使用 React 19、TypeScript、Vite 与 Tailwind CSS
+      4。应用启动后默认进入「文档转换」页。
+
+
+      四个一级页面固定为：
+
+
+      | 页面 | 本切片行为 |
+
+      | --- | --- |
+
+      | 文档转换 | 完整实现：选择/拖入文件、方向与引擎展示、转换、内联进度/成功/错误 |
+
+      | 语料制作 | 视觉占位：说明批量与语料将在后续 change 接入，不伪造队列或转换能力 |
+
+      | 转换历史 | 完整实现：真实历史列表、详情、重跑、打开、清空 |
+
+      | 系统设置 | 完整实现通用设置；引擎/输出/预设/日志/关于分组按原型展示，未实现的控件标注后续 |
+
+
+      界面必须复用 Proofing Desk token：纸色、墨色、校样红、修正蓝、成功绿、8pt 间距、原型字号与圆角。禁止在组件中写 hex
+      颜色。1280×800 与 1440×900 下不得出现横向滚动或主操作被截断。
+
+
+      ### 场景 A1｜应用启动与四页导航
+
+
+      - Given 应用已启动
+
+      - When 
+  - source: docs/comet/archive/2026-11-18-mvp-implementation/specs/mvp/spec.md
+    kind: native-archive
+    title: DullDoc MVP 纵向切片规格
+    snippet: >-
+      # DullDoc MVP 纵向切片规格
+
+
+      > Capability: `mvp`  
+
+      > 本规格描述归档后 DullDoc 第一条可运行切片的行为。批量语料、OCR、pandoc/Typst 与发布签名不在本规格内。
+
+
+      ## 1. 应用外壳与导航
+
+
+      DullDoc 是 Tauri 2 macOS 应用，前端使用 React 19、TypeScript、Vite 与 Tailwind CSS
+      4。应用启动后默认进入「文档转换」页。
+
+
+      四个一级页面固定为：
+
+
+      | 页面 | 本切片行为 |
+
+      | --- | --- |
+
+      | 文档转换 | 完整实现：选择/拖入文件、方向与引擎展示、转换、内联进度/成功/错误 |
+
+      | 语料制作 | 视觉占位：说明批量与语料将在后续 change 接入，不伪造队列或转换能力 |
+
+      | 转换历史 | 完整实现：真实历史列表、详情、重跑、打开、清空 |
+
+      | 系统设置 | 完整实现通用设置；引擎/输出/预设/日志/关于分组按原型展示，未实现的控件标注后续 |
+
+
+      界面必须复用 Proofing Desk token：纸色、墨色、校样红、修正蓝、成功绿、8pt 间距、原型字号与圆角。禁止在组件中写 hex
+      颜色。1280×800 与 1440×900 下不得出现横向滚动或主操作被截断。
+
+
+      ### 场景 A1｜应用启动与四页导航
+
+
+      - Given 应用已启动
+
+      - When 
+  - source: docs/comet/archive/2026-11-18-packaging-signing/specs/mvp/spec.md
+    kind: native-archive
+    title: DullDoc MVP 纵向切片规格
+    snippet: >-
+      # DullDoc MVP 纵向切片规格
+
+
+      > Capability: `mvp`  
+
+      > 本规格描述归档后 DullDoc 第一条可运行切片的行为。批量语料、OCR、pandoc/Typst 与发布签名不在本规格内。
+
+
+      ## 1. 应用外壳与导航
+
+
+      DullDoc 是 Tauri 2 macOS 应用，前端使用 React 19、TypeScript、Vite 与 Tailwind CSS
+      4。应用启动后默认进入「文档转换」页。
+
+
+      四个一级页面固定为：
+
+
+      | 页面 | 本切片行为 |
+
+      | --- | --- |
+
+      | 文档转换 | 完整实现：选择/拖入文件、方向与引擎展示、转换、内联进度/成功/错误 |
+
+      | 语料制作 | 视觉占位：说明批量与语料将在后续 change 接入，不伪造队列或转换能力 |
+
+      | 转换历史 | 完整实现：真实历史列表、详情、重跑、打开、清空 |
+
+      | 系统设置 | 完整实现通用设置；引擎/输出/预设/日志/关于分组按原型展示，未实现的控件标注后续 |
+
+
+      界面必须复用 Proofing Desk token：纸色、墨色、校样红、修正蓝、成功绿、8pt 间距、原型字号与圆角。禁止在组件中写 hex
+      颜色。1280×800 与 1440×900 下不得出现横向滚动或主操作被截断。
+
+
+      ### 场景 A1｜应用启动与四页导航
+
+
+      - Given 应用已启动
+
+      - When 
+  - source: docs/comet/archive/2026-11-18-pandoc-typst/specs/mvp/spec.md
+    kind: native-archive
+    title: DullDoc MVP 纵向切片规格
+    snippet: >-
+      # DullDoc MVP 纵向切片规格
+
+
+      > Capability: `mvp`  
+
+      > 本规格描述归档后 DullDoc 第一条可运行切片的行为。批量语料、OCR、pandoc/Typst 与发布签名不在本规格内。
+
+
+      ## 1. 应用外壳与导航
+
+
+      DullDoc 是 Tauri 2 macOS 应用，前端使用 React 19、TypeScript、Vite 与 Tailwind CSS
+      4。应用启动后默认进入「文档转换」页。
+
+
+      四个一级页面固定为：
+
+
+      | 页面 | 本切片行为 |
+
+      | --- | --- |
+
+      | 文档转换 | 完整实现：选择/拖入文件、方向与引擎展示、转换、内联进度/成功/错误 |
+
+      | 语料制作 | 视觉占位：说明批量与语料将在后续 change 接入，不伪造队列或转换能力 |
+
+      | 转换历史 | 完整实现：真实历史列表、详情、重跑、打开、清空 |
+
+      | 系统设置 | 完整实现通用设置；引擎/输出/预设/日志/关于分组按原型展示，未实现的控件标注后续 |
+
+
+      界面必须复用 Proofing Desk token：纸色、墨色、校样红、修正蓝、成功绿、8pt 间距、原型字号与圆角。禁止在组件中写 hex
+      颜色。1280×800 与 1440×900 下不得出现横向滚动或主操作被截断。
+
+
+      ### 场景 A1｜应用启动与四页导航
+
+
+      - Given 应用已启动
+
+      - When 

@@ -15,6 +15,8 @@ import { BatchPage } from "./pages/BatchPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { CommandPalette, type PageId } from "./components/CommandPalette";
+import { onFileDrop, pathKind } from "./lib/ipc";
+import { useActiveTask } from "./lib/taskbar";
 
 // 首屏使用与 Rust 默认值一致的设置，避免主题闪动；随后以磁盘配置为准。
 const DEFAULT_SETTINGS: Settings = {
@@ -22,6 +24,13 @@ const DEFAULT_SETTINGS: Settings = {
   language: "zh",
   theme: "system",
   outputDir: "~/Documents/DullDoc Output",
+  logLevel: "info",
+  logRetentionDays: 7,
+  imageMode: "assets",
+  overwrite: "rename",
+  historyLimit: 50,
+  pandocPath: "",
+  engine: "auto",
 };
 
 export default function App() {
@@ -32,12 +41,14 @@ export default function App() {
   const [toast, setToast] = useState("");
   const [requestedPath, setRequestedPath] = useState<string | null>(null);
   const [requestedTarget, setRequestedTarget] = useState<string | null>(null);
+  const [incomingBatchPaths, setIncomingBatchPaths] = useState<string[] | null>(null);
   const [batchRerun, setBatchRerun] = useState<{
     inputPaths: string[];
     config: BatchConfig;
   } | null>(null);
   const toastTimer = useRef<number | null>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
+  const dropUnsubscribe = useRef<(() => void) | null>(null);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -102,6 +113,58 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [changePalette]);
 
+  // 任意页面拖入：单文件进转换，多文件或文件夹进语料制作。
+  useEffect(() => {
+    let disposed = false;
+    void onFileDrop((paths) => {
+      if (disposed || paths.length === 0) return;
+      void (async () => {
+        if (paths.length > 1) {
+          setIncomingBatchPaths(paths);
+          setPage("batch");
+          return;
+        }
+        const kind = await pathKind(paths[0]).catch(() => "file");
+        if (kind === "directory") {
+          setIncomingBatchPaths(paths);
+          setPage("batch");
+        } else {
+          pickRecent(paths[0]);
+        }
+      })();
+    }).then((unsubscribe) => {
+      if (disposed) void unsubscribe();
+      else dropUnsubscribe.current = unsubscribe;
+    });
+    return () => {
+      disposed = true;
+      void dropUnsubscribe.current?.();
+    };
+  }, []);
+
+  // G 然后 1–4 快速切页（输入框内不触发）。
+  useEffect(() => {
+    let waiting = 0;
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable=true]")) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const key = event.key.toLowerCase();
+      if (key === "g") {
+        waiting = Date.now();
+        return;
+      }
+      if (Date.now() - waiting < 800 && ["1", "2", "3", "4"].includes(key)) {
+        event.preventDefault();
+        const pages: PageId[] = ["convert", "batch", "history", "settings"];
+        setPage(pages[Number(key) - 1]);
+        waiting = 0;
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   async function updateSettings(patch: Partial<Settings>) {
     const next = { ...settings, ...patch };
     setSettings(next);
@@ -148,6 +211,7 @@ export default function App() {
       corpus: params.corpus ?? true,
       chunkSize: params.chunkSize ?? 1200,
       overlap: params.overlap ?? 50,
+      noTextPolicy: (params.noTextPolicy as BatchConfig["noTextPolicy"]) ?? "skip",
     };
     setBatchRerun({ inputPaths: task.inputPaths, config });
     setPage("batch");
@@ -164,6 +228,7 @@ export default function App() {
         requestedPath={requestedPath}
         requestedTarget={requestedTarget}
         batchRerun={batchRerun}
+        incomingBatchPaths={incomingBatchPaths}
         onPage={setPage}
         onPalette={changePalette}
         onUpdateSettings={updateSettings}
@@ -174,6 +239,7 @@ export default function App() {
         onPickRecent={pickRecent}
         onRerunBatch={rerunBatch}
         onBatchRerunConsumed={() => setBatchRerun(null)}
+        onIncomingBatchConsumed={() => setIncomingBatchPaths(null)}
         onRequestedConsumed={() => setRequestedPath(null)}
       />
     </I18nProvider>
@@ -189,6 +255,7 @@ function AppShell({
   requestedPath,
   requestedTarget,
   batchRerun,
+  incomingBatchPaths,
   onPage,
   onPalette,
   onUpdateSettings,
@@ -199,6 +266,7 @@ function AppShell({
   onPickRecent,
   onRerunBatch,
   onBatchRerunConsumed,
+  onIncomingBatchConsumed,
   onRequestedConsumed,
 }: {
   settings: Settings;
@@ -209,6 +277,7 @@ function AppShell({
   requestedPath: string | null;
   requestedTarget: string | null;
   batchRerun: { inputPaths: string[]; config: BatchConfig } | null;
+  incomingBatchPaths: string[] | null;
   onPage: (page: PageId) => void;
   onPalette: (open: boolean) => void;
   onUpdateSettings: (patch: Partial<Settings>) => Promise<void>;
@@ -219,9 +288,11 @@ function AppShell({
   onPickRecent: (path: string, target?: string) => void;
   onRerunBatch: (task: HistoryTask) => void;
   onBatchRerunConsumed: () => void;
+  onIncomingBatchConsumed: () => void;
   onRequestedConsumed: () => void;
 }) {
   const { t } = useI18n();
+  const activeTask = useActiveTask();
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     try {
       return window.localStorage.getItem("dulldoc.sidebar") !== "0";
@@ -271,7 +342,19 @@ function AppShell({
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
           </button>
         </div>
-        <div className="tb-title" data-tauri-drag-region>{t("app.name")}</div>
+        <div className="tb-center" data-tauri-drag-region>
+          <div className="tb-title">{t("app.name")}</div>
+          {activeTask ? (
+          <div className="tb-task" role="status" aria-live="polite">
+            <span className="tb-task-label">{activeTask.label}</span>
+            <span className="tb-task-bar"><span style={{ width: `${activeTask.percent}%` }} /></span>
+            <span className="tb-task-percent">{activeTask.percent}%</span>
+            <button className="tb-task-cancel" onClick={activeTask.onCancel} aria-label={t("action.cancel")}>
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+          ) : null}
+        </div>
         <div className="tb-right" data-tauri-drag-region>
           <div className="seg" aria-label={t("settings.lang")}>
             <button className={settings.language === "zh" ? "on" : ""} onClick={() => settings.language !== "zh" && onToggleLanguage()}>中文</button>
@@ -333,6 +416,7 @@ function AppShell({
         requestedTarget={requestedTarget}
             onRequestedConsumed={onRequestedConsumed}
             onOpenSettings={() => onPage("settings")}
+            onEngineChange={(next) => void onUpdateSettings({ engine: next })}
           />
           <BatchPage
             active={page === "batch"}
@@ -340,7 +424,9 @@ function AppShell({
             showToast={onShowToast}
             onHistoryChanged={() => void onRefreshHistory()}
             rerunRequest={batchRerun}
+            incomingPaths={incomingBatchPaths}
             onRerunConsumed={onBatchRerunConsumed}
+            onIncomingConsumed={onIncomingBatchConsumed}
           />
           <HistoryPage
             active={page === "history"}

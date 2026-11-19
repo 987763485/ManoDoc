@@ -1,10 +1,14 @@
+mod assets;
 mod batch;
 mod chunk;
 mod clean;
 mod commands;
 mod corpus;
 mod engine;
+mod logging;
 mod models;
+mod preflight;
+mod presets;
 mod ocr;
 mod security;
 mod storage;
@@ -19,6 +23,7 @@ pub fn run() {
         .setup(|_app| {
             // 数据目录失败不应阻塞 UI 启动；具体命令会返回可读错误。
             let _ = storage::ensure_data_dirs();
+            logging::init(&storage::load_settings());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -37,6 +42,16 @@ pub fn run() {
             commands::retry_batch_file,
             commands::list_history,
             commands::clear_history,
+            commands::preflight_pdf,
+            commands::get_logs_dir,
+            commands::export_diagnostics,
+            commands::list_presets,
+            commands::save_preset,
+            commands::delete_preset,
+            commands::duplicate_preset,
+            commands::export_presets,
+            commands::import_presets,
+            commands::path_kind,
             commands::open_path
         ])
         .run(tauri::generate_context!())

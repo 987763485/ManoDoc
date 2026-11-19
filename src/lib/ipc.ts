@@ -10,6 +10,13 @@ export interface Settings {
   language: Language;
   theme: Theme;
   outputDir: string;
+  logLevel: "error" | "warn" | "info" | "debug";
+  logRetentionDays: number;
+  imageMode: "assets" | "base64" | "alt";
+  overwrite: "rename" | "overwrite" | "skip";
+  historyLimit: number;
+  pandocPath: string;
+  engine: string;
 }
 
 export interface TaskStats {
@@ -69,6 +76,7 @@ export interface BatchConfig {
   corpus: boolean;
   chunkSize: number;
   overlap: number;
+  noTextPolicy?: "skip" | "fail" | "ask";
 }
 
 export interface BatchInput {
@@ -138,6 +146,8 @@ export interface FileInfo {
   isImage: boolean;
   targets: string[];
   defaultTarget: string;
+  pageCount?: number | null;
+  estimatedEngine?: string;
 }
 
 export interface ConversionResult {
@@ -197,6 +207,28 @@ export interface OcrProgress {
   fileCount: number;
 }
 
+export interface PreflightPage {
+  page: number;
+  chars: number;
+}
+
+export interface PreflightResult {
+  pageCount: number;
+  pagesWithoutText: number[];
+  pages: PreflightPage[];
+  ratio: number;
+  ocrAvailable: boolean;
+  overThreshold: boolean;
+  suggested: "continue" | "ocr" | "fail" | "skip";
+}
+
+export interface Preset {
+  id: string;
+  name: string;
+  builtin: boolean;
+  config: BatchConfig;
+}
+
 export interface ProgressEvent {
   taskId: string;
   stage: string;
@@ -220,6 +252,13 @@ const defaultSettings: Settings = {
   language: "zh",
   theme: "system",
   outputDir: "~/Documents/DullDoc Output",
+  logLevel: "info",
+  logRetentionDays: 7,
+  imageMode: "assets",
+  overwrite: "rename",
+  historyLimit: 50,
+  pandocPath: "",
+  engine: "auto",
 };
 
 function readMockSettings(): Settings {
@@ -382,6 +421,7 @@ export async function convertFile(
   taskId: string,
   engineChoice: string = "auto",
   targetFormat: string = "markdown",
+  noTextPolicy: string = "ask",
 ): Promise<ConversionResult> {
   if (!isTauri()) {
     await new Promise((resolve) => setTimeout(resolve, 900));
@@ -428,6 +468,7 @@ export async function convertFile(
     taskId,
     engineChoice,
     targetFormat,
+    noTextPolicy,
   });
 }
 
@@ -595,4 +636,71 @@ export function errorToAppError(error: unknown): AppError {
     message: String(error),
     nextStep: "重试或复制诊断信息",
   };
+}
+
+
+export async function preflightPdf(path: string): Promise<PreflightResult | null> {
+  if (!isTauri()) {
+    return {
+      pageCount: 50,
+      pagesWithoutText: [1],
+      pages: Array.from({ length: 50 }, (_, index) => ({ page: index + 1, chars: index === 0 ? 0 : 900 })),
+      ratio: 0.02,
+      ocrAvailable: true,
+      overThreshold: false,
+      suggested: "ocr",
+    };
+  }
+  return invoke<PreflightResult>("preflight_pdf", { path });
+}
+
+export async function pathKind(path: string): Promise<"file" | "directory"> {
+  if (!isTauri()) return path.endsWith("/") ? "directory" : "file";
+  return invoke<"file" | "directory">("path_kind", { path });
+}
+
+export async function getLogsDir(): Promise<string> {
+  if (!isTauri()) return "~/.dull_doc/logs";
+  return invoke<string>("get_logs_dir");
+}
+
+export async function exportDiagnostics(target: string): Promise<string> {
+  if (!isTauri()) return target;
+  return invoke<string>("export_diagnostics", { target });
+}
+
+export async function listPresets(): Promise<Preset[]> {
+  if (!isTauri()) {
+    return [
+      { id: "builtin-standard", name: "标准文档", builtin: true, config: { preset: "standard", engine: "auto", concurrency: 4, cleanHeaders: true, cleanCjk: true, gradeTables: true, chunk: true, metadata: true, corpus: true, chunkSize: 1200, overlap: 50 } },
+      { id: "builtin-table", name: "表格清单", builtin: true, config: { preset: "table", engine: "auto", concurrency: 4, cleanHeaders: true, cleanCjk: true, gradeTables: true, chunk: true, metadata: true, corpus: true, chunkSize: 800, overlap: 50 } },
+      { id: "builtin-corpus", name: "知识库", builtin: true, config: { preset: "corpus", engine: "auto", concurrency: 4, cleanHeaders: true, cleanCjk: true, gradeTables: true, chunk: true, metadata: true, corpus: true, chunkSize: 1200, overlap: 100 } },
+    ];
+  }
+  return invoke<Preset[]>("list_presets");
+}
+
+export async function savePreset(preset: Preset): Promise<Preset[]> {
+  if (!isTauri()) return listPresets();
+  return invoke<Preset[]>("save_preset", { preset });
+}
+
+export async function deletePreset(id: string): Promise<Preset[]> {
+  if (!isTauri()) return listPresets();
+  return invoke<Preset[]>("delete_preset", { id });
+}
+
+export async function duplicatePreset(id: string): Promise<Preset[]> {
+  if (!isTauri()) return listPresets();
+  return invoke<Preset[]>("duplicate_preset", { id });
+}
+
+export async function exportPresets(target: string): Promise<string> {
+  if (!isTauri()) return target;
+  return invoke<string>("export_presets", { target });
+}
+
+export async function importPresets(path: string): Promise<Preset[]> {
+  if (!isTauri()) return listPresets();
+  return invoke<Preset[]>("import_presets", { path });
 }

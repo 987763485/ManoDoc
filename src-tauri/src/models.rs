@@ -34,7 +34,28 @@ pub struct Settings {
     pub language: String,
     pub theme: String,
     pub output_dir: String,
+    #[serde(default = "default_log_level")]
+    pub log_level: String,
+    #[serde(default = "default_log_retention")]
+    pub log_retention_days: u32,
+    #[serde(default = "default_image_mode")]
+    pub image_mode: String,
+    #[serde(default = "default_overwrite")]
+    pub overwrite: String,
+    #[serde(default = "default_history_limit")]
+    pub history_limit: usize,
+    #[serde(default)]
+    pub pandoc_path: String,
+    #[serde(default = "default_engine")]
+    pub engine: String,
 }
+
+fn default_log_level() -> String { "info".into() }
+fn default_log_retention() -> u32 { 7 }
+fn default_image_mode() -> String { "assets".into() }
+fn default_overwrite() -> String { "rename".into() }
+fn default_history_limit() -> usize { 50 }
+fn default_engine() -> String { "auto".into() }
 
 impl Default for Settings {
     fn default() -> Self {
@@ -43,6 +64,13 @@ impl Default for Settings {
             language: "zh".into(),
             theme: "system".into(),
             output_dir: "~/Documents/DullDoc Output".into(),
+            log_level: default_log_level(),
+            log_retention_days: default_log_retention(),
+            image_mode: default_image_mode(),
+            overwrite: default_overwrite(),
+            history_limit: default_history_limit(),
+            pandoc_path: String::new(),
+            engine: default_engine(),
         }
     }
 }
@@ -113,6 +141,10 @@ pub struct FileInfo {
     pub is_image: bool,
     pub targets: Vec<String>,
     pub default_target: String,
+    #[serde(default)]
+    pub page_count: Option<u32>,
+    #[serde(default)]
+    pub estimated_engine: String,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -198,3 +198,39 @@ html[data-theme="dark"] .ui-dialog-overlay { background: rgba(0, 0, 0, .62); }
 }
 .ui-dialog-title { font-size: 20px; margin: 0 0 4px; }
 .ui-dialog-description { color: var(--ink-3); font-size: 13px; line-height: 1.6; }
+
+/* 标题栏任务状态 */
+.tb-center { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tb-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--ink-2);
+  z-index: 5;
+  max-width: 70%;
+}
+.tb-task-label { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-task-bar { width: 80px; height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.tb-task-bar span { display: block; height: 100%; background: var(--blue); transition: width .2s ease; }
+.tb-task-percent { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tb-task-cancel { width: 18px; height: 18px; border: 0; border-radius: 4px; background: transparent; color: var(--ink-3); display: grid; place-items: center; cursor: pointer; }
+.tb-task-cancel:hover { background: var(--surface-2); color: var(--ink); }
+.tb-task-cancel svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+.preflight-pages { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.license-text { margin: 8px 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink-2); font-size: 12px; line-height: 1.7; white-space: pre-wrap; }
+.setting-row .control.actions { display: flex; gap: 8px; }
+.setting-row .control input,
+.settings-section .actions input {
+  min-width: 180px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 13px;
+}

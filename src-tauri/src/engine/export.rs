@@ -128,25 +128,33 @@ impl Drop for TempDir {
 }
 
 /// 与文本输出共用同名规则：`stem.ext`、`stem-1.ext`……
-fn unique_output(root: &Path, stem: &str, extension: &str) -> PathBuf {
-    for index in 0..1000 {
-        let name = if index == 0 {
-            format!("{stem}.{extension}")
-        } else {
-            format!("{stem}-{index}.{extension}")
-        };
-        let candidate = root.join(name);
+fn unique_output(root: &Path, stem: &str, extension: &str) -> Result<PathBuf, AppError> {
+    let base = root.join(format!("{stem}.{extension}"));
+    match storage::load_settings().overwrite.as_str() {
+        "overwrite" => return Ok(base),
+        "skip" if base.exists() => {
+            return Err(AppError::new(
+                "E_OUTPUT_EXISTS",
+                format!("输出已存在: {}", base.display()),
+                "打开已有文件，或在设置中改为自动重命名",
+            ))
+        }
+        _ => {}
+    }
+    for index in 1..1000 {
+        let candidate = root.join(format!("{stem}-{index}.{extension}"));
         if !candidate.exists() {
-            return candidate;
+            return Ok(if base.exists() { candidate } else { base });
         }
     }
-    root.join(format!("{stem}-{}.{}", uuid::Uuid::new_v4(), extension))
+    Ok(root.join(format!("{stem}-{}.{}", uuid::Uuid::new_v4(), extension)))
 }
 
 fn write_text(path: &Path, text: &str) -> Result<(), AppError> {
     let mut file = fs::OpenOptions::new()
         .write(true)
-        .create_new(true)
+        .create(true)
+        .truncate(true)
         .open(path)
         .map_err(|error| {
             AppError::new(
@@ -189,8 +197,12 @@ pub fn convert<F: FnMut(&str)>(
     target: TargetFormat,
     choice: EngineChoice,
     output_root: &Path,
+    output_name: Option<&str>,
     mut on_stage: F,
 ) -> Result<ExportResult, AppError> {
+    let image_mode = crate::assets::ImageMode::parse(&storage::load_settings().image_mode);
+    let want_images = image_mode != crate::assets::ImageMode::Alt;
+
     if !targets_for(kind).contains(&target) {
         return Err(AppError::new(
             "E_UNSUPPORTED_DIRECTION",
@@ -200,7 +212,9 @@ pub fn convert<F: FnMut(&str)>(
     }
 
     let temp = TempDir::new()?;
-    let title = title_for(input);
+    let title = output_name
+        .map(str::to_string)
+        .unwrap_or_else(|| title_for(input));
     let mut warnings = Vec::new();
     let mut source_engine = None;
     let mut fallback_reason = None;
@@ -217,13 +231,27 @@ pub fn convert<F: FnMut(&str)>(
             }
             _ => {
                 on_stage("converting");
-                let extracted = routing::extract(input, choice, &mut on_stage)?;
+                let extracted = routing::extract(input, choice, want_images, &mut on_stage)?;
                 warnings.extend(extracted.warnings.clone());
                 source_engine = Some(extracted.engine.clone());
                 fallback_reason = extracted.fallback_reason.clone();
                 ocr_pages = extracted.ocr_pages.clone();
                 ocr_engine = extracted.ocr_engine.clone();
-                (extracted.markdown, extracted.engine)
+                let mut markdown = extracted.markdown.clone();
+                if want_images && !extracted.images.is_empty() {
+                    let assets_dir = output_root.join("assets").join(&title);
+                    let prefix = format!("assets/{title}");
+                    let materialized = crate::assets::materialize(
+                        &markdown,
+                        &extracted.images,
+                        &assets_dir,
+                        &prefix,
+                        image_mode,
+                    )?;
+                    markdown = materialized.markdown;
+                    warnings.extend(materialized.warnings);
+                }
+                (markdown, extracted.engine)
             }
         },
         TargetFormat::Docx => match kind {
@@ -236,16 +264,29 @@ pub fn convert<F: FnMut(&str)>(
             }
             InputKind::Document(anydoc::Format::Pdf) => {
                 on_stage("converting");
-                let extracted = routing::extract(input, choice, &mut on_stage)?;
+                let extracted = routing::extract(input, choice, want_images, &mut on_stage)?;
                 source_engine = Some(extracted.engine.clone());
                 fallback_reason = extracted.fallback_reason.clone();
                 ocr_pages = extracted.ocr_pages.clone();
                 ocr_engine = extracted.ocr_engine.clone();
                 warnings.extend(extracted.warnings.clone());
                 warnings.push("PDF → Word 由 PDF → Markdown → DOCX 生成，目录与图片保真有限".into());
+                let mut markdown = extracted.markdown.clone();
+                if want_images && !extracted.images.is_empty() {
+                    let assets_dir = temp.path().join("assets");
+                    let materialized = crate::assets::materialize(
+                        &markdown,
+                        &extracted.images,
+                        &assets_dir,
+                        "assets",
+                        image_mode,
+                    )?;
+                    markdown = materialized.markdown;
+                    warnings.extend(materialized.warnings);
+                }
                 on_stage("rendering");
                 let markdown_path = temp.path().join("source.md");
-                fs::write(&markdown_path, &extracted.markdown).map_err(|error| {
+                fs::write(&markdown_path, &markdown).map_err(|error| {
                     AppError::new(
                         "E_OUTPUT_PERMISSION",
                         format!("写入临时 Markdown 失败: {error}"),
@@ -254,7 +295,7 @@ pub fn convert<F: FnMut(&str)>(
                 })?;
                 let generated = temp.path().join("output.docx");
                 pandoc::markdown_to_docx(&markdown_path, &generated, &title)?;
-                (extracted.markdown, "pandoc".to_string())
+                (markdown, "pandoc".to_string())
             }
             _ => {
                 return Err(AppError::new(
@@ -318,7 +359,7 @@ pub fn convert<F: FnMut(&str)>(
     };
 
     on_stage("writing");
-    let final_path = unique_output(output_root, &title, target.extension());
+    let final_path = unique_output(output_root, &title, target.extension())?;
     if target == TargetFormat::Markdown {
         write_text(&final_path, &stats_markdown)?;
     } else {
@@ -397,7 +438,7 @@ mod tests {
         fs::create_dir_all(&out).unwrap();
         let kind = InputKind::Markdown;
         for target in [TargetFormat::Docx, TargetFormat::Html, TargetFormat::Epub, TargetFormat::Pdf] {
-            let result = convert(&input, &kind, target, EngineChoice::Auto, &out, |_| {})
+            let result = convert(&input, &kind, target, EngineChoice::Auto, &out, None, |_| {})
                 .unwrap_or_else(|error| panic!("{target:?}: {}", error.message));
             let bytes = fs::read(&result.output_path).unwrap();
             assert!(!bytes.is_empty(), "{target:?} 输出为空");
@@ -424,6 +465,7 @@ mod tests {
             TargetFormat::Pdf,
             EngineChoice::Auto,
             &out,
+            None,
             |_| {},
         )
         .expect_err("Typst 失败应返回错误");
@@ -446,6 +488,7 @@ mod tests {
             TargetFormat::Docx,
             EngineChoice::Auto,
             &out,
+            None,
             |_| {},
         )
         .expect("PDF → Word 应完成");

@@ -18,9 +18,9 @@
 | 项目 | 内容 |
 | --- | --- |
 | 产品名 | **DullDoc**（暂定，S1 确认） |
-| 当前阶段 | **S7 CHG-001~005 全部归档，等待用户人工验收** |
+| 当前阶段 | **S7 CHG-001~006 全部归档，等待用户人工验收** |
 | 下一阶段 | 用户人工验收；取得 Developer ID 后执行公证与 staple |
-| 当前事项 | CHG-005 已接入 `scripts/package-macos.sh`：暂存并预签名 pandoc/Typst/uv 后由 Tauri 打包 `.app` 与 `.dmg`；产物 380MB/128MB，`codesign --verify --deep --strict` 通过（ad-hoc），DMG 可挂载且复制出的应用可启动；隐藏 `tools/macos` 后包内 sidecar 仍完成 Markdown→Word（25071 字符/212 标题/121 表格行）与 Markdown→PDF（21 页/672KB）；移除包内 pandoc 返回 `E_PANDOC_MISSING`；无 Developer ID 时脚本以退出码 20 标注公证阻塞。CHG-004 已接入 pandoc 3.14 + Typst 0.15.1：Markdown→DOCX/HTML/EPUB/PDF、PDF→DOCX、HTML→Markdown；转换页支持目标格式、引擎与质量提示，历史记录目标格式并支持重跑恢复。实机：Markdown→Word（25071 字符、212 标题、121 表格行）、Markdown→PDF（21 页、672KB，中文表格正常）、PDF→Word（64154 字符、203 表格行，OCR 2 页 + 保真提示）；重跑生成 `-1.docx`。`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 12 ignored）通过。CHG-003 已接入 xberg 1.4.0 与 PaddleOCR ONNX（PP-OCRv6 small）：`engine/routing.rs` 实现 auto/anydoc/xberg 路由与可见回退；`ocr/mod.rs` 管理 `~/.dull_doc/models` 的模型状态与显式安装（hf-hub 1.0 下载、约 31MB、SHA-256、离线不下载）；单文件、PNG/JPEG 与批量语料均写入实际引擎、OCR 页与回退原因。实机验证：封面无文本 50 页 PDF 以 xberg OCR 完成（64154 字符、9 标题、203 表格行，OCR 2 页，回退 anydoc:needs-ocr）；docx 保持 anydoc；无模型时图片返回 `E_NEEDS_OCR` 并给出安装入口；批量 4 文件（docx/xlsx/jpg/pdf）全部成功，356 chunks，manifest 记录 `engineUsed/ocrPages/ocrEngine/fallbackReason`。`pnpm build`、`pnpm test`（12 项）、`cargo test`（23 项 + 9 个 ignored）通过。模型下载已改用 hf-hub 1.0 并实测从 huggingface.co 完成（31MB，14.2s，SHA-256 通过）；本地镜像测试覆盖进度、校验与重复安装跳过。 |
+| 当前事项 | CHG-006 已关闭 71 条 P0 缺口：新增 `logging`（JSONL 分级日志、保留天数、脱敏诊断 zip）、`preflight`（页级预检与删页）、`presets`（内置/自定义预设 CRUD 与导入导出）、`assets`（图片落盘与相对路径/base64/alt）；设置页补齐输出（图片模式/覆盖/历史条数）、预设、日志与关于（MIT 全文、第三方许可、pandoc 源码）；转换页支持 PDF 预检弹窗、页数与预计引擎、错误诊断复制、引擎选择持久化；标题栏显示任务、进度与取消，任意页拖入按单/多文件与文件夹路由。实机：50 页 PDF 跳过封面后 26s 完成（66145 字符/203 表格行），Markdown 130 处图片引用全部写入 `assets/chg006/` 相对路径；诊断 zip 含 diagnostics.json 与最近日志；预设复制/编辑/删除与日志设置生效。修复 async 命令内 `block_on` 死锁（预检放到 spawn_blocking）与跳过页临时文件名泄漏到输出名。`pnpm build`、`pnpm test`（17 项）、`cargo test` 通过；详见 `docs/superpowers/P0自检.md`。CHG-005 已接入 `scripts/package-macos.sh`：暂存并预签名 pandoc/Typst/uv 后由 Tauri 打包 `.app` 与 `.dmg`；产物 380MB/128MB，`codesign --verify --deep --strict` 通过（ad-hoc），DMG 可挂载且复制出的应用可启动；隐藏 `tools/macos` 后包内 sidecar 仍完成 Markdown→Word（25071 字符/212 标题/121 表格行）与 Markdown→PDF（21 页/672KB）；移除包内 pandoc 返回 `E_PANDOC_MISSING`；无 Developer ID 时脚本以退出码 20 标注公证阻塞。CHG-004 已接入 pandoc 3.14 + Typst 0.15.1：Markdown→DOCX/HTML/EPUB/PDF、PDF→DOCX、HTML→Markdown；转换页支持目标格式、引擎与质量提示，历史记录目标格式并支持重跑恢复。实机：Markdown→Word（25071 字符、212 标题、121 表格行）、Markdown→PDF（21 页、672KB，中文表格正常）、PDF→Word（64154 字符、203 表格行，OCR 2 页 + 保真提示）；重跑生成 `-1.docx`。`pnpm build`、`pnpm test`（13 项）、`cargo test`（25 项 + 12 ignored）通过。CHG-003 已接入 xberg 1.4.0 与 PaddleOCR ONNX（PP-OCRv6 small）：`engine/routing.rs` 实现 auto/anydoc/xberg 路由与可见回退；`ocr/mod.rs` 管理 `~/.dull_doc/models` 的模型状态与显式安装（hf-hub 1.0 下载、约 31MB、SHA-256、离线不下载）；单文件、PNG/JPEG 与批量语料均写入实际引擎、OCR 页与回退原因。实机验证：封面无文本 50 页 PDF 以 xberg OCR 完成（64154 字符、9 标题、203 表格行，OCR 2 页，回退 anydoc:needs-ocr）；docx 保持 anydoc；无模型时图片返回 `E_NEEDS_OCR` 并给出安装入口；批量 4 文件（docx/xlsx/jpg/pdf）全部成功，356 chunks，manifest 记录 `engineUsed/ocrPages/ocrEngine/fallbackReason`。`pnpm build`、`pnpm test`（12 项）、`cargo test`（23 项 + 9 个 ignored）通过。模型下载已改用 hf-hub 1.0 并实测从 huggingface.co 完成（31MB，14.2s，SHA-256 通过）；本地镜像测试覆盖进度、校验与重复安装跳过。 |
 | 已确认 | ① `maker` = datalab-to/marker；② 首要场景同时覆盖「通用办公格式互转」与「批量知识库构建」；③ 首发 macOS Apple Silicon；④ MVP 接 anydoc + pandoc；⑤ 2026-11-18 追加 xberg 内核（P0）；⑥ 2026-11-18 追加 PaddleOCR（P1 OCR 组件）；⑦ 2026-11-18 追加中英文切换、主题切换、命令面板（P0） |
 
 ### 已确认的产品决策
@@ -65,8 +65,9 @@
 | S5 | UI 设计规范 | `docs/superpowers/UI设计规范.html` | 已确认（v1.4） |
 | S5 | UI 高保真原型 | `docs/superpowers/UI.html` | 已确认 |
 | S6 | 技术选型 | `docs/superpowers/技术选型.md` | 已确认（v1.1）；S6-5 待发布前补公证 |
-| S7 | Change 总索引 | `CHANGE.md` | CHG-001、CHG-002、CHG-003 已归档 |
-| S7 | Change 归档 | `docs/comet/archive/2026-11-18-mvp-implementation/`、`docs/comet/archive/2026-11-18-batch-corpus-v2/`、`docs/comet/archive/2026-11-18-xberg-ocr/` | A1–A8 通过 |
+| S7 | Change 总索引 | `CHANGE.md` | CHG-001~006 已归档 |
+| S7 | Change 归档 | `docs/comet/archive/2026-11-18-mvp-implementation/`、`docs/comet/archive/2026-11-18-batch-corpus-v2/`、`docs/comet/archive/2026-11-18-xberg-ocr/`、`docs/comet/archive/2026-11-18-pandoc-typst/`、`docs/comet/archive/2026-11-18-packaging-signing/`、`docs/comet/archive/2026-11-19-p0-completion/` | A1–A8 通过 |
+| S7 | P0 自检 | `docs/superpowers/P0自检.md` | 71 条 P0 收口记录（CHG-006） |
 | — | 项目说明（正式发布口径） | `README.md` | 未开始 |
 
 > 文档归类规则：哪个 skill 生成，就归入 `docs/.{skill-name}/` 对应目录。
@@ -185,6 +186,8 @@
 | 2026-11-19 | 维护 | 语料制作配置将并发、清洗与语料、切块上限/重叠折叠为「高级设置」，折叠时显示并发与切块摘要；实机展开/收起验证，`pnpm build`、`pnpm test`（14 项）通过；同步 UI 原型与设计规范。 |
 | 2026-11-19 | 维护 | 全部原生 select 替换为 shadcn/ui Select（Radix Select 2.4.1）：新增 `components/ui/select.tsx`、`lib/utils.ts`、`@` 别名与 `components.json`；覆盖转换、语料、设置共 13 处；补充 Radix 测试替身，`pnpm build`、`pnpm test`（14 项）通过；实机校验菜单、禁用态与方向行内选择器。 |
 | 2026-11-19 | 维护 | 弹窗迁移到 shadcn/ui Dialog（Radix Dialog 1.3.1）：统一 Modal 封装改为固定屏幕居中，遮罩、Esc、焦点返回由 Radix 处理；方向矩阵、历史详情、批量详情与清空确认四处已覆盖；测试改为 role=dialog，`pnpm build`、`pnpm test`（14 项）通过。 |
+| 2026-11-19 | S7 Build | CHG-006 P0 收口候选实现：新增日志/预检/预设/图片资产模块与设置页输出、预设、日志、关于；标题栏任务状态、全局拖入路由、预检弹窗与跳过策略、诊断复制、引擎持久化；修复 async 命令内 `block_on` 死锁与跳过页临时名泄漏。实机 PDF 26s 完成、130 处资产引用有效、诊断 zip 与预设编辑通过；`pnpm build`、`pnpm test`（17 项）、`cargo test` 通过；生成 `docs/superpowers/P0自检.md`。 |
+| 2026-11-19 | S7 Verify → Archive | CHG-006 通过 Comet Verify（A1–A8）；用户接受结果并归档至 `docs/comet/archive/2026-11-19-p0-completion/`；71 条 P0 关闭 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->
