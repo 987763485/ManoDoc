@@ -135,51 +135,72 @@ export function SettingsPage({
             <section className="settings-section on" id="set-engines">
               <h2>{t("settings.engines")}</h2>
               <p className="intro">{t("settings.enginesIntro")}</p>
-              <div className="engine-card">
-                <div><div className="name">anydoc</div><div className="meta">{t("settings.anydocMeta")}</div></div>
-                <div className="spacer"><span className="badge green">{t("settings.ready")}</span></div>
-              </div>
-              <div className="engine-card">
-                <div><div className="name">xberg</div><div className="meta">1.4.0 · {t("settings.xbergMeta")}</div></div>
-                <div className="spacer"><span className="badge green">{t("settings.ready")}</span></div>
-              </div>
-              <OcrModelCard showToast={showToast} />
-              <div className="engine-card">
-                <div><div className="name">PaddleOCR</div><div className="meta">{t("settings.paddleMeta")}</div></div>
-                <div className="spacer"><span className="badge gray">{t("settings.paddleBuiltin")}</span></div>
-              </div>
-              <div className="engine-card">
-                <div><div className="name">{t("settings.python")}</div><div className="meta">{t("settings.pythonMeta")}</div></div>
-                <div className="spacer"><span className="badge gray">{t("settings.later")}</span></div>
-              </div>
-              <div className="engine-card">
-                <div>
-                  <div className="name">pandoc</div>
-                  <div className="meta">{engines?.pandocVersion || t("settings.pandocMeta")}</div>
+
+              <div className="engine-group">
+                <h3>{t("settings.groupEngines")}</h3>
+                <p className="engine-group-intro">{t("settings.groupEnginesDesc")}</p>
+                <div className="engine-card">
+                  <div><div className="name">anydoc</div><div className="meta">{t("settings.anydocMeta")}</div></div>
+                  <div className="spacer"><span className="badge green">{t("settings.ready")}</span></div>
                 </div>
-                <div className="spacer">
-                  <span className={`badge ${engines?.pandocReady ? "green" : "gray"}`}>
-                    {engines?.pandocReady ? t("settings.ready") : t("settings.later")}
-                  </span>
+                <div className="engine-card">
+                  <div><div className="name">xberg</div><div className="meta">1.4.0 · {t("settings.xbergMeta")}</div></div>
+                  <div className="spacer"><span className="badge green">{t("settings.ready")}</span></div>
+                </div>
+                <div className="engine-card">
+                  <div>
+                    <div className="name">pandoc</div>
+                    <div className="meta">{engines?.pandocVersion || t("settings.pandocMeta")}</div>
+                    {settings.pandocPath ? (
+                      <div className="meta engine-path">{settings.pandocPath}</div>
+                    ) : null}
+                  </div>
+                  <div className="spacer actions">
+                    <button
+                      className="btn ghost small"
+                      onClick={async () => {
+                        const picked = await open({ multiple: false, directory: false });
+                        if (typeof picked !== "string") return;
+                        await onUpdate({ pandocPath: picked });
+                        setEngines(await getEngineInfo());
+                      }}
+                    >
+                      {t("settings.pandocCustom")}
+                    </button>
+                    <span className={`badge ${engines?.pandocReady ? "green" : "gray"}`}>
+                      {engines?.pandocReady ? t("settings.ready") : t("settings.later")}
+                    </span>
+                  </div>
+                </div>
+                <div className="engine-card">
+                  <div>
+                    <div className="name">Typst</div>
+                    <div className="meta">{engines?.typstVersion || t("settings.typstMeta")}</div>
+                  </div>
+                  <div className="spacer">
+                    <span className={`badge ${engines?.typstReady ? "green" : "gray"}`}>
+                      {engines?.typstReady ? t("settings.ready") : t("settings.later")}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="field">
-                <label>{t("settings.pandocPath")}</label>
-                <input
-                  value={settings.pandocPath}
-                  placeholder={t("settings.pandocPathHint")}
-                  onChange={(event) => void onUpdate({ pandocPath: event.target.value })}
-                />
-              </div>
-              <div className="engine-card">
-                <div>
-                  <div className="name">Typst</div>
-                  <div className="meta">{engines?.typstVersion || t("settings.typstMeta")}</div>
+
+              <div className="engine-group">
+                <h3>{t("settings.groupOcr")}</h3>
+                <p className="engine-group-intro">{t("settings.groupOcrDesc")}</p>
+                <OcrModelCard showToast={showToast} />
+                <div className="engine-card">
+                  <div><div className="name">PaddleOCR</div><div className="meta">{t("settings.paddleMeta")}</div></div>
+                  <div className="spacer"><span className="badge gray">{t("settings.paddleBuiltin")}</span></div>
                 </div>
-                <div className="spacer">
-                  <span className={`badge ${engines?.typstReady ? "green" : "gray"}`}>
-                    {engines?.typstReady ? t("settings.ready") : t("settings.later")}
-                  </span>
+              </div>
+
+              <div className="engine-group">
+                <h3>{t("settings.groupRuntime")}</h3>
+                <p className="engine-group-intro">{t("settings.groupRuntimeDesc")}</p>
+                <div className="engine-card">
+                  <div><div className="name">{t("settings.python")}</div><div className="meta">{t("settings.pythonMeta")}</div></div>
+                  <div className="spacer"><span className="badge gray">{t("settings.later")}</span></div>
                 </div>
               </div>
             </section>
@@ -401,27 +422,7 @@ export function SettingsPage({
                 <b>pandoc</b><span>GPL-2.0 · 独立 sidecar 进程调用</span>
               </div>
               <h3>{t("settings.licenseTitle")}</h3>
-              <pre className="license-text">{`MIT License
-
-Copyright (c) 2026 DullDoc
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.`}</pre>
+              <p className="license-name">MIT License</p>
               <p className="hint">{t("settings.pandocLicense")}</p>
             </section>
           ) : null}

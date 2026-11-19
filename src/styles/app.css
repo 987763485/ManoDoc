@@ -222,7 +222,13 @@ html[data-theme="dark"] .ui-dialog-overlay { background: rgba(0, 0, 0, .62); }
 .tb-task-cancel:hover { background: var(--surface-2); color: var(--ink); }
 .tb-task-cancel svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
 .preflight-pages { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
-.license-text { margin: 8px 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink-2); font-size: 12px; line-height: 1.7; white-space: pre-wrap; }
+.license-name { margin: 8px 0 4px; color: var(--ink); font-size: 13px; font-weight: 600; }
+.engine-group { margin-top: 22px; }
+.engine-group:first-of-type { margin-top: 14px; }
+.engine-group > h3 { margin: 0; font-size: 13px; font-weight: 650; color: var(--ink); }
+.engine-group-intro { margin: 2px 0 10px; font-size: 12px; color: var(--ink-3); }
+.engine-card .spacer.actions { display: flex; align-items: center; gap: 8px; }
+.engine-path { word-break: break-all; }
 .setting-row .control.actions { display: flex; gap: 8px; }
 .setting-row .control input,
 .settings-section .actions input {
