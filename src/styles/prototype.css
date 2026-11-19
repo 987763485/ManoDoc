@@ -672,7 +672,7 @@
 
     .route-row {
       display: grid;
-      grid-template-columns: 1.85fr .65fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 8px;
       margin-top: 8px;
     }

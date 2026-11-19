@@ -732,7 +732,7 @@
 
     .route-row {
       display: grid;
-      grid-template-columns: 1.85fr .65fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 8px;
       margin-top: 8px;
     }
@@ -2027,7 +2027,6 @@
               </div>
               <div class="actions">
                 <button class="btn primary" id="start-convert" data-i18n="convert.start">开始转换</button>
-                <button class="btn secondary" data-i18n="convert.open">打开输出目录</button>
               </div>
               <div class="convert-progress" id="convert-progress">
                 <div class="progress-line"><span></span></div>

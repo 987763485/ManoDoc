@@ -268,9 +268,6 @@ export function ConvertPage({
           <button className="btn secondary small" onClick={() => setMatrixOpen(true)}>
             {t("palette.pages") === "Go to" ? "Supported directions" : "支持的方向"}
           </button>
-          <button className="btn secondary small" onClick={() => openPath(settings.outputDir)}>
-            {t("action.openFolder")}
-          </button>
         </div>
       </div>
 
@@ -398,9 +395,6 @@ export function ConvertPage({
               <div className="actions">
                 <button className="btn primary" id="start-convert" disabled={status === "converting"} onClick={() => void start()}>
                   {t("convert.start")}
-                </button>
-                <button className="btn secondary" onClick={() => openPath(settings.outputDir)}>
-                  {t("action.openFolder")}
                 </button>
               </div>
             </>
