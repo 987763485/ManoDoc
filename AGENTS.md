@@ -69,7 +69,9 @@
 | S7 | Change 归档 | `docs/comet/archive/2026-11-18-mvp-implementation/`、`docs/comet/archive/2026-11-18-batch-corpus-v2/`、`docs/comet/archive/2026-11-18-xberg-ocr/`、`docs/comet/archive/2026-11-18-pandoc-typst/`、`docs/comet/archive/2026-11-18-packaging-signing/`、`docs/comet/archive/2026-11-19-p0-completion/` | A1–A8 通过 |
 | S7 | P0 自检 | `docs/superpowers/P0自检.md` | 71 条 P0 收口记录（CHG-006） |
 | S0 | 产品 Logo | `docs/superpowers/logo/logo-manodoc.svg` | MD 共笔 + 双向转换箭头（1024 PNG 同目录） |
-| — | 项目说明（正式发布口径） | `README.md` | 未开始 |
+| — | 项目说明（正式发布口径） | `README.md` | 已生成 |
+| — | 产品文档站 | `docs/index.html` | 已生成（截图在 `docs/assets/screenshots/`） |
+| — | 开源协议 | `LICENSE` | MIT |
 
 > 文档归类规则：哪个 skill 生成，就归入 `docs/.{skill-name}/` 对应目录。
 
@@ -193,6 +195,7 @@
 | 2026-11-19 | 维护 | 项目与产品更名为 ManoDoc：应用标识 `dev.manodoc.app`、crate/包名、数据目录 `~/.manodoc`、环境变量 `MANODOC_*`、界面文案与文档同步；按新项目处理，不保留 `.dull_doc` 目录兼容。`pnpm build`、`pnpm test`（17 项）、`cargo test`（29 项）通过。 |
 
 | 2026-11-19 | 维护 | 重新设计产品 Logo：MD 共享竖笔构成，D 字怀内双向箭头表达 Markdown ↔ Document 转换；暖纸 + 深绿，输出 `docs/superpowers/logo/logo-manodoc.svg` 与 1024 PNG，并替换 Tauri 全套图标（32/64/128/256/512 与 `.icns`）。 |
+| 2026-11-19 | 发布 | 完成正式发布材料：`README.md`（介绍/安装/使用/注意事项/协议）、`LICENSE`（MIT）与产品文档站 `docs/index.html`（产品介绍、截图、下载安装、使用、注意事项、版权、协议、版本日志）；截图使用中性演示文件，未包含 `example/` 内容。`pnpm package:mac` 产出 `ManoDoc_0.1.0_aarch64.dmg`（119.7MB），ad-hoc 签名通过，公证因缺 Developer ID 仍以退出码 20 阻塞。 |
 
 <comet-ambient-resume>
 <!-- Managed by Comet. Edits inside this block may be replaced by comet init/update. -->
